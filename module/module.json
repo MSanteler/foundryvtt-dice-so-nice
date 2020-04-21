@@ -1,0 +1,31 @@
+{
+	"name": "dice-so-nice",
+	"title": "Dice So Nice!",
+	"description": "",
+	"version": "1.0",
+	"minimumCoreVersion" : "0.5.5",
+	"author": "Simone",
+	"esmodules": [
+		"dice.js",
+		"main.js"
+	],
+	"scripts": [
+		"./libs/cannon.min.js",
+		"./libs/three.min.js",
+		"./libs/teal.js",
+		"./libs/ShadowMaterial.js"
+	],
+	"styles": [],
+	"languages": [{
+		"lang": "en",
+		"name": "English",
+		"path": "./lang/en.json"
+	}, {
+		"lang": "it",
+		"name": "Italian",
+		"path": "./lang/it.json"
+	}],
+	"url": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice",
+	"manifest": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/raw/master/module/module.json",
+	"download": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/-/jobs/artifacts/1.0/raw/dice-so-nice.zip?job=build"
+}

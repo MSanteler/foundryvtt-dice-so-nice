@@ -1,0 +1,21 @@
+image: python:3-alpine
+
+before_script:
+  - apk update
+  - apk add zip
+
+stages:
+  - build
+
+build:
+  stage: build
+  script:
+    - zip dice-so-nice.zip -r module -x ".*"
+  artifacts:
+    name: dice-so-nice
+    when: on_success
+    paths:
+      - dice-so-nice.zip
+  when: on_success
+  only:
+    - tags
