@@ -416,7 +416,7 @@ export class DiceBox {
         this.world.broadphase = new CANNON.NaiveBroadphase();
         this.world.solver.iterations = 16;
 
-        let ambientLight = new THREE.AmbientLight($t.dice.ambient_light_color);
+        let ambientLight = new THREE.AmbientLight(this.ambient_light_color);
         this.scene.add(ambientLight);
 
         this.dice_body_material = new CANNON.Material();
@@ -469,7 +469,7 @@ export class DiceBox {
             this.h = this.ch;
         }
         this.aspect = Math.min(this.cw / this.w, this.ch / this.h);
-        $t.dice.scale = Math.sqrt(this.w * this.w + this.h * this.h) / 13;
+        this.scale = Math.sqrt(this.w * this.w + this.h * this.h) / 13;
 
         this.renderer.setSize(this.cw * 2, this.ch * 2);
 
@@ -480,7 +480,7 @@ export class DiceBox {
 
         let mw = Math.max(this.w, this.h);
         if (this.light) this.scene.remove(this.light);
-        this.light = new THREE.SpotLight($t.dice.spot_light_color, 2.0);
+        this.light = new THREE.SpotLight(this.spot_light_color, 2.0);
         this.light.position.set(-mw / 2, mw / 2, mw * 2);
         this.light.target.position.set(0, 0, 0);
         this.light.distance = mw * 5;
@@ -545,7 +545,7 @@ export class DiceBox {
         let dice = this['create_' + type]();
         dice.castShadow = true;
         dice.dice_type = type;
-        dice.body = new CANNON.RigidBody($t.dice.dice_mass[type],
+        dice.body = new CANNON.RigidBody(this.dice_mass[type],
             dice.geometry.cannon_shape, this.dice_body_material);
         dice.body.position.set(pos.x, pos.y, pos.z);
         dice.body.quaternion.setFromAxisAngle(new CANNON.Vec3(axis.x, axis.y, axis.z), axis.a * Math.PI * 2);
@@ -623,17 +623,17 @@ export class DiceBox {
     __animate(threadid) {
         let time = (new Date()).getTime();
         let time_diff = (time - this.last_time) / 1000;
-        if (time_diff > 3) time_diff = $t.dice.frame_rate;
+        if (time_diff > 3) time_diff = this.frame_rate;
         ++this.iteration;
         if (this.use_adapvite_timestep) {
-            while (time_diff > $t.dice.frame_rate * 1.1) {
-                this.world.step($t.dice.frame_rate);
-                time_diff -= $t.dice.frame_rate;
+            while (time_diff > this.frame_rate * 1.1) {
+                this.world.step(this.frame_rate);
+                time_diff -= this.frame_rate;
             }
             this.world.step(time_diff);
         }
         else {
-            this.world.step($t.dice.frame_rate);
+            this.world.step(this.frame_rate);
         }
         for (let i in this.scene.children) {
             let interact = this.scene.children[i];
@@ -650,9 +650,9 @@ export class DiceBox {
         }
         if (this.running === threadid) {
             (function(t, tid, uat) {
-                if (!uat && time_diff < $t.dice.frame_rate) {
+                if (!uat && time_diff < this.frame_rate) {
                     setTimeout(function() { requestAnimationFrame(function() { t.__animate(tid); }); },
-                        ($t.dice.frame_rate - time_diff) * 1000);
+                        (this.frame_rate - time_diff) * 1000);
                 }
                 else requestAnimationFrame(function() { t.__animate(tid); });
             })(this, threadid, this.use_adapvite_timestep);
@@ -681,7 +681,7 @@ export class DiceBox {
     }
 
     shift_dice_faces(dice, value, res) {
-        let r = $t.dice.dice_face_range[dice.dice_type];
+        let r = this.dice_face_range[dice.dice_type];
         if (dice.dice_type === 'd10' && value === 10) value = 0;
         if (dice.dice_type === 'd10' && res === 10) res = 0;
         if (dice.dice_type === 'd100') res /= 10;
@@ -699,7 +699,7 @@ export class DiceBox {
         if (dice.dice_type === 'd4' && num !== 0) {
             if (num < 0) num += 4;
             dice.material = new THREE.MeshFaceMaterial(
-                $t.dice.create_d4_materials($t.dice.scale / 2, $t.dice.scale * 2, this.d4_labels[num]));
+                this.create_d4_materials(this.scale / 2, this.scale * 2, this.d4_labels[num]));
         }
         dice.geometry = geom;
     }
@@ -723,7 +723,7 @@ export class DiceBox {
     __selector_animate(threadid) {
         let time = (new Date()).getTime();
         let time_diff = (time - this.last_time) / 1000;
-        if (time_diff > 3) time_diff = $t.dice.frame_rate;
+        if (time_diff > 3) time_diff = this.frame_rate;
         let angle_change = 0.3 * time_diff * Math.PI * Math.min(24000 + threadid - time, 6000) / 6000;
         if (angle_change < 0) this.running = false;
         for(let i = 0; i < this.dices.length; i++) {
@@ -744,23 +744,23 @@ export class DiceBox {
         this.clear();
         let step = this.w / 4.5;
         this.pane = new THREE.Mesh(new THREE.PlaneGeometry(this.w * 6, this.h * 6, 1, 1),
-            new THREE.MeshPhongMaterial($t.dice.selector_back_colors));
+            new THREE.MeshPhongMaterial(this.selector_back_colors));
         this.pane.receiveShadow = true;
         this.pane.position.set(0, 0, 1);
         this.scene.add(this.pane);
 
-        /*for (let i = 0, pos = -3; i < $t.dice.known_types.length; ++i, ++pos) {
-            let dice = $t.dice['create_' + $t.dice.known_types[i]]();
+        /*for (let i = 0, pos = -3; i < this.known_types.length; ++i, ++pos) {
+            let dice = this['create_' + this.known_types[i]]();
             dice.position.set(pos * step, 0, step * 0.5);
             dice.castShadow = true;
-            dice.userData = $t.dice.known_types[i];
+            dice.userData = this.known_types[i];
             this.dices.push(dice); this.scene.add(dice);
         }*/
 
         let dice = this.create_d20();
         dice.position.set(0, 0, 0);
         dice.castShadow = true;
-        dice.userData = $t.dice.known_types[0];
+        dice.userData = this.known_types[0];
         this.dices.push(dice); this.scene.add(dice);
 
         this.running = (new Date()).getTime();
