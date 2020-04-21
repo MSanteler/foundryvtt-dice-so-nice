@@ -2,7 +2,7 @@
 	"name": "dice-so-nice",
 	"title": "Dice So Nice!",
 	"description": "",
-	"version": "1.0",
+	"version": "0.1",
 	"minimumCoreVersion" : "0.5.5",
 	"author": "Simone",
 	"esmodules": [
@@ -27,5 +27,5 @@
 	}],
 	"url": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice",
 	"manifest": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/raw/master/module/module.json",
-	"download": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/-/jobs/artifacts/1.0/raw/dice-so-nice.zip?job=build"
+	"download": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/-/jobs/artifacts/0.1/raw/dice-so-nice.zip?job=build"
 }
