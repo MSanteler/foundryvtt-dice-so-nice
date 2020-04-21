@@ -649,10 +649,11 @@ export class DiceBox {
             if (this.callback) this.callback.call(this, this.get_dice_values(this.dices));
         }
         if (this.running === threadid) {
+            var me = this;
             (function(t, tid, uat) {
-                if (!uat && time_diff < this.frame_rate) {
+                if (!uat && time_diff < me.frame_rate) {
                     setTimeout(function() { requestAnimationFrame(function() { t.__animate(tid); }); },
-                        (this.frame_rate - time_diff) * 1000);
+                        (me.frame_rate - time_diff) * 1000);
                 }
                 else requestAnimationFrame(function() { t.__animate(tid); });
             })(this, threadid, this.use_adapvite_timestep);
