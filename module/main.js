@@ -13,7 +13,7 @@ Hooks.once('init', () => {
 
     game.settings.register("dice-so-nice", "settings", {
         name: "3D Dice Settings",
-        scope: "world",
+        scope: "client",
         default: {
             enabled: true,
             labelColor: '#000000',
