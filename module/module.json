@@ -1,7 +1,7 @@
 {
 	"name": "dice-so-nice",
 	"title": "Dice So Nice!",
-	"description": "",
+	"description": "Adds the ability to show a 3D dice simulation when a roll is made.",
 	"version": "1.0",
 	"minimumCoreVersion" : "0.5.5",
 	"author": "Simone",

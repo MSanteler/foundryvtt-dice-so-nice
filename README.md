@@ -1,6 +1,6 @@
 # FoundryVTT - Dice So Nice!
 
-This module for Foundry VTT adds the ability to view a 3D simulation simulation when a dice roll is made.
+This module for Foundry VTT adds the ability to show a 3D dice simulation when a roll is made.
 
 ## Installation
 
