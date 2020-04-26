@@ -1,4 +1,18 @@
 {
-    "DICESONICE.config": "3D Dice Settings",
-    "DICESONICE.configTitle": "3D Dice Settings"
+    "DICESONICE.config": "Impostazioni Dadi 3D",
+    "DICESONICE.configTitle": "Impostazioni Dadi 3D",
+    "DICESONICE.configHint": "Configura le impostazioni relative ai dadi 3D quali colori e dimensione",
+
+    "DICESONICE.enable": "Abilita Dadi 3D",
+    "DICESONICE.labelColor": "Colore Etichetta",
+    "DICESONICE.diceColor": "Colore Dado",
+    "DICESONICE.hideAfterRoll": "Nascondi Automaticamente",
+    "DICESONICE.timeBeforeHide": "Millisecondi Prima ",
+    "DICESONICE.hideFX": "Effetto Applicato",
+    "DICESONICE.autoSize": "Scale Automatico?",
+    "DICESONICE.size": "Scale Manuale",
+    "DICESONICE.None": "Nessuno",
+    "DICESONICE.FadeOut": "Dissolvenza",
+    "DICESONICE.Save": "Salva",
+    "DICESONICE.Apply": "Applica"
 }

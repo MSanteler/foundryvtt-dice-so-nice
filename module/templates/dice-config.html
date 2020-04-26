@@ -1,12 +1,73 @@
 <div class="tab active" data-tab="general">
-    <div id="dice-gonfiguration-canvas" style="width: 800px; height: 150px"></div>
-    <div class="form-group">
-        <label>Modalità di Trasmissione Vocale</label>
-        <select name="voiceMode">
-            <option value="always">Sempre Abilitata</option>
-            <option value="activity">Attivazione Voce</option>
-            <option value="ptt" selected="">Push-to-Talk</option>
-        </select>
-        <p class="notes">Scegli la modalità di trasmissione della tua voce nelle chiamate AV.</p>
-    </div>
+    <div id="dice-gonfiguration-canvas" style="width: 335px; height: 250px"></div>
+
+    <form autocomplete="off" class="dice-so-nice">
+
+        <div class="form-group">
+            <label>{{localize "DICESONICE.enable"}}</label>
+            <input type="checkbox" name="enabled" data-dtype="Boolean" {{checked enabled}}/>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "DICESONICE.labelColor"}}</label>
+            <div class="form-fields">
+                <input type="text"  name="labelColor" value="{{labelColor}}" data-dtype="String"/>
+                <input type="color" value="{{labelColor}}" data-edit="labelColor"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "DICESONICE.diceColor"}}</label>
+            <div class="form-fields">
+                <input type="text" name="diceColor" value="{{diceColor}}" data-dtype="String"/>
+                <input type="color" value="{{diceColor}}" data-edit="diceColor"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "DICESONICE.hideAfterRoll"}}</label>
+            <input type="checkbox" name="hideAfterRoll" data-dtype="Boolean" {{checked hideAfterRoll}}/>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "DICESONICE.timeBeforeHide"}}</label>
+            <input type="text" name="timeBeforeHide" value="{{timeBeforeHide}}" style="flex: 1; text-align: right;">
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "DICESONICE.hideFX"}}</label>
+            <select name="hideFX" style="flex: 1;">
+                {{#select hideFX}}
+                {{#each fxList as |name key|}}
+                <option value="{{key}}">{{name}}</option>
+                {{/each}}
+                {{/select}}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "DICESONICE.autoSize"}}</label>
+            <input type="checkbox" name="autoscale" data-dtype="Boolean" {{checked autoscale}}/>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "DICESONICE.size"}}</label>
+            <div class="form-fields">
+                <input type="range" name="scale" value="{{scale}}" min="50" max="100" step="1" data-dtype="Number">
+                <span class="range-value">{{scale}}</span>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <button type="submit" name="submit">
+                <i class="fas fa-save"></i> {{localize "DICESONICE.Save"}}
+            </button>
+
+            <button type="button" name="apply">
+                <i class="fas fa-sync"></i> {{localize "DICESONICE.Apply"}}
+            </button>
+        </div>
+
+    </form>
+
 </div>

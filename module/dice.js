@@ -1,8 +1,8 @@
 export class DiceBox {
 
-    constructor(container, dimentions) {
+    constructor(container, config) {
         this.container = container;
-        this.dimentions = dimentions;
+        this.dimentions = config.dimensions;
         this.frame_rate = 1 / 60;
         this.standart_d20_dice_face_labels = [' ', '0', '1', '2', '3', '4', '5', '6', '7', '8',
             '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'];
@@ -20,10 +20,8 @@ export class DiceBox {
             shininess: 40,
             shading: THREE.FlatShading,
         };
-        this.label_color = '#000000';
-        this.dice_color = '#b72a1d';
-        /*this.label_color = '#aaaaaa';
-        this.dice_color = '#202020';*/
+        this.label_color = config.labelColor;
+        this.dice_color = config.diceColor;
         this.ambient_light_color = 0xf0f5fb;
         this.spot_light_color = 0xefdfd5;
         this.selector_back_colors = { color: 0x404040, shininess: 0, emissive: 0x858787 };
@@ -35,10 +33,24 @@ export class DiceBox {
         this.dice_mass = { 'd4': 300, 'd6': 300, 'd8': 340, 'd10': 350, 'd12': 350, 'd20': 400, 'd100': 350 };
         this.dice_inertia = { 'd4': 5, 'd6': 13, 'd8': 10, 'd10': 9, 'd12': 8, 'd20': 6, 'd100': 9 };
 
+        this.scale = config.scale;
+        this.autoscale = config.autoscale;
+
         this.rolling = false;
-        this.scale = 50;
 
         this.buildDiceBox();
+    }
+
+    update(config) {
+        this.label_color = config.labelColor;
+        this.dice_color = config.diceColor;
+        if(config.autoscale) {
+            this.scale = Math.sqrt(this.w * this.w + this.h * this.h) / 13;
+        } else {
+            this.scale = config.scale
+        }
+
+        this.resetCache();
     }
 
     copyto(obj, res) {
@@ -305,6 +317,18 @@ export class DiceBox {
         return this.create_geom(vertices, faces, radius, -0.2, -Math.PI / 4 / 2, 0.955);
     }
 
+    resetCache() {
+        this.d4_geometry = null;
+        this.d6_geometry = null;
+        this.d8_geometry = null;
+        this.d10_geometry = null;
+        this.d12_geometry = null;
+        this.d20_geometry = null;
+        this.d4_material = null;
+        this.dice_material = null;
+        this.d100_material = null;
+    }
+
     create_d4() {
         if (!this.d4_geometry) this.d4_geometry = this.create_d4_geometry(this.scale * 1.2);
         if (!this.d4_material) this.d4_material = new THREE.MeshFaceMaterial(
@@ -469,7 +493,10 @@ export class DiceBox {
             this.h = this.ch;
         }
         this.aspect = Math.min(this.cw / this.w, this.ch / this.h);
-        this.scale = Math.sqrt(this.w * this.w + this.h * this.h) / 13;
+
+        if(this.autoscale) {
+            this.scale = Math.sqrt(this.w * this.w + this.h * this.h) / 13;
+        }
 
         this.renderer.setSize(this.cw * 2, this.ch * 2);
 
@@ -720,55 +747,6 @@ export class DiceBox {
         this.__animate(this.running);
     }
 
-    __selector_animate(threadid) {
-        let time = (new Date()).getTime();
-        let time_diff = (time - this.last_time) / 1000;
-        if (time_diff > 3) time_diff = this.frame_rate;
-        let angle_change = 0.3 * time_diff * Math.PI * Math.min(24000 + threadid - time, 6000) / 6000;
-        if (angle_change < 0) this.running = false;
-        for(let i = 0; i < this.dices.length; i++) {
-            this.dices[i].rotation.y += angle_change;
-            this.dices[i].rotation.x += angle_change / 4;
-            this.dices[i].rotation.z += angle_change / 10;
-        }
-        this.last_time = time;
-        this.renderer.render(this.scene, this.camera);
-        if (this.running === threadid) {
-            (function(t, tid) {
-                requestAnimationFrame(function() { t.__selector_animate(tid); });
-            })(this, threadid);
-        }
-    }
-
-    draw_selector() {
-        this.clear();
-        let step = this.w / 4.5;
-        this.pane = new THREE.Mesh(new THREE.PlaneGeometry(this.w * 6, this.h * 6, 1, 1),
-            new THREE.MeshPhongMaterial(this.selector_back_colors));
-        this.pane.receiveShadow = true;
-        this.pane.position.set(0, 0, 1);
-        this.scene.add(this.pane);
-
-        /*for (let i = 0, pos = -3; i < this.known_types.length; ++i, ++pos) {
-            let dice = this['create_' + this.known_types[i]]();
-            dice.position.set(pos * step, 0, step * 0.5);
-            dice.castShadow = true;
-            dice.userData = this.known_types[i];
-            this.dices.push(dice); this.scene.add(dice);
-        }*/
-
-        let dice = this.create_d20();
-        dice.position.set(0, 0, 0);
-        dice.castShadow = true;
-        dice.userData = this.known_types[0];
-        this.dices.push(dice); this.scene.add(dice);
-
-        this.running = (new Date()).getTime();
-        this.last_time = 0;
-        if (this.animate_selector) this.__selector_animate(this.running);
-        else this.renderer.render(this.scene, this.camera);
-    }
-
     throw_dices(vector, boost, dist, notation_getter, before_roll, after_roll) {
         const me = this;
         let uat = this.use_adapvite_timestep;
@@ -797,5 +775,48 @@ export class DiceBox {
         let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
         let boost = (Math.random() + 3) * dist;
         this.throw_dices(vector, boost, dist, notation_getter, before_roll, after_roll);
+    }
+
+    showcase() {
+        this.clear();
+
+        this.pane = new THREE.Mesh(
+            new THREE.PlaneGeometry(this.w * 6, this.h * 6, 1, 1),
+            new THREE.MeshPhongMaterial(this.selector_back_colors)
+        );
+        this.pane.receiveShadow = true;
+        this.pane.position.set(0, 0, 1);
+        this.scene.add(this.pane);
+
+        let dice = this.create_d20();
+        dice.position.set(0, 0, 0);
+        dice.castShadow = true;
+        this.dices.push(dice);
+        this.scene.add(dice);
+
+        if(this.rotation) {
+            dice.rotation.y = this.rotation.y;
+            dice.rotation.x = this.rotation.x;
+            dice.rotation.z = this.rotation.z;
+        }
+
+        let me = this;
+        let render = function() {
+            requestAnimationFrame(render);
+
+            dice.rotation.y += 0.01;
+            dice.rotation.x += 0.01 / 4;
+            dice.rotation.z += 0.01 / 10;
+
+            me.rotation = {
+                y: dice.rotation.y,
+                x: dice.rotation.x,
+                z: dice.rotation.z
+            };
+
+            me.renderer.render(me.scene, me.camera);
+        };
+
+        render();
     }
 }

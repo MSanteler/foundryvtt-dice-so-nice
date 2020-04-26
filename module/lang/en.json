@@ -1,4 +1,19 @@
 {
     "DICESONICE.config": "3D Dice Settings",
-    "DICESONICE.configTitle": "3D Dice Settings"
+    "DICESONICE.configTitle": "3D Dice Settings",
+    "DICESONICE.configHint": "Configure settings for 3D dice such as colors and size",
+
+    "DICESONICE.enable": "Enable 3D Dices",
+    "DICESONICE.labelColor": "Label Color",
+    "DICESONICE.diceColor": "Dice Color",
+    "DICESONICE.hideAfterRoll": "Automatically Hide",
+    "DICESONICE.timeBeforeHide": "Millisecs Before Hiding",
+    "DICESONICE.hideFX": "Hide FX",
+    "DICESONICE.autoSize": "Auto Scale?",
+    "DICESONICE.size": "Manual Scale",
+    "DICESONICE.None": "None",
+    "DICESONICE.FadeOut": "FadeOut",
+    "DICESONICE.Save": "Save",
+    "DICESONICE.Apply": "Apply"
+
 }
