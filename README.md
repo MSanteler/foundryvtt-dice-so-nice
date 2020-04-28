@@ -33,6 +33,38 @@ It is possible to configure some aspects of the dice in the foundry game setting
 - **Auto Scale**: When enabled, auto scale the dice dimension based on the display size.
 - **Manual Scale**: Allows to manually change the scale of the dice.
 
+## Internal API
+
+Once enabled, 'Dice So Nice' changes the behaviour of the API `Roll.toMessage` method so that a 3D dice animation is 
+automatically displayed and resolved
+before the result is shown on the chat log.    
+This solves the majority of the cases related to the roll visualization when vanilla foundry is used.   
+Customized Systems and Modules, however, may implement differently the way the roll is resolved and therefore they may
+not use the `toMessage` method or they may not even use the `Roll` class entirely, in favor of custom random strategies for calculating the result.   
+In this case, 'Dice so Nice' exposes APIs to trigger the animation and have a notification when finished.
+If the Roll class is still used, activating the animation could be done using the `game.dice3d.showForRoll` method:
+```javascript
+const r = new Roll('1d20');
+r.roll();
+game.dice3d.showFoRoll(r).then(displayed => { /*do you stuff after the animation */  });
+```
+`game.dice3d.showForRoll` returns a promise that is resolved once the animation has ended. The returned parameter is a boolean that 
+informs if the animation took place or not.   
+
+If the `Roll` class is not used, you can alternatively call the `game.dice3d.show` method passing a JSON configuration data like so:
+
+```javascript
+const data = {
+    formula: 'd20 + 2d6',
+    results: [20,6,6]   
+};
+game.dice3d.show(data).then(displayed => { /*do you stuff after the animation */  }); 
+```
+The configuration must contain two parameters:
+
+* **formula**: a string containing the dice to show formatted as `[n of dices if > 0]d[n of faces] [+...n]`, where the 'n of faces' can take only these values: 4,6,8,10,12,20,100. 
+* **results** an array containing the ordered list of the roll results. In the example above 20 is the result of the d20, 6 and 6 of the 2d6.  
+
 ## Known limitations
 
 - Rolls made by the other players are not displayed (with 3D dices)

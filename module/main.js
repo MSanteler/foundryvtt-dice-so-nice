@@ -27,117 +27,29 @@ Hooks.once('init', () => {
         type: Object,
         config: false,
         onChange: settings => {
-            game.diceBox.update(settings);
+            game.dice3d.update(settings);
         }
     });
 });
 
 Hooks.once('ready', () => {
 
-    let canvasHtml = $('<div id="dice-box-canvas" style="position: absolute; left: 0; top: 0; z-index: 1000; pointer-events: none;"></div>');
-    canvasHtml.appendTo($('body'));
-
-    let canvas = document.getElementById('dice-box-canvas');
-    canvas.style.width = window.innerWidth - 1 + 'px';
-    canvas.style.height = window.innerHeight - 1 + 'px';
-
-    const config = game.settings.get('dice-so-nice', 'settings');
-    let box = new DiceBox(canvas, {
-        labelColor: config.labelColor,
-        diceColor: config.diceColor,
-        autoscale: config.autoscale,
-        scale: config.scale
-    });
-    game.diceBox = box;
-
-    window.addEventListener("resize", () => {
-        canvas.style.width = window.innerWidth - 1 + 'px';
-        canvas.style.height = window.innerHeight - 1 + 'px';
-    });
-
-    $('body,html').click(function() {
-        const config = game.settings.get('dice-so-nice', 'settings');
-        let diceBoxCanvas = $("#dice-box-canvas");
-        if(!config.hideAfterRoll && diceBoxCanvas.is(":visible")) {
-            diceBoxCanvas.hide();
-        }
-    });
+    game.dice3d = new Dice3D();
 
     const original = Roll.prototype.toMessage;
     Roll.prototype.toMessage = function (chatData={}, {rollMode=null, create=true}={}) {
 
-        const config = game.settings.get('dice-so-nice', 'settings');
-        if(!config.enabled) {
+        if(!game.dice3d.isEnabled()) {
             original.apply(this, arguments);
             return;
         }
 
-        if(box.rolling) {
-            return;
-        }
-
-        if(this.timeoutHandle) {
-            clearTimeout(this.timeoutHandle);
-        }
-
         chatData = original.apply(this, [chatData, {rollMode, create:false}]);
 
-        let formula = '';
-        let results = [];
-
-        this.dice.forEach(dice => {
-            if([4, 6, 8, 10, 12, 20, 100].includes(dice.faces)) {
-                let separator = formula.length > 1 ? ' + ' : '';
-                let rolls = Math.min(dice.rolls.length, 20);
-                formula += separator + (dice.rolls.length > 1 ? `${rolls}d${dice.faces}` : `d${dice.faces}`);
-                if(dice.faces === 100) {
-                    formula += ' + ' + (dice.rolls.length > 1 ? `${rolls}d10` : `d10`);
-                }
-
-                for(let i = 0; i < rolls; i++) {
-                    let r = dice.rolls[i];
-                    if(dice.faces === 100) {
-                        results.push(parseInt(r.roll/10));
-                        results.push(r.roll%10);
-                    } else {
-                        results.push(r.roll);
-                    }
-                }
-            }
-        });
-
-        if(formula.length > 0 && !chatData.blind) {
-
-            let $dice = $("#dice-box-canvas");
-            $dice.stop(true, true);
-            $dice.show();
-
-            box.start_throw(
-                () => { return box.parse_notation(formula) },
-                (vectors, notation, callback) => {
-                    AudioHelper.play({src: chatData.sound});
-                    callback(results);
-                },
-                () => {
-                    ChatMessage.create(mergeObject(chatData, { sound: null }));
-
-                    if(config.hideAfterRoll) {
-                        this.timeoutHandle = setTimeout(() => {
-                            if(!box.rolling) {
-                                if(config.hideFX === 'none') {
-                                    $dice.hide();
-                                }
-                                if(config.hideFX === 'fadeOut') {
-                                    $dice.fadeOut(1000);
-                                }
-                            }
-                        }, config.timeBeforeHide);
-                    }
-                }
-            );
-        } else {
+        game.dice3d.showForRoll(this).then(displayed => {
+            chatData = displayed ? mergeObject(chatData, { sound: null }) : chatData;
             ChatMessage.create(chatData);
-        }
+        });
     };
 });
 
@@ -154,8 +66,16 @@ Hooks.on('chatMessage', (chatLog, message, chatData) => {
 
 });
 
+/**
+ * Generic utilities class...
+ */
 class Utils {
 
+    /**
+     *
+     * @param cfg
+     * @returns {{}}
+     */
     static localize(cfg) {
         return Object.keys(cfg).reduce((i18nCfg, key) => {
                 i18nCfg[key] = game.i18n.localize(cfg[key]);
@@ -165,6 +85,217 @@ class Utils {
     };
 }
 
+/**
+ * Main class to handle 3D Dice animations.
+ */
+export class Dice3D {
+
+    /**
+     * Ctor. Create and initialize a new Dice3d.
+     */
+    constructor() {
+        this._buildCanvas();
+        this._buildDiceBox();
+        this._initListeners();
+    }
+
+    /**
+     * Create and inject the dice box canvas resizing to the window total size.
+     *
+     * @private
+     */
+    _buildCanvas() {
+        this.canvas = $('<div id="dice-box-canvas" style="position: absolute; left: 0; top: 0; z-index: 1000; pointer-events: none;"></div>');
+        this.canvas.appendTo($('body'));
+        this._resizeCanvas();
+    }
+
+    /**
+     * resize to the window total size.
+     *
+     * @private
+     */
+    _resizeCanvas() {
+        this.canvas.width(window.innerWidth - 1 + 'px');
+        this.canvas.height(window.innerHeight - 1 + 'px');
+    }
+
+    /**
+     * Build the dicebox.
+     *
+     * @private
+     */
+    _buildDiceBox() {
+        const config = game.settings.get('dice-so-nice', 'settings');
+        this.box = new DiceBox(this.canvas[0], {
+            labelColor: config.labelColor,
+            diceColor: config.diceColor,
+            autoscale: config.autoscale,
+            scale: config.scale
+        });
+    }
+
+    /**
+     * Init listeners on windows resize and on click if auto hide has been disabled within the settings.
+     *
+     * @private
+     */
+    _initListeners() {
+        $(window).resize(() => {
+            this._resizeCanvas()
+        });
+        $('body,html').click(() => {
+            const config = game.settings.get('dice-so-nice', 'settings');
+            if(!config.hideAfterRoll && this.canvas.is(":visible")) {
+                this.canvas.hide();
+            }
+        });
+    }
+
+    /**
+     * Check if 3D simulation is enabled from the settings.
+     */
+    isEnabled() {
+        const config = game.settings.get('dice-so-nice', 'settings');
+        return config.enabled;
+    }
+
+    /**
+     * Update the DiceBox with fresh new settgins.
+     *
+     * @param settings
+     */
+    update(settings) {
+        this.box.update(settings);
+    }
+
+    /**
+     * Show the 3D Dice animation for the
+     *
+     * @param roll an instance of Roll class to show 3D dice animation.
+     * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
+     */
+    showForRoll(roll) {
+        return this.show(new RollData(roll));
+    }
+
+    /**
+     * Show
+     *
+     * @param data data containing the formula and the result to show in the 3D animation.
+     * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
+     */
+    show(data) {
+        return new Promise((resolve, reject) => {
+
+            if (!data) throw new Error("Roll data should be not null");
+
+            const isEmpty = data.formula.length === 0 || data.results.length === 0;
+
+            if(!isEmpty && !this.box.rolling) {
+
+                this._beforeShow();
+
+                this.box.start_throw(
+                    () => {
+                        let notation = this.box.parse_notation(data.formula);
+                        if(notation.error) {
+                            throw new Error("Roll data contains errors");
+                        }
+
+                        return notation;
+                    },
+                    (vectors, notation, callback) => {
+                        AudioHelper.play({src: CONFIG.sounds.dice});
+                        callback(data.results);
+                    },
+                    () => {
+                        resolve(true);
+                        this._afterShow();
+                    }
+                );
+            } else {
+                resolve(false);
+            }
+        });
+    }
+
+    /**
+     *
+     * @private
+     */
+    _beforeShow() {
+        if(this.timeoutHandle) {
+            clearTimeout(this.timeoutHandle);
+        }
+
+        this.canvas.stop(true, true);
+        this.canvas.show();
+    }
+
+    /**
+     *
+     * @private
+     */
+    _afterShow() {
+        const config = game.settings.get('dice-so-nice', 'settings');
+        if(config.hideAfterRoll) {
+            this.timeoutHandle = setTimeout(() => {
+                if(!this.box.rolling) {
+                    if(config.hideFX === 'none') {
+                        this.canvas.hide();
+                    }
+                    if(config.hideFX === 'fadeOut') {
+                        this.canvas.fadeOut(1000);
+                    }
+                }
+            }, config.timeBeforeHide);
+        }
+    }
+}
+
+
+/**
+ *
+ */
+class RollData {
+
+    constructor(roll) {
+
+        if (!roll) throw new Error("Roll instance should be not null");
+
+        if ( !roll._rolled ) roll.roll();
+
+        this.formula = '';
+        this.results = [];
+
+        roll.dice.forEach(dice => {
+            if([4, 6, 8, 10, 12, 20, 100].includes(dice.faces)) {
+                let separator = this.formula.length > 1 ? ' + ' : '';
+                let rolls = Math.min(dice.rolls.length, 20);
+                this.formula += separator + (dice.rolls.length > 1 ? `${rolls}d${dice.faces}` : `d${dice.faces}`);
+                if(dice.faces === 100) {
+                    this.formula += ' + ' + (dice.rolls.length > 1 ? `${rolls}d10` : `d10`);
+                }
+
+                for(let i = 0; i < rolls; i++) {
+                    let r = dice.rolls[i];
+                    if(dice.faces === 100) {
+                        this.results.push(parseInt(r.roll/10));
+                        this.results.push(r.roll%10);
+                    } else {
+                        this.results.push(r.roll);
+                    }
+                }
+            }
+        });
+    }
+
+}
+
+/**
+ * Form application to configure settings of the 3D Dice.
+ */
 class DiceConfig extends FormApplication {
 
     static get defaultOptions() {
