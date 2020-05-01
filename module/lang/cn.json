@@ -13,6 +13,10 @@
     "DICESONICE.size": "手动调整大小",
     "DICESONICE.None": "无",
     "DICESONICE.FadeOut": "淡出",
+    "DICESONICE.speed": "Animation Speed",
+    "DICESONICE.NormalSpeed": "Normal",
+    "DICESONICE.2xSpeed": "2x",
+    "DICESONICE.3xSpeed": "3x",
     "DICESONICE.Save": "保存",
     "DICESONICE.Apply": "应用"
 
