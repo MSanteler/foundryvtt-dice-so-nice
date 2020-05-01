@@ -46,14 +46,14 @@ If the Roll class is still used, activating the animation could be done using th
 ```javascript
 const r = new Roll('1d20');
 r.roll();
-game.dice3d.showFoRoll(r).then(displayed => { /*do you stuff after the animation */  });
+game.dice3d.showForRoll(r).then(displayed => { /*do you stuff after the animation */  });
 ```
 `game.dice3d.showForRoll` returns a promise that is resolved once the animation has ended. The returned parameter is a boolean that 
 informs if the animation took place or not.
 
 Since version 1.3 it is possible to view other player's rolls so, two optionals parameters have been added to the signature:   
 ```javascript
-game.dice3d.showFoRoll(r, whisper, blind)
+game.dice3d.showForRoll(r, whisper, blind)
 ```
 where: 
 * `whisper`: array containing the ids of other users who can see the roll (typically the DM)
