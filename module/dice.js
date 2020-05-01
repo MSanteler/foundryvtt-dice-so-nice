@@ -35,6 +35,7 @@ export class DiceBox {
 
         this.scale = config.scale;
         this.autoscale = config.autoscale;
+        this.speed = config.speed;
 
         this.rolling = false;
 
@@ -49,7 +50,13 @@ export class DiceBox {
         } else {
             this.scale = config.scale
         }
+        this.speed = config.speed;
+        this.resetCache();
+    }
 
+    updateColors(diceColor, labelColor) {
+        this.dice_color = diceColor;
+        this.label_color = labelColor;
         this.resetCache();
     }
 
@@ -653,14 +660,18 @@ export class DiceBox {
         if (time_diff > 3) time_diff = this.frame_rate;
         ++this.iteration;
         if (this.use_adapvite_timestep) {
-            while (time_diff > this.frame_rate * 1.1) {
-                this.world.step(this.frame_rate);
-                time_diff -= this.frame_rate;
+            for(let i=0; i<this.speed; i++) {
+                while (time_diff > this.frame_rate * 1.1) {
+                    this.world.step(this.frame_rate);
+                    time_diff -= this.frame_rate;
+                }
+                this.world.step(time_diff);
             }
-            this.world.step(time_diff);
         }
         else {
-            this.world.step(this.frame_rate);
+            for(let i=0; i<this.speed; i++) {
+                this.world.step(this.frame_rate);
+            }
         }
         for (let i in this.scene.children) {
             let interact = this.scene.children[i];
@@ -734,7 +745,7 @@ export class DiceBox {
     roll(vectors, values, callback) {
         this.prepare_dices_for_roll(vectors);
         if (values !== undefined && values.length) {
-            this.use_adapvite_timestep = false;
+            //this.use_adapvite_timestep = false;
             let res = this.emulate_throw();
             this.prepare_dices_for_roll(vectors);
             for(let i = 0; i < res.length; i++) {

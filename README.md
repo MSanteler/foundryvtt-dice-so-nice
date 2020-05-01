@@ -49,14 +49,24 @@ r.roll();
 game.dice3d.showFoRoll(r).then(displayed => { /*do you stuff after the animation */  });
 ```
 `game.dice3d.showForRoll` returns a promise that is resolved once the animation has ended. The returned parameter is a boolean that 
-informs if the animation took place or not.   
+informs if the animation took place or not.
+
+Since version 1.3 it is possible to view other player's rolls so, two optionals parameters have been added to the signature:   
+```javascript
+game.dice3d.showFoRoll(r, whisper, blind)
+```
+where: 
+* `whisper`: array containing the ids of other users who can see the roll (typically the DM)
+* `blind`: when true the roll is not displayed, unless the id of the user is contained in the whisper array. 
 
 If the `Roll` class is not used, you can alternatively call the `game.dice3d.show` method passing a JSON configuration data like so:
 
 ```javascript
 const data = {
     formula: 'd20 + 2d6',
-    results: [20,6,6]   
+    results: [20,6,6]   ,
+    whisper: [],
+    blind: false
 };
 game.dice3d.show(data).then(displayed => { /*do you stuff after the animation */  }); 
 ```
@@ -67,7 +77,6 @@ The configuration must contain two parameters:
 
 ## Known limitations
 
-- Rolls made by the other players are not displayed (with 3D dices)
 - The maximum number of dice displayed simultaneously is equal to 20.
 - Works with vanilla foundry and with modules that do not substantially modify the Roll API.
 

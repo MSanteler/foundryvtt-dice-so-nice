@@ -13,6 +13,10 @@
     "DICESONICE.size": "Scale Manuale",
     "DICESONICE.None": "Nessuno",
     "DICESONICE.FadeOut": "Dissolvenza",
+    "DICESONICE.speed": "Velocità Animazione",
+    "DICESONICE.NormalSpeed": "Normale",
+    "DICESONICE.2xSpeed": "2x",
+    "DICESONICE.3xSpeed": "3x",
     "DICESONICE.Save": "Salva",
     "DICESONICE.Apply": "Applica"
 }

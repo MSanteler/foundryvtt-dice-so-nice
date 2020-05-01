@@ -10,19 +10,23 @@ Hooks.once('init', () => {
         type: DiceConfig,
         restricted: false
     });
+});
+
+Hooks.once('ready', () => {
 
     game.settings.register("dice-so-nice", "settings", {
         name: "3D Dice Settings",
         scope: "client",
         default: {
             enabled: true,
-            labelColor: '#000000',
-            diceColor: '#b72a1d',
+            labelColor: Utils.contrastOf(game.user.color),
+            diceColor: game.user.color,
             hideAfterRoll: true,
             timeBeforeHide: 2000,
             hideFX: 'fadeOut',
             autoscale: true,
-            scale: 75
+            scale: 75,
+            speed: 1
         },
         type: Object,
         config: false,
@@ -30,26 +34,24 @@ Hooks.once('init', () => {
             game.dice3d.update(settings);
         }
     });
-});
-
-Hooks.once('ready', () => {
 
     game.dice3d = new Dice3D();
 
     const original = Roll.prototype.toMessage;
     Roll.prototype.toMessage = function (chatData={}, {rollMode=null, create=true}={}) {
 
-        if(!game.dice3d.isEnabled()) {
-            original.apply(this, arguments);
-            return;
+        if(!create) {
+            return original.apply(this, arguments);
         }
 
         chatData = original.apply(this, [chatData, {rollMode, create:false}]);
 
-        game.dice3d.showForRoll(this).then(displayed => {
+        game.dice3d.showForRoll(this, chatData.whisper, chatData.blind).then(displayed => {
             chatData = displayed ? mergeObject(chatData, { sound: null }) : chatData;
             ChatMessage.create(chatData);
         });
+
+        return chatData;
     };
 });
 
@@ -82,6 +84,32 @@ class Utils {
                 return i18nCfg;
             }, {}
         );
+    };
+
+    /**
+     * Get the contrasting color for any hex color.
+     *
+     * @returns {String} The contrasting color (black or white)
+     */
+    static contrastOf(color){
+
+        if (color.slice(0, 1) === '#') {
+            color = color.slice(1);
+        }
+
+        if (color.length === 3) {
+            color = color.split('').map(function (hex) {
+                return hex + hex;
+            }).join('');
+        }
+
+        const r = parseInt(color.substr(0,2),16);
+        const g = parseInt(color.substr(2,2),16);
+        const b = parseInt(color.substr(4,2),16);
+
+        var yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+
+        return (yiq >= 128) ? '#000000' : '#FFFFFF';
     };
 }
 
@@ -116,7 +144,8 @@ export class Dice3D {
      * @private
      */
     _resizeCanvas() {
-        this.canvas.width(window.innerWidth - 1 + 'px');
+        const sidebarWidth = $('#sidebar').width();
+        this.canvas.width(window.innerWidth - sidebarWidth + 'px');
         this.canvas.height(window.innerHeight - 1 + 'px');
     }
 
@@ -131,7 +160,8 @@ export class Dice3D {
             labelColor: config.labelColor,
             diceColor: config.diceColor,
             autoscale: config.autoscale,
-            scale: config.scale
+            scale: config.scale,
+            speed: config.speed ? config.speed : 1
         });
     }
 
@@ -142,12 +172,25 @@ export class Dice3D {
      */
     _initListeners() {
         $(window).resize(() => {
-            this._resizeCanvas()
+            this._resizeCanvas();
+            //this.box.reinit();
+            //this.box.resetCache();
         });
         $('body,html').click(() => {
             const config = game.settings.get('dice-so-nice', 'settings');
             if(!config.hideAfterRoll && this.canvas.is(":visible")) {
                 this.canvas.hide();
+            }
+        });
+        game.socket.on('module.dice-so-nice', (data) => {
+            const diceColor = game.users.get(data.user).color;
+            const labelColor = Utils.contrastOf(diceColor);
+            if(!data.whisper || data.whisper.includes(game.user._id)) {
+                this.box.updateColors(diceColor, labelColor);
+                this._showAnimation(data.formula, data.results).then(() => {
+                    const config = game.settings.get('dice-so-nice', 'settings');
+                    this.box.updateColors(config.diceColor, config.labelColor);
+                });
             }
         });
     }
@@ -175,8 +218,8 @@ export class Dice3D {
      * @param roll an instance of Roll class to show 3D dice animation.
      * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
      */
-    showForRoll(roll) {
-        return this.show(new RollData(roll));
+    showForRoll(roll, whisper, blind) {
+        return this.show(new RollData(roll, whisper, blind));
     }
 
     /**
@@ -191,23 +234,44 @@ export class Dice3D {
             if (!data) throw new Error("Roll data should be not null");
 
             const isEmpty = data.formula.length === 0 || data.results.length === 0;
+            if(!isEmpty) {
 
-            if(!isEmpty && !this.box.rolling) {
+                game.socket.emit("module.dice-so-nice", mergeObject(data, { user: game.user._id }), () => {
 
+                    if(!data.blind || data.whisper.includes(game.user._id)) {
+                        this._showAnimation(data.formula, data.results).then(displayed => {
+                            resolve(displayed);
+                        });
+                    } else {
+                        resolve(false);
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     *
+     * @param formula
+     * @param results
+     * @returns {Promise<unknown>}
+     * @private
+     */
+    _showAnimation(formula, results) {
+        return new Promise((resolve, reject) => {
+            if(this.isEnabled() && !this.box.rolling) {
                 this._beforeShow();
-
                 this.box.start_throw(
                     () => {
-                        let notation = this.box.parse_notation(data.formula);
+                        let notation = this.box.parse_notation(formula);
                         if(notation.error) {
                             throw new Error("Roll data contains errors");
                         }
-
                         return notation;
                     },
                     (vectors, notation, callback) => {
                         AudioHelper.play({src: CONFIG.sounds.dice});
-                        callback(data.results);
+                        callback(results);
                     },
                     () => {
                         resolve(true);
@@ -260,7 +324,7 @@ export class Dice3D {
  */
 class RollData {
 
-    constructor(roll) {
+    constructor(roll, whisper, blind) {
 
         if (!roll) throw new Error("Roll instance should be not null");
 
@@ -268,6 +332,8 @@ class RollData {
 
         this.formula = '';
         this.results = [];
+        this.whisper = whisper;
+        this.blind = blind;
 
         roll.dice.forEach(dice => {
             if([4, 6, 8, 10, 12, 20, 100].includes(dice.faces)) {
@@ -304,20 +370,25 @@ class DiceConfig extends FormApplication {
             id: "dice-config",
             template: "modules/dice-so-nice/templates/dice-config.html",
             width: 350,
-            height: 580,
+            height: 600,
             closeOnSubmit: true
         })
     }
 
     getData(options) {
-        return mergeObject(
-            game.settings.get('dice-so-nice', 'settings'),
-            {
+        return mergeObject({
+                speed: 1,
                 fxList: Utils.localize({
                     "none": "DICESONICE.None",
                     "fadeOut": "DICESONICE.FadeOut"
+                }),
+                speedList: Utils.localize({
+                    "1": "DICESONICE.NormalSpeed",
+                    "2": "DICESONICE.2xSpeed",
+                    "3": "DICESONICE.3xSpeed"
                 })
-            }
+            },
+            game.settings.get('dice-so-nice', 'settings')
         );
     }
 
