@@ -1,0 +1,23 @@
+{
+    "DICESONICE.config": "3D 주사위 세팅",
+    "DICESONICE.configTitle": "3D 주사위 세팅",
+    "DICESONICE.configHint": "색상 및 사이즈와 같이 3D 주사위에 대해 설정한다",
+
+    "DICESONICE.enable": "3D 주사위 사용",
+    "DICESONICE.labelColor": "라벨 색상",
+    "DICESONICE.diceColor": "주사위 색상",
+    "DICESONICE.hideAfterRoll": "자동 숨김",
+    "DICESONICE.timeBeforeHide": "숨기기까지의 시간(밀리초)",
+    "DICESONICE.hideFX": "특수 효과 숨김",
+    "DICESONICE.autoSize": "자동 크기 조정",
+    "DICESONICE.size": "수동 크기 조정",
+    "DICESONICE.None": "없음",
+    "DICESONICE.FadeOut": "페이드 아웃",
+    "DICESONICE.speed": "애니메이션 속도",
+    "DICESONICE.NormalSpeed": "보통",
+    "DICESONICE.2xSpeed": "2x",
+    "DICESONICE.3xSpeed": "3x",
+    "DICESONICE.Save": "저장",
+    "DICESONICE.Apply": "적용"
+
+}

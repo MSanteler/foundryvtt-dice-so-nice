@@ -2,7 +2,7 @@
 	"name": "dice-so-nice",
 	"title": "Dice So Nice!",
 	"description": "Adds the ability to show a nice 3D dice simulation when a roll is made.",
-	"version": "1.3",
+	"version": "1.4",
 	"minimumCoreVersion" : "0.5.5",
 	"compatibleCoreVersion" : "0.5.5",
 	"author": "Simone",
@@ -30,5 +30,5 @@
 	}],
 	"url": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice",
 	"manifest": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/raw/master/module/module.json",
-	"download": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/-/jobs/artifacts/1.3/raw/dice-so-nice.zip?job=build"
+	"download": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/-/jobs/artifacts/1.4/raw/dice-so-nice.zip?job=build"
 }

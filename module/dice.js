@@ -745,7 +745,7 @@ export class DiceBox {
     roll(vectors, values, callback) {
         this.prepare_dices_for_roll(vectors);
         if (values !== undefined && values.length) {
-            //this.use_adapvite_timestep = false;
+            this.use_adapvite_timestep = false;
             let res = this.emulate_throw();
             this.prepare_dices_for_roll(vectors);
             for(let i = 0; i < res.length; i++) {

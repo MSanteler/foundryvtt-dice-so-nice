@@ -3,7 +3,7 @@
     "DICESONICE.configTitle": "3D Dice Settings",
     "DICESONICE.configHint": "Configure settings for 3D dice such as colors and size",
 
-    "DICESONICE.enable": "Enable 3D Dices",
+    "DICESONICE.enable": "Enable 3D Dice",
     "DICESONICE.labelColor": "Label Color",
     "DICESONICE.diceColor": "Dice Color",
     "DICESONICE.hideAfterRoll": "Automatically Hide",
