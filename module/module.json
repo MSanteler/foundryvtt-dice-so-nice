@@ -27,6 +27,10 @@
 		"lang": "it",
 		"name": "Italian",
 		"path": "./lang/it.json"
+	}, {
+		"lang": "es",
+		"name": "Spanish",
+		"path": "./lang/es.json"
 	}],
 	"url": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice",
 	"manifest": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/raw/master/module/module.json",
