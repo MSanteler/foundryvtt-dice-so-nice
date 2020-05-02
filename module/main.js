@@ -246,6 +246,8 @@ export class Dice3D {
                         resolve(false);
                     }
                 });
+            } else {
+                resolve(false);
             }
         });
     }
