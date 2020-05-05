@@ -28,6 +28,10 @@
 		"name": "Italian",
 		"path": "./lang/it.json"
 	}, {
+		"lang": "es",
+		"name": "Spanish",
+		"path": "./lang/es.json"
+	}, {
 		"lang": "cn",
 		"name": "Chinese",
 		"path": "./lang/cn.json"
