@@ -36,9 +36,9 @@
 		"name": "Chinese",
 		"path": "./lang/cn.json"
 	}, {
-		"lang": "kr",
+		"lang": "ko",
 		"name": "Korean",
-		"path": "./lang/kr.json"
+		"path": "./lang/ko.json"
 	}],
 	"url": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice",
 	"manifest": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/raw/master/module/module.json",
