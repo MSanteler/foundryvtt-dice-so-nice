@@ -46,7 +46,13 @@ Hooks.once('ready', () => {
 
         chatData = original.apply(this, [chatData, {rollMode, create:false}]);
 
-        game.dice3d.showForRoll(this, chatData.whisper, chatData.blind).then(displayed => {
+        let blind = false, whisper;
+        rollMode = rollMode || game.settings.get("core", "rollMode");
+        if ( ["gmroll", "blindroll"].includes(rollMode) ) whisper = ChatMessage.getWhisperRecipients("GM");
+        if ( rollMode === "blindroll" ) blind = true;
+        if ( rollMode === "selfroll" ) whisper = [game.user.id];
+
+        game.dice3d.showForRoll(this, whisper, blind).then(displayed => {
             chatData = displayed ? mergeObject(chatData, { sound: null }) : chatData;
             ChatMessage.create(chatData);
         });
@@ -185,7 +191,7 @@ export class Dice3D {
         game.socket.on('module.dice-so-nice', (data) => {
             const diceColor = game.users.get(data.user).color;
             const labelColor = Utils.contrastOf(diceColor);
-            if(!data.whisper || data.whisper.includes(game.user._id)) {
+            if(!data.whisper || data.whisper.map(user => user._id).includes(game.user._id)) {
                 this.box.updateColors(diceColor, labelColor);
                 this._showAnimation(data.formula, data.results).then(() => {
                     const config = game.settings.get('dice-so-nice', 'settings');
