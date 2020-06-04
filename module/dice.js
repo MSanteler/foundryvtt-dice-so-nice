@@ -18,7 +18,7 @@ export class DiceBox {
             specular: 0x172022,
             color: 0xf0f0f0,
             shininess: 40,
-            shading: THREE.FlatShading,
+            flatShading: true
         };
         this.label_color = config.labelColor;
         this.dice_color = config.diceColor;
@@ -35,7 +35,8 @@ export class DiceBox {
 
         this.scale = config.scale;
         this.autoscale = config.autoscale;
-        this.speed = config.speed;
+        //Latest cannonjs version needs this *.5 multiplier to be consistent with previous speed. Not sure why.
+        this.speed = config.speed*0.5;
 
         this.rolling = false;
 
@@ -50,7 +51,7 @@ export class DiceBox {
         } else {
             this.scale = config.scale
         }
-        this.speed = config.speed;
+        this.speed = config.speed*0.5;
         this.resetCache();
     }
 
@@ -338,50 +339,43 @@ export class DiceBox {
 
     create_d4() {
         if (!this.d4_geometry) this.d4_geometry = this.create_d4_geometry(this.scale * 1.2);
-        if (!this.d4_material) this.d4_material = new THREE.MeshFaceMaterial(
-            this.create_d4_materials(this.scale / 2, this.scale * 2, this.d4_labels[0]));
+        if (!this.d4_material) this.d4_material = this.create_d4_materials(this.scale / 2, this.scale * 2, this.d4_labels[0]);
         return new THREE.Mesh(this.d4_geometry, this.d4_material);
     }
 
     create_d6() {
         if (!this.d6_geometry) this.d6_geometry = this.create_d6_geometry(this.scale * 0.9);
-        if (!this.dice_material) this.dice_material = new THREE.MeshFaceMaterial(
-            this.create_dice_materials(this.standart_d20_dice_face_labels, this.scale / 2, 1.0));
+        if (!this.dice_material) this.dice_material = this.create_dice_materials(this.standart_d20_dice_face_labels, this.scale / 2, 1.0);
         return new THREE.Mesh(this.d6_geometry, this.dice_material);
     }
 
     create_d8() {
         if (!this.d8_geometry) this.d8_geometry = this.create_d8_geometry(this.scale);
-        if (!this.dice_material) this.dice_material = new THREE.MeshFaceMaterial(
-            this.create_dice_materials(this.standart_d20_dice_face_labels, this.scale / 2, 1.2));
+        if (!this.dice_material) this.dice_material = this.create_dice_materials(this.standart_d20_dice_face_labels, this.scale / 2, 1.2);
         return new THREE.Mesh(this.d8_geometry, this.dice_material);
     }
 
     create_d10() {
         if (!this.d10_geometry) this.d10_geometry = this.create_d10_geometry(this.scale * 0.9);
-        if (!this.dice_material) this.dice_material = new THREE.MeshFaceMaterial(
-            this.create_dice_materials(this.standart_d20_dice_face_labels, this.scale / 2, 1.0));
+        if (!this.dice_material) this.dice_material = this.create_dice_materials(this.standart_d20_dice_face_labels, this.scale / 2, 1.0);
         return new THREE.Mesh(this.d10_geometry, this.dice_material);
     }
 
     create_d12() {
         if (!this.d12_geometry) this.d12_geometry = this.create_d12_geometry(this.scale * 0.9);
-        if (!this.dice_material) this.dice_material = new THREE.MeshFaceMaterial(
-            this.create_dice_materials(this.standart_d20_dice_face_labels, this.scale / 2, 1.0));
+        if (!this.dice_material) this.dice_material = this.create_dice_materials(this.standart_d20_dice_face_labels, this.scale / 2, 1.0);
         return new THREE.Mesh(this.d12_geometry, this.dice_material);
     }
 
     create_d20() {
         if (!this.d20_geometry) this.d20_geometry = this.create_d20_geometry(this.scale);
-        if (!this.dice_material) this.dice_material = new THREE.MeshFaceMaterial(
-            this.create_dice_materials(this.standart_d20_dice_face_labels, this.scale / 2, 1.0));
+        if (!this.dice_material) this.dice_material = this.create_dice_materials(this.standart_d20_dice_face_labels, this.scale / 2, 1.0);
         return new THREE.Mesh(this.d20_geometry, this.dice_material);
     }
 
     create_d100() {
         if (!this.d10_geometry) this.d10_geometry = this.create_d10_geometry(this.scale * 0.9);
-        if (!this.d100_material) this.d100_material = new THREE.MeshFaceMaterial(
-            this.create_dice_materials(this.standart_d100_dice_face_labels, this.scale / 2, 1.5));
+        if (!this.d100_material) this.d100_material = this.create_dice_materials(this.standart_d100_dice_face_labels, this.scale / 2, 1.5);
         return new THREE.Mesh(this.d10_geometry, this.d100_material);
     }
 
@@ -454,30 +448,30 @@ export class DiceBox {
         let desk_body_material = new CANNON.Material();
         let barrier_body_material = new CANNON.Material();
         this.world.addContactMaterial(new CANNON.ContactMaterial(
-            desk_body_material, this.dice_body_material, 0.01, 0.5));
+            desk_body_material, this.dice_body_material, {friction:0.01, restitution:0.5}));
         this.world.addContactMaterial(new CANNON.ContactMaterial(
-            barrier_body_material, this.dice_body_material, 0, 1.0));
+            barrier_body_material, this.dice_body_material, {friction:0, restitution:1}));
         this.world.addContactMaterial(new CANNON.ContactMaterial(
-            this.dice_body_material, this.dice_body_material, 0, 0.5));
+            this.dice_body_material, this.dice_body_material, {friction:0, restitution:0.5}));
 
-        this.world.add(new CANNON.RigidBody(0, new CANNON.Plane(), desk_body_material));
+        this.world.add(new CANNON.Body({mass:0,shape: new CANNON.Plane(),material: desk_body_material}));
         let barrier;
-        barrier = new CANNON.RigidBody(0, new CANNON.Plane(), barrier_body_material);
+        barrier = new CANNON.Body({mass:0,shape: new CANNON.Plane(),material: barrier_body_material});
         barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2);
         barrier.position.set(0, this.h * 0.93, 0);
         this.world.add(barrier);
 
-        barrier = new CANNON.RigidBody(0, new CANNON.Plane(), barrier_body_material);
+        barrier = new CANNON.Body({mass:0,shape: new CANNON.Plane(),material: barrier_body_material});
         barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
         barrier.position.set(0, -this.h * 0.93, 0);
         this.world.add(barrier);
 
-        barrier = new CANNON.RigidBody(0, new CANNON.Plane(), barrier_body_material);
+        barrier = new CANNON.Body({mass:0,shape: new CANNON.Plane(),material: barrier_body_material});
         barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -Math.PI / 2);
         barrier.position.set(this.w * 0.93, 0, 0);
         this.world.add(barrier);
 
-        barrier = new CANNON.RigidBody(0, new CANNON.Plane(), barrier_body_material);
+        barrier = new CANNON.Body({mass:0,shape: new CANNON.Plane(),material: barrier_body_material});
         barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
         barrier.position.set(-this.w * 0.93, 0, 0);
         this.world.add(barrier);
@@ -514,14 +508,15 @@ export class DiceBox {
 
         let mw = Math.max(this.w, this.h);
         if (this.light) this.scene.remove(this.light);
-        this.light = new THREE.SpotLight(this.spot_light_color, 2.0);
-        this.light.position.set(-mw / 2, mw / 2, mw * 2);
+        this.light = new THREE.SpotLight(this.spot_light_color, 1.2);
+        this.light.position.set(-mw / 2, mw / 2, mw * 2.2);
         this.light.target.position.set(0, 0, 0);
         this.light.distance = mw * 5;
         this.light.castShadow = true;
+        this.light.angle = Math.PI / 6.0;
         this.light.shadow.camera.near = mw / 10;
         this.light.shadow.camera.far = mw * 5;
-        this.light.shadow.camera.fov = 50;
+        this.light.shadow.camera.fov = 40;
         this.light.shadow.bias = 0.001;
         this.light.shadow.mapSize.width = 1024;
         this.light.shadow.mapSize.height = 1024;
@@ -532,7 +527,7 @@ export class DiceBox {
         let material = new THREE.ShadowMaterial();
         material.opacity = 0.5;
 
-        this.desk = new THREE.Mesh(new THREE.PlaneGeometry(this.w * 2, this.h * 2, 1, 1), material);
+        this.desk = new THREE.Mesh(new THREE.PlaneBufferGeometry(this.w * 2, this.h * 2, 1, 1), material);
         this.desk.receiveShadow = true;
         this.scene.add(this.desk);
 
@@ -579,8 +574,7 @@ export class DiceBox {
         let dice = this['create_' + type]();
         dice.castShadow = true;
         dice.dice_type = type;
-        dice.body = new CANNON.RigidBody(this.dice_mass[type],
-            dice.geometry.cannon_shape, this.dice_body_material);
+        dice.body = new CANNON.Body({mass:this.dice_mass[type],shape: dice.geometry.cannon_shape, material:this.dice_body_material});
         dice.body.position.set(pos.x, pos.y, pos.z);
         dice.body.quaternion.setFromAxisAngle(new CANNON.Vec3(axis.x, axis.y, axis.z), axis.a * Math.PI * 2);
         dice.body.angularVelocity.set(angle.x, angle.y, angle.z);
@@ -655,22 +649,22 @@ export class DiceBox {
     }
 
     __animate(threadid) {
-        let time = (new Date()).getTime();
+        let time = Date.now();
         let time_diff = (time - this.last_time) / 1000;
         if (time_diff > 3) time_diff = this.frame_rate;
         ++this.iteration;
         if (this.use_adapvite_timestep) {
             for(let i=0; i<this.speed; i++) {
                 while (time_diff > this.frame_rate * 1.1) {
-                    this.world.step(this.frame_rate);
+                    this.world.step(this.frame_rate,time_diff,10);
                     time_diff -= this.frame_rate;
                 }
-                this.world.step(time_diff);
+                this.world.step(this.frame_rate,time_diff,10);
             }
         }
         else {
             for(let i=0; i<this.speed; i++) {
-                this.world.step(this.frame_rate);
+                this.world.step(this.frame_rate,time_diff,10);
             }
         }
         for (let i in this.scene.children) {
@@ -681,7 +675,7 @@ export class DiceBox {
             }
         }
         this.renderer.render(this.scene, this.camera);
-        this.last_time = this.last_time ? time : (new Date()).getTime();
+        this.last_time = this.last_time ? time : Date.now();
         if (this.running === threadid && this.check_if_throw_finished()) {
             this.running = false;
             if (this.callback) this.callback.call(this, this.get_dice_values(this.dices));
@@ -736,8 +730,7 @@ export class DiceBox {
         }
         if (dice.dice_type === 'd4' && num !== 0) {
             if (num < 0) num += 4;
-            dice.material = new THREE.MeshFaceMaterial(
-                this.create_d4_materials(this.scale / 2, this.scale * 2, this.d4_labels[num]));
+            dice.material = this.create_d4_materials(this.scale / 2, this.scale * 2, this.d4_labels[num]);
         }
         dice.geometry = geom;
     }
@@ -792,7 +785,7 @@ export class DiceBox {
         this.clear();
 
         this.pane = new THREE.Mesh(
-            new THREE.PlaneGeometry(this.w * 6, this.h * 6, 1, 1),
+            new THREE.PlaneBufferGeometry(this.w * 6, this.h * 6, 1, 1),
             new THREE.MeshPhongMaterial(this.selector_back_colors)
         );
         this.pane.receiveShadow = true;
