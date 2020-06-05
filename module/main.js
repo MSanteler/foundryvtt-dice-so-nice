@@ -2,7 +2,7 @@ import {DiceBox} from "./dice.js";
 
 Hooks.once('init', () => {
 
-    game.settings.registerMenu("module", "dice-so-nice", {
+    game.settings.registerMenu("dice-so-nice", "dice-so-nice", {
         name: "DICESONICE.config",
         label: "DICESONICE.configTitle",
         hint: "DICESONICE.configHint",
@@ -26,7 +26,8 @@ Hooks.once('ready', () => {
             hideFX: 'fadeOut',
             autoscale: true,
             scale: 75,
-            speed: 1
+            speed: 1,
+            fps: 60
         },
         type: Object,
         config: false,
@@ -54,7 +55,8 @@ Hooks.once('ready', () => {
 
         game.dice3d.showForRoll(this, whisper, blind).then(displayed => {
             chatData = displayed ? mergeObject(chatData, { sound: null }) : chatData;
-            ChatMessage.create(chatData);
+            const messageOptions = {rollMode};
+            CONFIG.ChatMessage.entityClass.create(chatData, messageOptions);
         });
 
         return chatData;
@@ -66,9 +68,9 @@ Hooks.on('chatMessage', (chatLog, message, chatData) => {
     let [command, match] = chatLog.constructor.parse(message);
     if (!match) throw new Error("Unmatched chat command");
 
-    if(command === 'roll') {
+    if(["roll", "gmroll", "blindroll", "selfroll"].includes(command)) {
         chatLog._processDiceCommand(command, match, chatData, {});
-        chatData.roll.toMessage(chatData);
+        chatData.roll.toMessage(chatData, { rollMode: command });
         return false;
     }
 
@@ -167,7 +169,8 @@ export class Dice3D {
             diceColor: config.diceColor,
             autoscale: config.autoscale,
             scale: config.scale,
-            speed: config.speed ? config.speed : 1
+            speed: config.speed ? config.speed : 1,
+            fps: config.fps ? config.fps : 60
         });
     }
 
@@ -222,6 +225,8 @@ export class Dice3D {
      * Show the 3D Dice animation for the
      *
      * @param roll an instance of Roll class to show 3D dice animation.
+     * @param whisper
+     * @param blind
      * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
      */
     showForRoll(roll, whisper, blind) {
@@ -244,7 +249,7 @@ export class Dice3D {
 
                 game.socket.emit("module.dice-so-nice", mergeObject(data, { user: game.user._id }), () => {
 
-                    if(!data.blind || data.whisper.includes(game.user._id)) {
+                    if(!data.blind || data.whisper.map(user => user._id).includes(game.user._id)) {
                         this._showAnimation(data.formula, data.results).then(displayed => {
                             resolve(displayed);
                         });
@@ -262,7 +267,7 @@ export class Dice3D {
      *
      * @param formula
      * @param results
-     * @returns {Promise<unknown>}
+     * @returns {Promise<boolean>}
      * @private
      */
     _showAnimation(formula, results) {
@@ -378,7 +383,7 @@ class DiceConfig extends FormApplication {
             id: "dice-config",
             template: "modules/dice-so-nice/templates/dice-config.html",
             width: 350,
-            height: 600,
+            height: 650,
             closeOnSubmit: true
         })
     }
@@ -386,6 +391,7 @@ class DiceConfig extends FormApplication {
     getData(options) {
         return mergeObject({
                 speed: 1,
+                fps: 60,
                 fxList: Utils.localize({
                     "none": "DICESONICE.None",
                     "fadeOut": "DICESONICE.FadeOut"

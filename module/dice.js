@@ -3,7 +3,7 @@ export class DiceBox {
     constructor(container, config) {
         this.container = container;
         this.dimentions = config.dimensions;
-        this.frame_rate = 1 / 60;
+        this.frame_rate = 1 / config.fps;
         this.standart_d20_dice_face_labels = [' ', '0', '1', '2', '3', '4', '5', '6', '7', '8',
             '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20'];
         this.standart_d100_dice_face_labels = [' ', '00', '10', '20', '30', '40', '50',
@@ -52,6 +52,7 @@ export class DiceBox {
             this.scale = config.scale
         }
         this.speed = config.speed*0.5;
+        this.frame_rate = 1 / config.fps;
         this.resetCache();
     }
 
@@ -237,7 +238,7 @@ export class DiceBox {
             let context = canvas.getContext("2d");
             let ts = me.calc_texture_size(size + margin) * 2;
             canvas.width = canvas.height = ts;
-            context.font = (ts - margin) / 1.5 + "pt Arial";
+            context.font = (ts - margin) / 2 + "pt Arial";
             context.fillStyle = back_color;
             context.fillRect(0, 0, canvas.width, canvas.height);
             context.textAlign = "center";

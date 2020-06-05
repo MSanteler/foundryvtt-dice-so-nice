@@ -69,6 +69,14 @@
             </select>
         </div>
 
+        <div class="form-group">
+            <label>{{localize "DICESONICE.fps"}}</label>
+            <div class="form-fields">
+                <input type="range" name="fps" data-dtype="Number" value="{{fps}}" min="10" max="60" step="10">
+                <span class="range-value">{{fps}}</span>
+            </div>
+        </div>
+
         <div class="form-group" style="margin-top: 20px;">
             <button type="submit" name="submit">
                 <i class="fas fa-save"></i> {{localize "DICESONICE.Save"}}
