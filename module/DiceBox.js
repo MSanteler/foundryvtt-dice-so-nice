@@ -501,7 +501,7 @@ export class DiceBox {
 				let low = 250;
 				strength = Math.max(Math.min(speed / (high-low), 1), strength);
 
-				let sound = sounds_dice[Math.floor(Math.random() * sounds_dice.length)];
+				let sound = this.sounds_dice[Math.floor(Math.random() * this.sounds_dice.length)];
 				sound.volume = (strength * (volume/100));
 				sound.play();
 				this.lastSoundType = 'dice';
@@ -512,13 +512,13 @@ export class DiceBox {
 				// also don't bother playing at low speeds
 				if (speed < 250) return;
 
-				let surface = dicefavorites.settings.surface.value || 'felt';
+				let surface = this.dicefavorites.settings.surface.value || 'felt';
 				let strength = 0.1;
 				let high = 12000;
 				let low = 250;
 				strength = Math.max(Math.min(speed / (high-low), 1), strength);
 
-				let soundlist = sounds_table[surface];
+				let soundlist = this.sounds_table[surface];
 				let sound = soundlist[Math.floor(Math.random() * soundlist.length)];
 				sound.volume = (strength * (volume/100));
 				sound.play();
@@ -573,7 +573,7 @@ export class DiceBox {
 				if (this.solverBodyStopped(dicemesh.body)) {
 
 					if (dicemesh.stopped == 0) {
-						dicemesh.stopped = iteration + stoptimer;
+						dicemesh.stopped = this.iteration + stoptimer;
 					}
 
 					if(dicemesh.stopped < this.iteration) {
@@ -640,91 +640,91 @@ export class DiceBox {
 		}
 	}
 
-	animateThrow(threadid, callback, notationVectors){
-		this.animstate = 'throw';
+	animateThrow(me, threadid, callback, notationVectors){
+		me.animstate = 'throw';
 		let time = (new Date()).getTime();
-		let time_diff = (time - this.last_time) / 1000;
-		if (time_diff > 3) time_diff = this.framerate;
-		++this.iteration;
+		let time_diff = (time - me.last_time) / 1000;
+		if (time_diff > 3) time_diff = me.framerate;
+		++me.iteration;
 
 		// use optional adaptive timestep
 		// for singleplayer use only
 		// this method desyncs whe networked
-		if (this.adaptive_timestep) {
-			while (time_diff > this.framerate * 1.1) {
-				this.world.step(this.framerate);
-				time_diff -= this.framerate;
+		if (me.adaptive_timestep) {
+			while (time_diff > me.framerate * 1.1) {
+				me.world.step(me.framerate);
+				time_diff -= me.framerate;
 			}
-			this.world.step(time_diff);
+			me.world.step(time_diff);
 		} else {
-			this.world.step(this.framerate);
+			me.world.step(me.framerate);
 		}
 
 		// update physics interactions visually
-		for (let i in this.scene.children) {
-			let interact = this.scene.children[i];
+		for (let i in me.scene.children) {
+			let interact = me.scene.children[i];
 			if (interact.body != undefined) {
 				interact.position.copy(interact.body.position);
 				interact.quaternion.copy(interact.body.quaternion);
 			}
 		}
 
-		this.renderer.render(this.scene, this.camera);
-		this.last_time = this.last_time ? time : (new Date()).getTime();
+		me.renderer.render(me.scene, me.camera);
+		me.last_time = me.last_time ? time : (new Date()).getTime();
 
 		// roll finished
-		if (this.running == threadid && this.throwFinished()) {
-			this.running = false;
-			this.rolling = false;
+		if (me.running == threadid && me.throwFinished()) {
+			me.running = false;
+			me.rolling = false;
 			if(callback) callback(notationVectors);
 
 			
-			this.running = (new Date()).getTime();
-			this.animateAfterThrow(this.running);
+			me.running = (new Date()).getTime();
+			me.animateAfterThrow(me,me.running);
 			return;
 		}
 
 		// roll not finished, keep animating
-		if (this.running == threadid) {
+		if (me.running == threadid) {
 			((call, tid, at, aftercall, vecs) => {
-				if (!at && time_diff < this.framerate) {
-					setTimeout(() => { requestAnimationFrame(() => { call(tid, aftercall, vecs); }); }, (this.framerate - time_diff) * 1000);
+				if (!at && time_diff < me.framerate) {
+					setTimeout(() => { requestAnimationFrame(() => { call(me,tid, aftercall, vecs); }); }, (me.framerate - time_diff) * 1000);
 				} else {
-					requestAnimationFrame(() => { call(tid, aftercall, vecs); });
+					requestAnimationFrame(() => { call(me,tid, aftercall, vecs); });
 				}
-			})(this.animateThrow, threadid, this.adaptive_timestep, callback, notationVectors);
+			})(me.animateThrow, threadid, me.adaptive_timestep, callback, notationVectors);
 		}
 	}
 
-	animateAfterThrow(threadid) {
-		this.animstate = 'afterthrow';
+	animateAfterThrow(me,threadid) {
+		me.animstate = 'afterthrow';
 		let time = (new Date()).getTime();
-		let time_diff = (time - this.last_time) / 1000;
-		if (time_diff > 3) time_diff = this.framerate;
+		let time_diff = (time - me.last_time) / 1000;
+		if (time_diff > 3) time_diff = me.framerate;
 
-		this.raycaster.setFromCamera( this.mouse.pos, this.camera );
-		if (this.rayvisual) this.rayvisual.setDirection(this.raycaster.ray.direction);
-		let intersects = this.raycaster.intersectObjects(this.diceList);
+		me.raycaster.setFromCamera( me.mouse.pos, me.camera );
+		if (me.rayvisual) me.rayvisual.setDirection(me.raycaster.ray.direction);
+		let intersects = me.raycaster.intersectObjects(me.diceList);
 		if ( intersects.length > 0 ) {
 			//setSelected(intersects[0].object);
 		} else {
 			//setSelected();
 		}
 
-		this.last_time = time;
-		this.renderer.render(this.scene, this.camera);
-		if (this.running == threadid) {
+		me.last_time = time;
+		me.renderer.render(me.scene, me.camera);
+		if (me.running == threadid) {
 			((call, tid, at) => {
-				if (!at && time_diff < this.framerate) {
-					setTimeout(() => { requestAnimationFrame(() => { call(tid); }); }, (this.framerate - time_diff) * 1000);
+				if (!at && time_diff < me.framerate) {
+					setTimeout(() => { requestAnimationFrame(() => { call(me,tid); }); }, (me.framerate - time_diff) * 1000);
 				} else {
-					requestAnimationFrame(() => { call(tid); });
+					requestAnimationFrame(() => { call(me,tid); });
 				}
-			})(this.animateAfterThrow, threadid, this.adaptive_timestep);
+			})(me.animateAfterThrow, threadid, me.adaptive_timestep);
 		}
 	}
 
-	start_throw(notation, before_roll, after_roll) {
+	start_throw(notation, callback) {
 		if (this.rolling) return;
 
 		let vector = { x: (Math.random() * 2 - 1) * this.display.currentWidth, y: -(Math.random() * 2 - 1) * this.display.currentHeight };
@@ -738,13 +738,12 @@ export class DiceBox {
 		let texture = "";
 
 		if (colorset.length > 0 || texture.length > 0) 
-			DiceColors.applyColorSet(res.colorset, texture, false);
+			DiceColors.applyColorSet(colorset, texture, false);
 
 		let notationVectors = new DiceNotation(res.notation);
 		notationVectors.vectors = res.vectors;
 
-		if (before_roll) before_roll.call(this, notationVectors.vectors, notationVectors.notation, roll);
-		this.rollDice(notationVectors,after_roll);
+		this.rollDice(notationVectors,callback);
 	}
 
 	clearDice() {
@@ -803,7 +802,7 @@ export class DiceBox {
 		this.rolling = true;
 		this.running = (new Date()).getTime();
 		this.last_time = 0;
-		this.animateThrow(running, callback, notationVectors);
+		this.animateThrow(this,this.running, callback, notationVectors);
 
 	}
 }

@@ -539,6 +539,7 @@ export const COLORSETS = {
 	}
 
 };
+
 export class DiceColors {
 	constructor() {
 		
@@ -565,7 +566,7 @@ export class DiceColors {
 					callback(images);
 				}
 			};
-			images[key].src = value.source;
+			images[key].src = `modules/dice-so-nice/${value.source}`;
 		}
 	}
 	
@@ -576,7 +577,7 @@ export class DiceColors {
 			let textures = [];
 			for(let i = 0, l = texturename.length; i < l; i++){
 				if (typeof texturename[i] == 'string') {
-					textures.push(getTexture(texturename[i]));
+					textures.push(this.getTexture(texturename[i]));
 				}
 			}
 			return textures;
@@ -591,15 +592,15 @@ export class DiceColors {
 		}
 	
 		if(texturename == 'random') {
-			let names = Object.keys(diceTextures);
+			let names = Object.keys(game.dice3d.diceTextures);
 			// add 'none' for possibility of no texture
 			names.pop(); //remove 'random' from this list
 	
-			return getTexture(names[Math.floor(Math.random() * names.length)]);
+			return this.getTexture(names[Math.floor(Math.random() * names.length)]);
 		}
 	
-		if (diceTextures[texturename] != null) {
-			return { name: texturename, texture: diceTextures[texturename], composite: TEXTURELIST[texturename].composite };
+		if (game.dice3d.diceTextures[texturename] != null) {
+			return { name: texturename, texture: game.dice3d.diceTextures[texturename], composite: TEXTURELIST[texturename].composite };
 		}
 		return {name:'',texture:''};
 	}
@@ -625,13 +626,13 @@ export class DiceColors {
 		let sets = Object.entries(COLORSETS);
 		for (const [name, data] of sets) {
 			COLORSETS[name].id = name;
-			COLORSETS[name].texture = getTexture(data.texture);
+			COLORSETS[name].texture = this.getTexture(data.texture);
 		}
 	
 		// generate the colors and textures for the random set
 		for (let i = 0; i < 10; i++) {
-			let randcolor = randomColor();
-			let randtex = getTexture('random');
+			let randcolor = this.randomColor();
+			let randtex = this.getTexture('random');
 	
 			if (randtex.name != '') {
 				COLORSETS['random'].foreground.push(randcolor.foreground); 

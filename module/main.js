@@ -2,6 +2,7 @@ import {DiceFactory} from './DiceFactory.js';
 import {DiceFavorites} from './DiceFavorites.js';
 import {DiceFunctions} from './DiceFunctions.js';
 import {DiceBox} from './DiceBox.js';
+import {DiceColors, TEXTURELIST, COLORSETS} from './DiceColors.js';
 
 Hooks.once('init', () => {
 
@@ -62,6 +63,14 @@ Hooks.once('ready', () => {
 
         return chatData;
     };
+
+    DiceColors.ImageLoader(TEXTURELIST, function(images) {
+		game.dice3d.diceTextures = images;
+
+		// init colorset textures
+        DiceColors.initColorSets();
+		//DiceColors.applyColorSet('random');
+	});
 });
 
 Hooks.on('chatMessage', (chatLog, message, chatData) => {
@@ -283,13 +292,7 @@ export class Dice3D {
         return new Promise((resolve, reject) => {
             if(this.isEnabled() && !this.box.rolling) {
                 this._beforeShow();
-                this.box.start_throw(
-                    formula,
-                    (vectors, notation, callback) => {
-                        //AudioHelper.play({src: CONFIG.sounds.dice});
-                        callback(results);
-                    },
-                    () => {
+                this.box.start_throw(formula,() => {
                         resolve(true);
                         this._afterShow();
                     }

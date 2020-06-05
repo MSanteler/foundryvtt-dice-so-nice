@@ -422,7 +422,7 @@ export class DiceFactory {
 			}
 			let matindex = closest_face.materialIndex - 1;
 
-			const diceobj = DiceFactory.dice[this.notation.type];
+			const diceobj = game.dice3d.DiceFactory.dice[this.notation.type];
 
 			if (this.shape == 'd4') {
 				console.log('matindex', matindex, 'diceobj.labels', diceobj.labels);
