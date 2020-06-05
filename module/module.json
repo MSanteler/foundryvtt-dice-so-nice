@@ -7,13 +7,11 @@
 	"compatibleCoreVersion" : "0.5.7",
 	"author": "Simone",
 	"esmodules": [
-		"dice.js",
-		"main.js"
+		"./main.js"
 	],
 	"scripts": [
 		"./libs/cannon.min.js",
-		"./libs/three.min.js",
-		"./libs/ShadowMaterial.js"
+		"./libs/three.min.js"
 	],
 	"socket": true,
 	"styles": [

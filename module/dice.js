@@ -28,7 +28,7 @@ export class DiceBox {
         this.desk_color = 0xdfdfdf;
         this.use_shadows = true;
 
-        this.known_types = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
+        
         this.dice_face_range = { 'd4': [1, 4], 'd6': [1, 6], 'd8': [1, 8], 'd10': [0, 9], 'd12': [1, 12], 'd20': [1, 20], 'd100': [0, 9] };
         this.dice_mass = { 'd4': 300, 'd6': 300, 'd8': 340, 'd10': 350, 'd12': 350, 'd20': 400, 'd100': 350 };
         this.dice_inertia = { 'd4': 5, 'd6': 13, 'd8': 10, 'd10': 9, 'd12': 8, 'd20': 6, 'd100': 9 };

@@ -1,0 +1,809 @@
+import {DiceNotation} from './DiceNotation.js';
+import {DiceColors} from './DiceColors.js';
+export class DiceBox {
+
+	constructor(element_container, vector2_dimensions, dice_factory, dice_favorites) {
+		//private variables
+		this.known_types = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'];
+		this.container = element_container;
+		this.dimensions = vector2_dimensions;
+		this.dicefactory = dice_factory;
+		this.dicefavorites = dice_favorites;
+
+		this.adaptive_timestep = false;
+		this.last_time = 0;
+		this.settle_time = 0;
+		this.running = false;
+		this.rolling = false;
+		this.threadid;
+
+		this.display = {
+			currentWidth: null,
+			currentHeight: null,
+			containerWidth: null,
+			containerHeight: null,
+			aspect: null,
+			scale: null
+		};
+
+		this.mouse = {
+			pos: new THREE.Vector2(),
+			startDrag: undefined,
+			startDragTime: undefined
+		}
+
+		this.cameraHeight = {
+			max: null,
+			close: null,
+			medium: null,
+			far: null
+		};
+
+		this.scene = new THREE.Scene();
+		this.world = new CANNON.World();
+		this.raycaster = new THREE.Raycaster();
+		this.rayvisual = null;
+		this.showdebugtracer = false;
+		this.dice_body_material = new CANNON.Material();
+		this.desk_body_material = new CANNON.Material();
+		this.barrier_body_material = new CANNON.Material();
+		this.sounds_table = {};
+		this.sounds_dice = [];
+		this.lastSoundType = '';
+		this.lastSoundStep = 0;
+		this.lastSound = 0;
+		this.iteration;
+		this.renderer;
+		this.barrier;
+		this.camera;
+		this.light;
+		this.desk;
+		this.pane;
+
+		//public variables
+		this.public_interface = {};
+		this.diceList = []; //'private' variable
+		this.framerate = (1/60);
+		this.sounds = true;
+		this.volume = 100;
+		this.soundDelay = 10; // time between sound effects in ms
+		this.animstate = '';
+
+		this.selector = {
+			animate: true,
+			rotate: true,
+			intersected: null,
+			dice: []
+		};
+
+		this.colors = {
+			ambient:  0xf0f5fb,
+			spotlight: 0xefdfd5
+		};
+
+		this.shadows = true;
+
+		this.rethrowFunctions = {};
+		this.afterThrowFunctions = {};
+	}
+
+	
+	enableShadows(){
+		this.shadows = true;
+		if (this.renderer) this.renderer.shadowMap.enabled = this.shadows;
+		if (this.light) this.light.castShadow = this.shadows;
+		if (this.desk) this.desk.receiveShadow = this.shadows;
+	}
+	disableShadows() {
+		this.shadows = false;
+		if (this.renderer) this.renderer.shadowMap.enabled = this.shadows;
+		if (this.light) this.light.castShadow = this.shadows;
+		if (this.desk) this.desk.receiveShadow = this.shadows;
+	}
+
+	registerRethrowFunction(funcName, callback, helptext){
+		this.rethrowFunctions[funcName] = {
+			name: funcName,
+			help: helptext,
+			method: callback
+		};
+	}
+
+	registerAfterThrowFunction(funcName, callback, helptext) {
+		this.afterThrowFunctions[funcName] = {
+			name: funcName,
+			help: helptext,
+			method: callback
+		};
+	}
+
+	initialize() {
+
+		let surfaces = [
+			['felt', 7],
+			['wood_table', 7],
+			['wood_tray', 7],
+			['metal', 9]
+		];
+
+		for (const [surface, numsounds] of surfaces) {
+			this.sounds_table[surface] = [];
+			for (let s=1; s <= numsounds; ++s) {
+				this.sounds_table[surface].push(new Audio(`modules/dice-so-nice/sounds/${surface}/surface_${surface}${s}.wav`));
+			}
+		}
+
+		for (let i=1; i <= 15; ++i) {
+			this.sounds_dice.push(new Audio(`modules/dice-so-nice/sounds/dicehit${i}.wav`));
+		}
+
+		this.sounds = this.dicefavorites.settings.sounds.value == '1';
+		this.volume = parseInt(this.dicefavorites.settings.volume.value);
+		this.shadows = this.dicefavorites.settings.shadows.value == '1';
+
+		this.renderer = window.WebGLRenderingContext
+			? new THREE.WebGLRenderer({ antialias: true, alpha: true })
+			: new THREE.CanvasRenderer({ antialias: true, alpha: true });
+		this.container.appendChild(this.renderer.domElement);
+		this.renderer.shadowMap.enabled = this.shadows;
+		this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+		this.renderer.setClearColor(0x000000, 0);
+
+		this.setDimensions(this.dimensions);
+
+		this.world.gravity.set(0, 0, -9.8 * 800);
+		this.world.broadphase = new CANNON.NaiveBroadphase();
+		this.world.solver.iterations = 14;
+
+		this.scene.add(new THREE.AmbientLight(this.colors.ambient, 1));
+
+		this.world.addContactMaterial(new CANNON.ContactMaterial( this.desk_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.5}));
+		this.world.addContactMaterial(new CANNON.ContactMaterial( this.barrier_body_material, this.dice_body_material, {friction: 0, restitution: 1.0}));
+		this.world.addContactMaterial(new CANNON.ContactMaterial( this.dice_body_material, this.dice_body_material, {friction: 0, restitution: 0.5}));
+		this.world.add(new CANNON.Body({mass: 0, shape: new CANNON.Plane(), material: this.desk_body_material}));
+		
+		let barrier = new CANNON.Body({mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2);
+		barrier.position.set(0, this.display.containerHeight * 0.93, 0);
+		this.world.add(barrier);
+
+		barrier = new CANNON.Body({mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+		barrier.position.set(0, -this.display.containerHeight * 0.93, 0);
+		this.world.add(barrier);
+
+		barrier = new CANNON.Body({mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -Math.PI / 2);
+		barrier.position.set(this.display.containerWidth * 0.93, 0, 0);
+		this.world.add(barrier);
+
+		barrier = new CANNON.Body({mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
+		barrier.position.set(-this.display.containerWidth * 0.93, 0, 0);
+		this.world.add(barrier);
+
+		if (this.showdebugtracer) {
+			//raycaster.setFromCamera( this.mouse.pos, this.camera );
+			this.rayvisual = new THREE.ArrowHelper(this.raycaster.ray.direction, this.camera.position, 1000, 0xff0000);
+			this.rayvisual.headWidth = this.rayvisual.headLength * 0.005;
+			this.scene.add(this.rayvisual);
+		}
+
+		this.renderer.render(this.scene, this.camera);
+	}
+
+	setDimensions(dimensions) {
+		this.display.currentWidth = this.container.clientWidth / 2;
+		this.display.currentHeight = this.container.clientHeight / 2;
+		if (this.dimensions) {
+			this.display.containerWidth = this.dimensions.w;
+			this.display.containerHeight = this.dimensions.h;
+		} else {
+			this.display.containerWidth = this.display.currentWidth;
+			this.display.containerHeight = this.display.currentHeight;
+		}
+		this.display.aspect = Math.min(this.display.currentWidth / this.display.containerWidth, this.display.currentHeight / this.display.containerHeight);
+		this.display.scale = Math.sqrt(this.display.containerWidth * this.display.containerWidth + this.display.containerHeight * this.display.containerHeight) / 13;
+
+		this.renderer.setSize(this.display.currentWidth * 2, this.display.currentHeight * 2);
+
+		this.cameraHeight.max = this.display.currentHeight / this.display.aspect / Math.tan(10 * Math.PI / 180);
+
+		this.cameraHeight.medium = this.cameraHeight.max / 1.5;
+		this.cameraHeight.far = this.cameraHeight.max;
+		this.cameraHeight.close = this.cameraHeight.max / 2;
+
+		if (this.camera) this.scene.remove(this.camera);
+		this.camera = new THREE.PerspectiveCamera(20, this.display.currentWidth / this.display.currentHeight, 1, this.cameraHeight.max * 1.3);
+
+		switch (this.animstate) {
+			case 'selector':
+				this.camera.position.z = this.selector.dice.length > 9 ? this.cameraHeight.far : (this.selector.dice.length < 6 ? this.cameraHeight.close : this.cameraHeight.medium);
+				break;
+			case 'throw': case 'afterthrow': default: this.camera.position.z = this.cameraHeight.far;
+
+		}
+
+		this.camera.lookAt(new THREE.Vector3(0,0,0));
+		
+		const maxwidth = Math.max(this.display.containerWidth, this.display.containerHeight);
+
+		if (this.light) this.scene.remove(this.light);
+		this.light = new THREE.SpotLight(this.colors.spotlight, 1.0);
+		this.light.position.set(-maxwidth / 2, maxwidth / 2, maxwidth * 2);
+		this.light.target.position.set(0, 0, 0);
+		this.light.distance = maxwidth * 5;
+		this.light.castShadow = this.shadows;
+		this.light.shadow.camera.near = maxwidth / 10;
+		this.light.shadow.camera.far = maxwidth * 5;
+		this.light.shadow.camera.fov = 50;
+		this.light.shadow.bias = 0.001;
+		this.light.shadow.mapSize.width = 1024;
+		this.light.shadow.mapSize.height = 1024;
+		this.scene.add(this.light);
+
+		if (this.desk) this.scene.remove(this.desk);
+		let shadowplane = new THREE.ShadowMaterial();
+		shadowplane.opacity = 0.5;
+		this.desk = new THREE.Mesh(new THREE.PlaneGeometry(this.display.containerWidth * 6, this.display.containerHeight * 6, 1, 1), shadowplane);
+		this.desk.receiveShadow = this.shadows;
+		this.scene.add(this.desk);
+
+		if (this.rayvisual && this.showdebugtracer) {
+			this.rayvisual = new THREE.ArrowHelper(this.raycaster.ray.direction, this.raycaster.ray.origin, 1000, 0xff0000);
+			this.scene.add(this.rayvisual);
+		}
+
+		this.renderer.render(this.scene, this.camera);
+	}
+
+	vectorRand({x, y}) {
+		let angle = Math.random() * Math.PI / 5 - Math.PI / 5 / 2;
+		let vec = {
+			x: x * Math.cos(angle) - y * Math.sin(angle),
+			y: x * Math.sin(angle) + y * Math.cos(angle)
+		};
+		if (vec.x == 0) vec.x = 0.01;
+		if (vec.y == 0) vec.y = 0.01;
+		return vec;
+	}
+
+	//returns an array of vectordata objects
+	getNotationVectors(notation, vector, boost, dist){
+
+		let notationVectors = new DiceNotation(notation);
+
+		for (let i in notationVectors.set) {
+
+			const diceobj = this.dicefactory.get(notationVectors.set[i].type);
+			let numdice = notationVectors.set[i].num;
+			let operator = notationVectors.set[i].op;
+			let sid = notationVectors.set[i].sid;
+			let gid = notationVectors.set[i].gid;
+			let glvl = notationVectors.set[i].glvl;
+			let func = notationVectors.set[i].func;
+			let args = notationVectors.set[i].args;
+
+			for(let k = 0; k < numdice; k++){
+
+				let vec = this.vectorRand(vector);
+
+				vec.x /= dist;
+				vec.y /= dist;
+
+				let pos = {
+					x: this.display.containerWidth * (vec.x > 0 ? -1 : 1) * 0.9,
+					y: this.display.containerHeight * (vec.y > 0 ? -1 : 1) * 0.9,
+					z: Math.random() * 200 + 200
+				};
+
+				let projector = Math.abs(vec.x / vec.y);
+				if (projector > 1.0) pos.y /= projector; else pos.x *= projector;
+
+
+				let velvec = this.vectorRand(vector);
+
+				velvec.x /= dist;
+				velvec.y /= dist;
+
+				let velocity = { 
+					x: velvec.x * (boost * notationVectors.boost), 
+					y: velvec.y * (boost * notationVectors.boost), 
+					z: -10
+				};
+
+				let angle = {
+					x: -(Math.random() * vec.y * 5 + diceobj.inertia * vec.y),
+					y: Math.random() * vec.x * 5 + diceobj.inertia * vec.x,
+					z: 0
+				};
+
+				let axis = { 
+					x: Math.random(), 
+					y: Math.random(), 
+					z: Math.random(), 
+					a: Math.random()
+				};
+
+				notationVectors.vectors.push({ 
+					type: diceobj.type, 
+					op: operator,
+					sid,  
+					gid, 
+					glvl,
+					func, 
+					args, 
+					pos, 
+					velocity, 
+					angle, 
+					axis
+				});
+			}            
+		}
+		return notationVectors;
+	}
+
+	// swaps dice faces to match desired result
+	swapDiceFace(dicemesh, result){
+
+		const diceobj = this.dicefactory.get(dicemesh.notation.type);
+
+		if (diceobj.shape == 'd4') {
+			this.swapDiceFace_D4(dicemesh, result);
+			return;
+		}
+
+		let values = diceobj.values;
+		let value = parseInt(dicemesh.getLastValue().value);
+		result = parseInt(result);
+		
+		if (dicemesh.notation.type == 'd10' && value == 0) value = 10;
+		if (dicemesh.notation.type == 'd100' && value == 0) value = 100;
+		if (dicemesh.notation.type == 'd100' && (value > 0 && value < 10)) value *= 10;
+
+		if (dicemesh.notation.type == 'd10' && result == 0) result = 10;
+		if (dicemesh.notation.type == 'd100' && result == 0) result = 100;
+		if (dicemesh.notation.type == 'd100' && (result > 0 && result < 10)) result *= 10;
+
+		let valueindex = diceobj.values.indexOf(value);
+		let resultindex = diceobj.values.indexOf(result);
+
+		if (valueindex < 0 || resultindex < 0) return;
+		if (valueindex == resultindex) return;
+
+		// find material index for corresponding value -> face and swap them
+		// must clone the geom before modifying it
+		let geom = dicemesh.geometry.clone();
+
+		// find list of faces that use the matching material index for the given value/result
+		let geomindex_value = [];
+		let geomindex_result = [];
+
+		// it's magic but not really
+		// the mesh's materials start at index 2
+		let magic = 2;
+		// except on d10 meshes
+		if (diceobj.shape == 'd10') magic = 1;
+
+		let material_value = (valueindex+magic);
+		let material_result = (resultindex+magic);
+
+		for (var i = 0, l = geom.faces.length; i < l; ++i) {
+			const matindex = geom.faces[i].materialIndex;
+
+			if (matindex == material_value) {
+				geomindex_value.push(i);
+				continue;
+			}
+			if (matindex == material_result) {
+				geomindex_result.push(i);
+				continue;
+			}
+		}
+
+		if (geomindex_value.length <= 0 || geomindex_result.length <= 0) return;
+
+		//swap the materials
+		for(let i = 0, l = geomindex_result.length; i < l; i++) {
+			geom.faces[geomindex_result[i]].materialIndex = material_value;
+		}
+
+		for(let i = 0, l = geomindex_value.length; i < l; i++) {
+			geom.faces[geomindex_value[i]].materialIndex = material_result;
+		}
+
+		dicemesh.resultReason = 'forced';
+		dicemesh.geometry = geom;
+	}
+
+	swapDiceFace_D4(dicemesh, result) {
+		const diceobj = this.dicefactory.get(dicemesh.notation.type);
+		let value = parseInt(dicemesh.getLastValue().value);
+		result = parseInt(result);
+
+		if (!(value >= 1 && value <= 4)) return;
+
+		let num = value - result;
+		let geom = dicemesh.geometry.clone();
+        
+		for (let i = 0, l = geom.faces.length; i < l; ++i) {
+
+			let matindex = geom.faces[i].materialIndex;
+			if (matindex == 0) continue;
+
+			matindex += num - 1;
+
+			while (matindex > 4) matindex -= 4;
+			while (matindex < 1) matindex += 4;
+
+			geom.faces[i].materialIndex = matindex + 1;
+		}
+        if (num != 0) {
+            if (num < 0) num += 4;
+
+            dicemesh.material = this.dicefactory.createMaterials(diceobj, 0, 0, false, result);
+        }
+
+		dicemesh.resultReason = 'forced';
+		dicemesh.geometry = geom;
+	}
+
+	//spawns one dicemesh object from a single vectordata object
+	spawnDice(vectordata) {
+		const diceobj = this.dicefactory.get(vectordata.type);
+		if(!diceobj) return;
+
+		let dicemesh = this.dicefactory.create(diceobj.type);
+		if(!dicemesh) return;
+
+		dicemesh.notation = vectordata;
+		dicemesh.result = [];
+		dicemesh.stopped = 0;
+		dicemesh.castShadow = this.shadows;
+		dicemesh.body = new CANNON.Body({mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
+		dicemesh.body.type = CANNON.Body.DYNAMIC;
+		dicemesh.body.position.set(vectordata.pos.x, vectordata.pos.y, vectordata.pos.z);
+		dicemesh.body.quaternion.setFromAxisAngle(new CANNON.Vec3(vectordata.axis.x, vectordata.axis.y, vectordata.axis.z), vectordata.axis.a * Math.PI * 2);
+		dicemesh.body.angularVelocity.set(vectordata.angle.x, vectordata.angle.y, vectordata.angle.z);
+		dicemesh.body.velocity.set(vectordata.velocity.x, vectordata.velocity.y, vectordata.velocity.z);
+		dicemesh.body.linearDamping = 0.1;
+		dicemesh.body.angularDamping = 0.1;
+
+		dicemesh.body.addEventListener('collide', ({body, target}) => {
+			// collision events happen simultaneously for both colliding bodies
+			// all this sanity checking helps limits sounds being played
+
+			// don't play sounds if we're simulating
+			if (this.animstate == 'simulate') return;
+			if (!this.sounds || !body) return;
+
+			let volume = parseInt(this.dicefavorites.settings.volume.value) || 0;
+			if (volume <= 0) return;
+
+			let now = Date.now();
+			let currentSoundType = (body.mass > 0) ? 'dice' : 'table';
+
+			// 
+			// the idea here is that a dice clack should never be skipped in favor of a table sound
+			// if ((don't play sounds if we played one this world step, or there hasn't been enough delay) AND 'this sound IS NOT a dice clack') then 'skip it'
+			if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType != 'dice') return;
+			// also skip if it's too early and both last sound and this sound are the same
+			if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType == 'dice' && this.lastSoundType == 'dice') return;
+
+			if (body.mass > 0) { // dice to dice collision
+
+				let speed = body.velocity.length();
+				// also don't bother playing at low speeds
+				if (speed < 250) return;
+
+				let strength = 0.1;
+				let high = 12000;
+				let low = 250;
+				strength = Math.max(Math.min(speed / (high-low), 1), strength);
+
+				let sound = sounds_dice[Math.floor(Math.random() * sounds_dice.length)];
+				sound.volume = (strength * (volume/100));
+				sound.play();
+				this.lastSoundType = 'dice';
+
+
+			} else { // dice to table collision
+				let speed = target.velocity.length();
+				// also don't bother playing at low speeds
+				if (speed < 250) return;
+
+				let surface = dicefavorites.settings.surface.value || 'felt';
+				let strength = 0.1;
+				let high = 12000;
+				let low = 250;
+				strength = Math.max(Math.min(speed / (high-low), 1), strength);
+
+				let soundlist = sounds_table[surface];
+				let sound = soundlist[Math.floor(Math.random() * soundlist.length)];
+				sound.volume = (strength * (volume/100));
+				sound.play();
+				this.lastSoundType = 'table';
+			}
+
+			this.lastSoundStep = body.world.stepnumber;
+			this.lastSound = now + this.soundDelay;
+		});
+
+		this.scene.add(dicemesh);
+		this.diceList.push(dicemesh);
+		this.world.add(dicemesh.body);
+	}
+
+	//resets vectors on dice back to startign notation values for a roll after simulation.
+	resetDice(dicemesh, {pos, axis, angle, velocity}) {
+		dicemesh.stopped = 0;
+		dicemesh.body.type = CANNON.Body.DYNAMIC;
+		dicemesh.body.position.set(pos.x, pos.y, pos.z);
+		dicemesh.body.quaternion.setFromAxisAngle(new CANNON.Vec3(axis.x, axis.y, axis.z), axis.a * Math.PI * 2);
+		dicemesh.body.angularVelocity.set(angle.x, angle.y, angle.z);
+		dicemesh.body.velocity.set(velocity.x, velocity.y, velocity.z);
+		dicemesh.body.linearDamping = 0.1;
+		dicemesh.body.angularDamping = 0.1;
+	}
+
+	solverBodyStopped(physicsbody) {
+		let errorMargin = 6;
+		let angular = physicsbody.angularVelocity;
+		let velocity = physicsbody.velocity;
+		return (
+			Math.abs(angular.x) < errorMargin &&
+			Math.abs(angular.y) < errorMargin &&
+			Math.abs(angular.z) < errorMargin &&
+			Math.abs(velocity.x) < errorMargin &&
+			Math.abs(velocity.y) < errorMargin &&
+			Math.abs(velocity.z) < errorMargin
+		);
+	}
+
+	throwFinished()  {
+		let stopped = 0;
+		let stoptimer = (this.framerate * 60) * 50; // 10 more iterations
+		if (this.iteration > 1000) return true;
+		if (this.iteration < (10 / this.framerate)) {
+
+			for (let i=0, len=this.diceList.length; i < len; ++i) {
+				let dicemesh = this.diceList[i];
+
+				// use a stoptimer to let the dice settle a bit before reading
+				if (this.solverBodyStopped(dicemesh.body)) {
+
+					if (dicemesh.stopped == 0) {
+						dicemesh.stopped = iteration + stoptimer;
+					}
+
+					if(dicemesh.stopped < this.iteration) {
+						++stopped;
+
+						// store value and check for rerolls on second to last frae
+						// before declaring this dice as stopped
+						if (dicemesh.stopped == this.iteration-1) {
+
+							// all dice in a set/dice group will have the same function and arguments due to sorting beforehand
+							// this means the list passed in is the set of dice that need to be affected by this function
+							let diceFunc = (dicemesh.notation.func) ? dicemesh.notation.func.toLowerCase() : '';
+
+							dicemesh.storeRolledValue();
+
+							if (diceFunc != '') {
+
+								diceFunc = dicemesh.notation.func.toLowerCase();
+
+								let funcdata = this.rethrowFunctions[diceFunc];	
+
+								let reroll = false;
+								if (funcdata && funcdata.method) {
+									let method = funcdata.method;
+
+									let diceFuncArgs = dicemesh.notation.args || '';
+									reroll = funcdata.method(dicemesh, diceFuncArgs);
+								}
+
+								if (reroll) {
+									--stopped;
+									dicemesh.rerolls += 1;
+									dicemesh.resultReason = 'reroll';
+									dicemesh.body.angularVelocity = new CANNON.Vec3(25, 25, 25);
+									dicemesh.body.velocity = new CANNON.Vec3(0, 0, 3000);
+
+								// if not rerolling by now, freeze the physics
+								// this prevents rerolls from changing other dice
+								} else {
+
+									dicemesh.body.type = CANNON.Body.KINEMATIC;
+
+								}
+							}
+						}
+					}
+				} else {
+					dicemesh.stopped = 0;
+				}
+			}
+		}
+		return stopped == this.diceList.length;
+	}
+
+	simulateThrow() {
+		this.animstate = 'simulate';
+		this.iteration = 0;
+		this.settle_time = 0;
+		this.rolling = true;
+
+		while (!this.throwFinished()) {
+			++this.iteration;
+			this.world.step(this.framerate);
+		}
+	}
+
+	animateThrow(threadid, callback, notationVectors){
+		this.animstate = 'throw';
+		let time = (new Date()).getTime();
+		let time_diff = (time - this.last_time) / 1000;
+		if (time_diff > 3) time_diff = this.framerate;
+		++this.iteration;
+
+		// use optional adaptive timestep
+		// for singleplayer use only
+		// this method desyncs whe networked
+		if (this.adaptive_timestep) {
+			while (time_diff > this.framerate * 1.1) {
+				this.world.step(this.framerate);
+				time_diff -= this.framerate;
+			}
+			this.world.step(time_diff);
+		} else {
+			this.world.step(this.framerate);
+		}
+
+		// update physics interactions visually
+		for (let i in this.scene.children) {
+			let interact = this.scene.children[i];
+			if (interact.body != undefined) {
+				interact.position.copy(interact.body.position);
+				interact.quaternion.copy(interact.body.quaternion);
+			}
+		}
+
+		this.renderer.render(this.scene, this.camera);
+		this.last_time = this.last_time ? time : (new Date()).getTime();
+
+		// roll finished
+		if (this.running == threadid && this.throwFinished()) {
+			this.running = false;
+			this.rolling = false;
+			if(callback) callback(notationVectors);
+
+			
+			this.running = (new Date()).getTime();
+			this.animateAfterThrow(this.running);
+			return;
+		}
+
+		// roll not finished, keep animating
+		if (this.running == threadid) {
+			((call, tid, at, aftercall, vecs) => {
+				if (!at && time_diff < this.framerate) {
+					setTimeout(() => { requestAnimationFrame(() => { call(tid, aftercall, vecs); }); }, (this.framerate - time_diff) * 1000);
+				} else {
+					requestAnimationFrame(() => { call(tid, aftercall, vecs); });
+				}
+			})(this.animateThrow, threadid, this.adaptive_timestep, callback, notationVectors);
+		}
+	}
+
+	animateAfterThrow(threadid) {
+		this.animstate = 'afterthrow';
+		let time = (new Date()).getTime();
+		let time_diff = (time - this.last_time) / 1000;
+		if (time_diff > 3) time_diff = this.framerate;
+
+		this.raycaster.setFromCamera( this.mouse.pos, this.camera );
+		if (this.rayvisual) this.rayvisual.setDirection(this.raycaster.ray.direction);
+		let intersects = this.raycaster.intersectObjects(this.diceList);
+		if ( intersects.length > 0 ) {
+			//setSelected(intersects[0].object);
+		} else {
+			//setSelected();
+		}
+
+		this.last_time = time;
+		this.renderer.render(this.scene, this.camera);
+		if (this.running == threadid) {
+			((call, tid, at) => {
+				if (!at && time_diff < this.framerate) {
+					setTimeout(() => { requestAnimationFrame(() => { call(tid); }); }, (this.framerate - time_diff) * 1000);
+				} else {
+					requestAnimationFrame(() => { call(tid); });
+				}
+			})(this.animateAfterThrow, threadid, this.adaptive_timestep);
+		}
+	}
+
+	start_throw(notation, before_roll, after_roll) {
+		if (this.rolling) return;
+
+		let vector = { x: (Math.random() * 2 - 1) * this.display.currentWidth, y: -(Math.random() * 2 - 1) * this.display.currentHeight };
+		let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+		let boost = (Math.random() + 3) * dist;
+
+		let res = this.getNotationVectors(notation, vector, boost, dist);
+
+		//temp
+		let colorset = "random";
+		let texture = "";
+
+		if (colorset.length > 0 || texture.length > 0) 
+			DiceColors.applyColorSet(res.colorset, texture, false);
+
+		let notationVectors = new DiceNotation(res.notation);
+		notationVectors.vectors = res.vectors;
+
+		if (before_roll) before_roll.call(this, notationVectors.vectors, notationVectors.notation, roll);
+		this.rollDice(notationVectors,after_roll);
+	}
+
+	clearDice() {
+		this.running = false;
+		let dice;
+		while (dice = this.diceList.pop()) {
+			this.scene.remove(dice); 
+			if (dice.body) this.world.remove(dice.body);
+		}
+		if (this.pane) this.scene.remove(this.pane);
+		this.renderer.render(this.scene, this.camera);
+
+		setTimeout(() => { this.renderer.render(this.scene, this.camera); }, 100);
+	}
+
+	rollDice(notationVectors, callback){
+
+		if (notationVectors.error) {
+			callback();
+			return;
+		}
+
+		this.camera.position.z = this.cameraHeight.far;
+		this.clearDice();
+
+		for (let i=0, len=notationVectors.vectors.length; i < len; ++i) {
+			this.spawnDice(notationVectors.vectors[i]);
+		}
+		this.simulateThrow();
+		
+		this.iteration = 0;
+		this.settle_time = 0;
+
+		//check forced results, fix dice faces if necessary
+		if (notationVectors.result && notationVectors.result.length > 0) {
+			for (let i in notationVectors.result) {
+				let dicemesh = this.diceList[i];
+				if (!dicemesh) continue;
+				if (dicemesh.getLastValue().value == notationVectors.result[i]) continue;
+				this.swapDiceFace(dicemesh, notationVectors.result[i]);
+			}
+		}
+
+		//reset dice vectors
+		for (let i=0, len=this.diceList.length; i < len; ++i) {
+			if (!this.diceList[i]) continue;
+
+			if (this.diceList[i].resultReason != 'forced') {
+				this.diceList[i].result = [];
+			}
+
+			this.resetDice(this.diceList[i], notationVectors.vectors[i]);
+		}
+
+		// animate the previously simulated roll
+		this.rolling = true;
+		this.running = (new Date()).getTime();
+		this.last_time = 0;
+		this.animateThrow(running, callback, notationVectors);
+
+	}
+}

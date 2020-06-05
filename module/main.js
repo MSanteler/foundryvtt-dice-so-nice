@@ -1,4 +1,7 @@
-import {DiceBox} from "./dice.js";
+import {DiceFactory} from './DiceFactory.js';
+import {DiceFavorites} from './DiceFavorites.js';
+import {DiceFunctions} from './DiceFunctions.js';
+import {DiceBox} from './DiceBox.js';
 
 Hooks.once('init', () => {
 
@@ -162,13 +165,24 @@ export class Dice3D {
      */
     _buildDiceBox() {
         const config = game.settings.get('dice-so-nice', 'settings');
-        this.box = new DiceBox(this.canvas[0], {
+
+        this.DiceFavorites = new DiceFavorites();
+        this.DiceFactory = new DiceFactory();
+        this.box = new DiceBox(this.canvas[0], { w: 500, h: 300 }, this.DiceFactory, this.DiceFavorites);
+		//$t.DiceBox.selector.dice = ['df', 'd4', 'd6', 'd8', 'd10', 'd100', 'd12', 'd20'];
+		this.box.initialize();
+
+		this.box.volume = parseInt(this.DiceFavorites.settings.volume.value);
+		this.box.sounds = this.DiceFavorites.settings.sounds.value == '1';
+
+		this.DiceFunctions = new DiceFunctions(this.box);
+        /*this.box = new DiceBox(this.canvas[0], {
             labelColor: config.labelColor,
             diceColor: config.diceColor,
             autoscale: config.autoscale,
             scale: config.scale,
             speed: config.speed ? config.speed : 1
-        });
+        });*/
     }
 
     /**
@@ -270,15 +284,9 @@ export class Dice3D {
             if(this.isEnabled() && !this.box.rolling) {
                 this._beforeShow();
                 this.box.start_throw(
-                    () => {
-                        let notation = this.box.parse_notation(formula);
-                        if(notation.error) {
-                            throw new Error("Roll data contains errors");
-                        }
-                        return notation;
-                    },
+                    formula,
                     (vectors, notation, callback) => {
-                        AudioHelper.play({src: CONFIG.sounds.dice});
+                        //AudioHelper.play({src: CONFIG.sounds.dice});
                         callback(results);
                     },
                     () => {
@@ -323,6 +331,208 @@ export class Dice3D {
                 }
             }, config.timeBeforeHide);
         }
+    }
+
+    copyto(obj, res) {
+        if (obj == null || typeof obj !== 'object') return obj;
+        if (obj instanceof Array) {
+            for (var i = obj.length - 1; i >= 0; --i)
+                res[i] = Dice3D.copy(obj[i]);
+        }
+        else {
+            for (var i in obj) {
+                if (obj.hasOwnProperty(i))
+                    res[i] = Dice3D.copy(obj[i]);
+            }
+        }
+        return res;
+    }
+
+    copy(obj) {
+        if (!obj) return obj;
+        return Dice3D.copyto(obj, new obj.constructor());
+    }
+
+    hidden(obj, hidden, display = 'block') {
+        if(!obj) return;
+        obj.style.display = (hidden) ? 'none' : display;
+        obj.style.visibility = (hidden) ? 'hidden' : 'visible';
+    }
+
+    element(name, props, place, content) {
+        var dom = document.createElement(name);
+        if (props) for (var i in props) dom.setAttribute(i, props[i]);
+        if (place) place.appendChild(dom);
+        if (content !== undefined) Dice3D.inner(content, dom);
+        return dom;
+    }
+
+    inner(obj, sel) {
+        sel.appendChild(obj.nodeName != undefined ? obj : document.createTextNode(obj));
+        return sel;
+    }
+
+    id(id) {
+        return document.getElementById(id);
+    }
+
+    set(sel, props) {
+        for (var i in props) sel.setAttribute(i, props[i]);
+        return sel;
+    }
+
+    selectByValue(sel, value) {
+        for(var i=0;i<sel.options.length;i++){
+            if (sel.options[i].value == value) {
+                sel.selectedIndex = i;
+                return;
+            }
+        }
+        sel.selectedIndex = -1;
+    }
+
+    clas(sel, oldclass, newclass) {
+        var oc = oldclass ? oldclass.split(/\s+/) : [],
+            nc = newclass ? newclass.split(/\s+/) : [],
+            classes = (sel.getAttribute('class') || '').split(/\s+/);
+        if (!classes[0]) classes = [];
+        for (var i in oc) {
+            var ind = classes.indexOf(oc[i]);
+            if (ind >= 0) classes.splice(ind, 1);
+        }
+        for (var i in nc) {
+            if (nc[i] && classes.indexOf(nc[i]) < 0) classes.push(nc[i]);
+        }
+        sel.setAttribute('class', classes.join(' '));
+    }
+
+    empty(sel) {
+        if (sel.childNodes)
+            while (sel.childNodes.length)
+                sel.removeChild(sel.firstChild);
+    }
+
+    remove(sel) {
+        if (sel) {
+            if (sel.parentNode) sel.parentNode.removeChild(sel);
+            else for (var i = sel.length - 1; i >= 0; --i)
+                sel[i].parentNode.removeChild(sel[i]);
+        }
+    }
+
+    bind(sel, eventname, func, bubble) {
+        if (!sel) return;
+        if (eventname.constructor === Array) {
+            for (var i in eventname)
+                sel.addEventListener(eventname[i], func, bubble ? bubble : false);
+        }
+        else
+            sel.addEventListener(eventname, func, bubble ? bubble : false);
+    }
+
+    unbind(sel, eventname, func, bubble) {
+        if (eventname.constructor === Array) {
+            for (var i in eventname)
+                sel.removeEventListener(eventname[i], func, bubble ? bubble : false);
+        }
+        else
+            sel.removeEventListener(eventname, func, bubble ? bubble : false);
+    }
+
+    one(sel, eventname, func, bubble) {
+        var one_func = function(e) {
+            func.call(this, e);
+            Dice3D.unbind(sel, eventname, one_func, bubble);
+        };
+        Dice3D.bind(sel, eventname, one_func, bubble);
+    }
+
+    raise_event(sel, eventname, bubble, cancelable) {
+        var evt = document.createEvent('UIEvents');
+        evt.initEvent(eventname, bubble == undefined ? true : bubble,
+                cancelable == undefined ? true : cancelable);
+        sel.dispatchEvent(evt);
+    }
+
+    raise(sel, eventname, params, bubble, cancelable) {
+        var ev = document.createEvent("CustomEvent");
+        ev.initCustomEvent(eventname, bubble, cancelable, params);
+        sel.dispatchEvent(ev);
+    }
+
+    get_elements_by_class(classes, node) {
+        return (node || document).getElementsByClassName(classes);
+    }
+
+    uuid() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    get_url_params() {
+        var params = window.location.search.substring(1).split("&");
+        var res = {};
+        for (var i in params) {
+            var keyvalue = params[i].split("=");
+            res[keyvalue[0]] = decodeURI(keyvalue[1]);
+        }
+        return res;
+    }
+
+    get_mouse_coords(ev) {
+        if (ev && ev.changedTouches && ev.changedTouches.length > 0) return { x: ev.changedTouches[0].clientX, y: ev.changedTouches[0].clientY };
+        return { x: ev.clientX, y: ev.clientY };
+    }
+
+    deferred() {
+        var solved = false, callbacks = [], args = [];
+        function solve() {
+            while (callbacks.length) {
+                callbacks.shift().apply(this, args);
+            }
+        }
+        return {
+            promise: function() {
+                return {
+                    then: function(callback) {
+                        var deferred = Dice3D.deferred(), promise = deferred.promise();
+                        callbacks.push(function() { 
+                            var res = callback.apply(this, arguments);
+                            if (res && 'done' in res) res.done(deferred.resolve);
+                            else deferred.resolve.apply(this, arguments); 
+                        });
+                        return promise;
+                    },
+                    done: function(callback) {
+                        callbacks.push(callback);
+                        if (solved) solve();
+                        return this;
+                    },
+                    cancel: function() {
+                        callbacks = [];
+                    }
+                };
+            },
+            resolve: function() {
+                solved = true;
+                args = Array.prototype.slice.call(arguments, 0);
+                solve();
+            }
+        };
+    }
+
+    when(promises) {
+        var deferred = Dice3D.deferred();
+        var count = promises.length, ind = 0;
+        if (count == 0) deferred.resolve();
+        for (var i = 0; i < count; ++i) {
+            promises[i].done(function() {
+                if (++ind == count) deferred.resolve();
+            });
+        }
+        return deferred.promise();
     }
 }
 
