@@ -154,30 +154,31 @@ export class DiceBox {
 		this.world.gravity.set(0, 0, -9.8 * 800);
 		this.world.broadphase = new CANNON.NaiveBroadphase();
 		this.world.solver.iterations = 14;
+		this.world.allowSleep = true;
 
 		this.scene.add(new THREE.AmbientLight(this.colors.ambient, 1));
 
 		this.world.addContactMaterial(new CANNON.ContactMaterial( this.desk_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.5}));
 		this.world.addContactMaterial(new CANNON.ContactMaterial( this.barrier_body_material, this.dice_body_material, {friction: 0, restitution: 1.0}));
 		this.world.addContactMaterial(new CANNON.ContactMaterial( this.dice_body_material, this.dice_body_material, {friction: 0, restitution: 0.5}));
-		this.world.add(new CANNON.Body({mass: 0, shape: new CANNON.Plane(), material: this.desk_body_material}));
+		this.world.add(new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.desk_body_material}));
 		
-		let barrier = new CANNON.Body({mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+		let barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2);
 		barrier.position.set(0, this.display.containerHeight * 0.93, 0);
 		this.world.add(barrier);
 
-		barrier = new CANNON.Body({mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 		barrier.position.set(0, -this.display.containerHeight * 0.93, 0);
 		this.world.add(barrier);
 
-		barrier = new CANNON.Body({mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -Math.PI / 2);
 		barrier.position.set(this.display.containerWidth * 0.93, 0, 0);
 		this.world.add(barrier);
 
-		barrier = new CANNON.Body({mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
 		barrier.position.set(-this.display.containerWidth * 0.93, 0, 0);
 		this.world.add(barrier);
@@ -345,7 +346,7 @@ export class DiceBox {
 
 	// swaps dice faces to match desired result
 	swapDiceFace(dicemesh, result){
-
+		return;
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 
 		if (diceobj.shape == 'd4') {
@@ -460,7 +461,7 @@ export class DiceBox {
 		dicemesh.result = [];
 		dicemesh.stopped = 0;
 		dicemesh.castShadow = this.shadows;
-		dicemesh.body = new CANNON.Body({mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
+		dicemesh.body = new CANNON.Body({allowSleep: true, mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
 		dicemesh.body.type = CANNON.Body.DYNAMIC;
 		dicemesh.body.position.set(vectordata.pos.x, vectordata.pos.y, vectordata.pos.z);
 		dicemesh.body.quaternion.setFromAxisAngle(new CANNON.Vec3(vectordata.axis.x, vectordata.axis.y, vectordata.axis.z), vectordata.axis.a * Math.PI * 2);
@@ -546,86 +547,18 @@ export class DiceBox {
 		dicemesh.body.angularDamping = 0.1;
 	}
 
-	solverBodyStopped(physicsbody) {
-		let errorMargin = 6;
-		let angular = physicsbody.angularVelocity;
-		let velocity = physicsbody.velocity;
-		return (
-			Math.abs(angular.x) < errorMargin &&
-			Math.abs(angular.y) < errorMargin &&
-			Math.abs(angular.z) < errorMargin &&
-			Math.abs(velocity.x) < errorMargin &&
-			Math.abs(velocity.y) < errorMargin &&
-			Math.abs(velocity.z) < errorMargin
-		);
-	}
-
 	throwFinished()  {
-		let stopped = 0;
-		let stoptimer = (this.framerate * 60) * 50; // 10 more iterations
+		
+		let stopped = true;
 		if (this.iteration > 1000) return true;
-		if (this.iteration < (10 / this.framerate)) {
-
-			for (let i=0, len=this.diceList.length; i < len; ++i) {
-				let dicemesh = this.diceList[i];
-
-				// use a stoptimer to let the dice settle a bit before reading
-				if (this.solverBodyStopped(dicemesh.body)) {
-
-					if (dicemesh.stopped == 0) {
-						dicemesh.stopped = this.iteration + stoptimer;
-					}
-
-					if(dicemesh.stopped < this.iteration) {
-						++stopped;
-
-						// store value and check for rerolls on second to last frae
-						// before declaring this dice as stopped
-						if (dicemesh.stopped == this.iteration-1) {
-
-							// all dice in a set/dice group will have the same function and arguments due to sorting beforehand
-							// this means the list passed in is the set of dice that need to be affected by this function
-							let diceFunc = (dicemesh.notation.func) ? dicemesh.notation.func.toLowerCase() : '';
-
-							dicemesh.storeRolledValue();
-
-							if (diceFunc != '') {
-
-								diceFunc = dicemesh.notation.func.toLowerCase();
-
-								let funcdata = this.rethrowFunctions[diceFunc];	
-
-								let reroll = false;
-								if (funcdata && funcdata.method) {
-									let method = funcdata.method;
-
-									let diceFuncArgs = dicemesh.notation.args || '';
-									reroll = funcdata.method(dicemesh, diceFuncArgs);
-								}
-
-								if (reroll) {
-									--stopped;
-									dicemesh.rerolls += 1;
-									dicemesh.resultReason = 'reroll';
-									dicemesh.body.angularVelocity = new CANNON.Vec3(25, 25, 25);
-									dicemesh.body.velocity = new CANNON.Vec3(0, 0, 3000);
-
-								// if not rerolling by now, freeze the physics
-								// this prevents rerolls from changing other dice
-								} else {
-
-									dicemesh.body.type = CANNON.Body.KINEMATIC;
-
-								}
-							}
-						}
-					}
-				} else {
-					dicemesh.stopped = 0;
-				}
-			}
+		for (let i=0, len=this.diceList.length; i < len; ++i) {
+			let dicemesh = this.diceList[i];
+			if(dicemesh.body.sleepState < 2)
+				return false;
+			else if(dicemesh.result.length==0)
+				dicemesh.storeRolledValue();
 		}
-		return stopped == this.diceList.length;
+		return stopped;
 	}
 
 	simulateThrow() {
@@ -633,11 +566,13 @@ export class DiceBox {
 		this.iteration = 0;
 		this.settle_time = 0;
 		this.rolling = true;
-
+		console.time("test");
 		while (!this.throwFinished()) {
 			++this.iteration;
 			this.world.step(this.framerate);
 		}
+		console.timeEnd("test");
+		console.log(this.iteration);
 	}
 
 	animateThrow(me, threadid, callback, notationVectors){
@@ -797,12 +732,14 @@ export class DiceBox {
 			}
 
 			this.resetDice(this.diceList[i], notationVectors.vectors[i]);
+			this.diceList[i].body.sleepState = 0;
 		}
 
 		// animate the previously simulated roll
 		this.rolling = true;
 		this.running = (new Date()).getTime();
 		this.last_time = 0;
+		
 		this.animateThrow(this,this.running, callback, notationVectors);
 
 	}

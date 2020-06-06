@@ -423,16 +423,19 @@ export class DiceFactory {
 			let matindex = closest_face.materialIndex - 1;
 
 			const diceobj = game.dice3d.DiceFactory.dice[this.notation.type];
+			
 
 			if (this.shape == 'd4') {
 				console.log('matindex', matindex, 'diceobj.labels', diceobj.labels);
+				console.log("Rolled a "+matindex);
 				return {value: matindex, label: diceobj.labels[matindex-1], reason: reason};
 			}
 			if (this.shape == 'd10') matindex += 1;
 
 			let value = diceobj.values[((matindex-1) % diceobj.values.length)];
 			let label = diceobj.labels[(((matindex-1) % (diceobj.labels.length-2))+2)];
-			
+			console.log("Rolled a "+value);
+			console.log(label);
 			return {value: value, label: label, reason: reason};
 		}
 
