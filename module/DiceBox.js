@@ -441,7 +441,7 @@ export class DiceBox {
         if (num != 0) {
             if (num < 0) num += 4;
 
-            dicemesh.material = this.dicefactory.createMaterials(diceobj, 0, 0, false, result);
+            dicemesh.material = this.dicefactory.createMaterials(diceobj, 0, 0, false, num);
         }
 
 		dicemesh.resultReason = 'forced';
@@ -724,7 +724,7 @@ export class DiceBox {
 		}
 	}
 
-	start_throw(notation, callback) {
+	start_throw(notation, result, callback) {
 		if (this.rolling) return;
 
 		let vector = { x: (Math.random() * 2 - 1) * this.display.currentWidth, y: -(Math.random() * 2 - 1) * this.display.currentHeight };
@@ -732,7 +732,7 @@ export class DiceBox {
 		let boost = (Math.random() + 3) * dist;
 
 		let res = this.getNotationVectors(notation, vector, boost, dist);
-
+		
 		//temp
 		let colorset = "random";
 		let texture = "";
@@ -741,6 +741,7 @@ export class DiceBox {
 			DiceColors.applyColorSet(colorset, texture, false);
 
 		let notationVectors = new DiceNotation(res.notation);
+		notationVectors.result = result;
 		notationVectors.vectors = res.vectors;
 
 		this.rollDice(notationVectors,callback);
@@ -779,7 +780,7 @@ export class DiceBox {
 
 		//check forced results, fix dice faces if necessary
 		if (notationVectors.result && notationVectors.result.length > 0) {
-			for (let i in notationVectors.result) {
+			for (let i=0;i<notationVectors.result.length;i++) {
 				let dicemesh = this.diceList[i];
 				if (!dicemesh) continue;
 				if (dicemesh.getLastValue().value == notationVectors.result[i]) continue;

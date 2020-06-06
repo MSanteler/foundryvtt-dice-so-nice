@@ -292,7 +292,7 @@ export class Dice3D {
         return new Promise((resolve, reject) => {
             if(this.isEnabled() && !this.box.rolling) {
                 this._beforeShow();
-                this.box.start_throw(formula,() => {
+                this.box.start_throw(formula,results,() => {
                         resolve(true);
                         this._afterShow();
                     }
