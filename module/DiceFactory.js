@@ -900,7 +900,7 @@ export class DiceFactory {
             var ii = faces[i], fl = ii.length - 1;
             var aa = Math.PI * 2 / fl;
             var v0 = 1 - 1*0.8;
-            var v1 = 1 - 0.895*0.8;
+            var v1 = 1 - (0.895/1.105)*0.8;
             var v2 = 1;
             for (var j = 0; j < fl - 2; ++j) {
                 geom.faces.push(new THREE.Face3(ii[0], ii[j + 1], ii[j + 2], [geom.vertices[ii[0]],

@@ -346,7 +346,6 @@ export class DiceBox {
 
 	// swaps dice faces to match desired result
 	swapDiceFace(dicemesh, result){
-		return;
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 
 		if (diceobj.shape == 'd4') {
@@ -470,74 +469,78 @@ export class DiceBox {
 		dicemesh.body.linearDamping = 0.1;
 		dicemesh.body.angularDamping = 0.1;
 
-		dicemesh.body.addEventListener('collide', ({body, target}) => {
-			// collision events happen simultaneously for both colliding bodies
-			// all this sanity checking helps limits sounds being played
-
-			// don't play sounds if we're simulating
-			if (this.animstate == 'simulate') return;
-			if (!this.sounds || !body) return;
-
-			let volume = parseInt(this.dicefavorites.settings.volume.value) || 0;
-			if (volume <= 0) return;
-
-			let now = Date.now();
-			let currentSoundType = (body.mass > 0) ? 'dice' : 'table';
-
-			// 
-			// the idea here is that a dice clack should never be skipped in favor of a table sound
-			// if ((don't play sounds if we played one this world step, or there hasn't been enough delay) AND 'this sound IS NOT a dice clack') then 'skip it'
-			if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType != 'dice') return;
-			// also skip if it's too early and both last sound and this sound are the same
-			if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType == 'dice' && this.lastSoundType == 'dice') return;
-
-			if (body.mass > 0) { // dice to dice collision
-
-				let speed = body.velocity.length();
-				// also don't bother playing at low speeds
-				if (speed < 250) return;
-
-				let strength = 0.1;
-				let high = 12000;
-				let low = 250;
-				strength = Math.max(Math.min(speed / (high-low), 1), strength);
-
-				let sound = this.sounds_dice[Math.floor(Math.random() * this.sounds_dice.length)];
-				sound.volume = (strength * (volume/100));
-				sound.play();
-				this.lastSoundType = 'dice';
-
-
-			} else { // dice to table collision
-				let speed = target.velocity.length();
-				// also don't bother playing at low speeds
-				if (speed < 250) return;
-
-				let surface = this.dicefavorites.settings.surface.value || 'felt';
-				let strength = 0.1;
-				let high = 12000;
-				let low = 250;
-				strength = Math.max(Math.min(speed / (high-low), 1), strength);
-
-				let soundlist = this.sounds_table[surface];
-				let sound = soundlist[Math.floor(Math.random() * soundlist.length)];
-				sound.volume = (strength * (volume/100));
-				sound.play();
-				this.lastSoundType = 'table';
-			}
-
-			this.lastSoundStep = body.world.stepnumber;
-			this.lastSound = now + this.soundDelay;
-		});
+		dicemesh.body.addEventListener('collide', this.eventCollide);
 
 		this.scene.add(dicemesh);
 		this.diceList.push(dicemesh);
 		this.world.add(dicemesh.body);
 	}
 
+	eventCollide({body, target}) {
+		// collision events happen simultaneously for both colliding bodies
+		// all this sanity checking helps limits sounds being played
+
+		// don't play sounds if we're simulating
+		if (this.animstate == 'simulate') return;
+		if (!this.sounds || !body) return;
+
+		let volume = parseInt(this.dicefavorites.settings.volume.value) || 0;
+		if (volume <= 0) return;
+
+		let now = Date.now();
+		let currentSoundType = (body.mass > 0) ? 'dice' : 'table';
+
+		// 
+		// the idea here is that a dice clack should never be skipped in favor of a table sound
+		// if ((don't play sounds if we played one this world step, or there hasn't been enough delay) AND 'this sound IS NOT a dice clack') then 'skip it'
+		if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType != 'dice') return;
+		// also skip if it's too early and both last sound and this sound are the same
+		if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType == 'dice' && this.lastSoundType == 'dice') return;
+
+		if (body.mass > 0) { // dice to dice collision
+
+			let speed = body.velocity.length();
+			// also don't bother playing at low speeds
+			if (speed < 250) return;
+
+			let strength = 0.1;
+			let high = 12000;
+			let low = 250;
+			strength = Math.max(Math.min(speed / (high-low), 1), strength);
+
+			let sound = this.sounds_dice[Math.floor(Math.random() * this.sounds_dice.length)];
+			sound.volume = (strength * (volume/100));
+			sound.play();
+			this.lastSoundType = 'dice';
+
+
+		} else { // dice to table collision
+			let speed = target.velocity.length();
+			// also don't bother playing at low speeds
+			if (speed < 250) return;
+
+			let surface = this.dicefavorites.settings.surface.value || 'felt';
+			let strength = 0.1;
+			let high = 12000;
+			let low = 250;
+			strength = Math.max(Math.min(speed / (high-low), 1), strength);
+
+			let soundlist = this.sounds_table[surface];
+			let sound = soundlist[Math.floor(Math.random() * soundlist.length)];
+			sound.volume = (strength * (volume/100));
+			sound.play();
+			this.lastSoundType = 'table';
+		}
+
+		this.lastSoundStep = body.world.stepnumber;
+		this.lastSound = now + this.soundDelay;
+	}
+
 	//resets vectors on dice back to startign notation values for a roll after simulation.
 	resetDice(dicemesh, {pos, axis, angle, velocity}) {
 		dicemesh.stopped = 0;
+		this.world.remove(dicemesh.body);
+		dicemesh.body = new CANNON.Body({allowSleep: true, mass: dicemesh.body.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
 		dicemesh.body.type = CANNON.Body.DYNAMIC;
 		dicemesh.body.position.set(pos.x, pos.y, pos.z);
 		dicemesh.body.quaternion.setFromAxisAngle(new CANNON.Vec3(axis.x, axis.y, axis.z), axis.a * Math.PI * 2);
@@ -545,6 +548,10 @@ export class DiceBox {
 		dicemesh.body.velocity.set(velocity.x, velocity.y, velocity.z);
 		dicemesh.body.linearDamping = 0.1;
 		dicemesh.body.angularDamping = 0.1;
+		dicemesh.body.addEventListener('collide', this.eventCollide);
+		this.world.add(dicemesh.body);
+		dicemesh.body.sleepState = 0;
+		
 	}
 
 	throwFinished()  {
@@ -566,33 +573,26 @@ export class DiceBox {
 		this.iteration = 0;
 		this.settle_time = 0;
 		this.rolling = true;
-		console.time("test");
+		let steps = 0;
 		while (!this.throwFinished()) {
 			++this.iteration;
+			steps++;
 			this.world.step(this.framerate);
 		}
-		console.timeEnd("test");
-		console.log(this.iteration);
+		console.log(steps);
 	}
 
 	animateThrow(me, threadid, callback, notationVectors){
 		me.animstate = 'throw';
 		let time = (new Date()).getTime();
+		me.last_time = me.last_time || time - (me.framerate*1000);
 		let time_diff = (time - me.last_time) / 1000;
-		if (time_diff > 3) time_diff = me.framerate;
 		++me.iteration;
+		let neededSteps = Math.floor(time_diff / me.framerate);
 
-		// use optional adaptive timestep
-		// for singleplayer use only
-		// this method desyncs whe networked
-		if (me.adaptive_timestep) {
-			while (time_diff > me.framerate * 1.1) {
-				me.world.step(me.framerate);
-				time_diff -= me.framerate;
-			}
-			me.world.step(time_diff);
-		} else {
+		for(let i =0; i < neededSteps; i++) {
 			me.world.step(me.framerate);
+			me.steps++;
 		}
 
 		// update physics interactions visually
@@ -605,12 +605,13 @@ export class DiceBox {
 		}
 
 		me.renderer.render(me.scene, me.camera);
-		me.last_time = me.last_time ? time : (new Date()).getTime();
+		me.last_time = me.last_time + neededSteps*me.framerate*1000;
 
 		// roll finished
 		if (me.running == threadid && me.throwFinished()) {
 			me.running = false;
 			me.rolling = false;
+			console.log(me.steps);
 			if(callback) callback(notationVectors);
 
 			
@@ -662,7 +663,7 @@ export class DiceBox {
 	start_throw(notation, result, callback) {
 		if (this.rolling) return;
 
-		let vector = { x: (Math.random() * 2 - 1) * this.display.currentWidth, y: -(Math.random() * 2 - 1) * this.display.currentHeight };
+		let vector = { x: (Math.random() * 2 - 1) * this.display.currentWidth, y: -(Math.random() * 2 - 1) * this.display.currentHeight};
 		let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 		let boost = (Math.random() + 3) * dist;
 
@@ -709,9 +710,16 @@ export class DiceBox {
 			this.spawnDice(notationVectors.vectors[i]);
 		}
 		this.simulateThrow();
-		
+		this.steps = 0;
 		this.iteration = 0;
 		this.settle_time = 0;
+
+		//reset dice vectors
+		for (let i=0, len=this.diceList.length; i < len; ++i) {
+			if (!this.diceList[i]) continue;
+
+			this.resetDice(this.diceList[i], notationVectors.vectors[i]);
+		}
 
 		//check forced results, fix dice faces if necessary
 		if (notationVectors.result && notationVectors.result.length > 0) {
@@ -723,23 +731,19 @@ export class DiceBox {
 			}
 		}
 
-		//reset dice vectors
+		//reset the result
 		for (let i=0, len=this.diceList.length; i < len; ++i) {
 			if (!this.diceList[i]) continue;
 
 			if (this.diceList[i].resultReason != 'forced') {
 				this.diceList[i].result = [];
 			}
-
-			this.resetDice(this.diceList[i], notationVectors.vectors[i]);
-			this.diceList[i].body.sleepState = 0;
 		}
 
 		// animate the previously simulated roll
 		this.rolling = true;
 		this.running = (new Date()).getTime();
 		this.last_time = 0;
-		
 		this.animateThrow(this,this.running, callback, notationVectors);
 
 	}
