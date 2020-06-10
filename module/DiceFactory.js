@@ -581,6 +581,11 @@ export class DiceFactory {
 			var lineHeight = context.measureText("M").width * 1.4;
 			let textlines = text.split("\n");
 			let textstarty = (canvas.height / 2);
+			if(diceobj.shape == 'd10')
+			{
+				console.log(textstarty);
+				textstarty = textstarty*1.25;
+			}
 
 			if (textlines.length > 1) {
 				fontsize = fontsize / textlines.length;
@@ -608,7 +613,7 @@ export class DiceFactory {
 					context.fillText('  .', canvas.width / 2, textstarty);
 				}
 				textstarty += (lineHeight * 1.5);
-
+				
 			}
 
 		} else {
@@ -897,8 +902,8 @@ export class DiceFactory {
         for (var i = 0; i < faces.length; ++i) {
             var ii = faces[i], fl = ii.length - 1;
             var aa = Math.PI * 2 / fl;
-            var v0 = 1 - 1*0.8;
-            var v1 = 1 - (0.895/1.105)*0.8;
+            var v0 = 1 - 1*1;
+            var v1 = 1 - (0.895/1.105)*1;
             var v2 = 1;
             for (var j = 0; j < fl - 2; ++j) {
                 geom.faces.push(new THREE.Face3(ii[0], ii[j + 1], ii[j + 2], [geom.vertices[ii[0]],
