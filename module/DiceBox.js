@@ -480,12 +480,12 @@ export class DiceBox {
 	eventCollide({body, target}) {
 		// collision events happen simultaneously for both colliding bodies
 		// all this sanity checking helps limits sounds being played
-
+		let dicebox = game.dice3d.box;
 		// don't play sounds if we're simulating
-		if (this.animstate == 'simulate') return;
-		if (!this.sounds || !body) return;
+		if (dicebox.animstate == 'simulate') return;
+		if (!dicebox.sounds || !body) return;
 
-		let volume = parseInt(this.dicefavorites.settings.volume.value) || 0;
+		let volume = parseInt(dicebox.dicefavorites.settings.volume.value) || 0;
 		if (volume <= 0) return;
 
 		let now = Date.now();
@@ -494,9 +494,9 @@ export class DiceBox {
 		// 
 		// the idea here is that a dice clack should never be skipped in favor of a table sound
 		// if ((don't play sounds if we played one this world step, or there hasn't been enough delay) AND 'this sound IS NOT a dice clack') then 'skip it'
-		if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType != 'dice') return;
+		if ((dicebox.lastSoundStep == body.world.stepnumber || dicebox.lastSound > now) && currentSoundType != 'dice') return;
 		// also skip if it's too early and both last sound and this sound are the same
-		if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType == 'dice' && this.lastSoundType == 'dice') return;
+		if ((dicebox.lastSoundStep == body.world.stepnumber || dicebox.lastSound > now) && currentSoundType == 'dice' && dicebox.lastSoundType == 'dice') return;
 
 		if (body.mass > 0) { // dice to dice collision
 
@@ -509,10 +509,10 @@ export class DiceBox {
 			let low = 250;
 			strength = Math.max(Math.min(speed / (high-low), 1), strength);
 
-			let sound = this.sounds_dice[Math.floor(Math.random() * this.sounds_dice.length)];
+			let sound = dicebox.sounds_dice[Math.floor(Math.random() * dicebox.sounds_dice.length)];
 			sound.volume = (strength * (volume/100));
 			sound.play();
-			this.lastSoundType = 'dice';
+			dicebox.lastSoundType = 'dice';
 
 
 		} else { // dice to table collision
@@ -520,21 +520,21 @@ export class DiceBox {
 			// also don't bother playing at low speeds
 			if (speed < 250) return;
 
-			let surface = this.dicefavorites.settings.surface.value || 'felt';
+			let surface = dicebox.dicefavorites.settings.surface.value || 'felt';
 			let strength = 0.1;
 			let high = 12000;
 			let low = 250;
 			strength = Math.max(Math.min(speed / (high-low), 1), strength);
 
-			let soundlist = this.sounds_table[surface];
+			let soundlist = dicebox.sounds_table[surface];
 			let sound = soundlist[Math.floor(Math.random() * soundlist.length)];
 			sound.volume = (strength * (volume/100));
 			sound.play();
-			this.lastSoundType = 'table';
+			dicebox.lastSoundType = 'table';
 		}
 
-		this.lastSoundStep = body.world.stepnumber;
-		this.lastSound = now + this.soundDelay;
+		dicebox.lastSoundStep = body.world.stepnumber;
+		dicebox.lastSound = now + dicebox.soundDelay;
 	}
 
 	//resets vectors on dice back to startign notation values for a roll after simulation.
