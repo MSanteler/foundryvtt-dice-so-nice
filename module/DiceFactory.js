@@ -426,8 +426,6 @@ export class DiceFactory {
 			
 
 			if (this.shape == 'd4') {
-				console.log('matindex', matindex, 'diceobj.labels', diceobj.labels);
-				console.log("Rolled a "+matindex);
 				return {value: matindex, label: diceobj.labels[matindex-1], reason: reason};
 			}
 			if (this.shape == 'd10') matindex += 1;
@@ -558,9 +556,9 @@ export class DiceFactory {
 		context.globalCompositeOperation = 'source-over';
 		context.textAlign = "center";
 		context.textBaseline = "middle";
-
+		
 		if (diceobj.shape != 'd4') {
-
+			
 			// fix for some faces being weirdly rotated
 			let rotateface = this.rotate[diceobj.shape];
 			if(rotateface) {

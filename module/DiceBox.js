@@ -420,10 +420,12 @@ export class DiceBox {
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 		let value = parseInt(dicemesh.getLastValue().value);
 		result = parseInt(result);
+		if (!(value >= 1 && value <= 4))
+		{
+			return;
+		}
 
-		if (!(value >= 1 && value <= 4)) return;
-
-		let num = value - result;
+		let num = result - value;
 		let geom = dicemesh.geometry.clone();
         
 		for (let i = 0, l = geom.faces.length; i < l; ++i) {
@@ -435,12 +437,11 @@ export class DiceBox {
 
 			while (matindex > 4) matindex -= 4;
 			while (matindex < 1) matindex += 4;
-
 			geom.faces[i].materialIndex = matindex + 1;
+			
 		}
         if (num != 0) {
             if (num < 0) num += 4;
-
             dicemesh.material = this.dicefactory.createMaterials(diceobj, 0, 0, false, num);
         }
 
@@ -460,7 +461,7 @@ export class DiceBox {
 		dicemesh.result = [];
 		dicemesh.stopped = 0;
 		dicemesh.castShadow = this.shadows;
-		dicemesh.body = new CANNON.Body({allowSleep: true, mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
+		dicemesh.body = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 100, mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
 		dicemesh.body.type = CANNON.Body.DYNAMIC;
 		dicemesh.body.position.set(vectordata.pos.x, vectordata.pos.y, vectordata.pos.z);
 		dicemesh.body.quaternion.setFromAxisAngle(new CANNON.Vec3(vectordata.axis.x, vectordata.axis.y, vectordata.axis.z), vectordata.axis.a * Math.PI * 2);
@@ -540,7 +541,7 @@ export class DiceBox {
 	resetDice(dicemesh, {pos, axis, angle, velocity}) {
 		dicemesh.stopped = 0;
 		this.world.remove(dicemesh.body);
-		dicemesh.body = new CANNON.Body({allowSleep: true, mass: dicemesh.body.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
+		dicemesh.body = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 100, mass: dicemesh.body.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
 		dicemesh.body.type = CANNON.Body.DYNAMIC;
 		dicemesh.body.position.set(pos.x, pos.y, pos.z);
 		dicemesh.body.quaternion.setFromAxisAngle(new CANNON.Vec3(axis.x, axis.y, axis.z), axis.a * Math.PI * 2);
@@ -579,7 +580,6 @@ export class DiceBox {
 			steps++;
 			this.world.step(this.framerate);
 		}
-		console.log(steps);
 	}
 
 	animateThrow(me, threadid, callback, notationVectors){
@@ -611,7 +611,6 @@ export class DiceBox {
 		if (me.running == threadid && me.throwFinished()) {
 			me.running = false;
 			me.rolling = false;
-			console.log(me.steps);
 			if(callback) callback(notationVectors);
 
 			
@@ -663,7 +662,7 @@ export class DiceBox {
 	start_throw(notation, result, callback) {
 		if (this.rolling) return;
 
-		let vector = { x: (Math.random() * 2 - 1) * this.display.currentWidth, y: -(Math.random() * 2 - 1) * this.display.currentHeight};
+		let vector = { x: (Math.random() * 2 - 0.5) * this.display.currentWidth, y: -(Math.random() * 2 - 0.5) * this.display.currentHeight};
 		let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 		let boost = (Math.random() + 3) * dist;
 
