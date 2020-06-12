@@ -68,7 +68,7 @@ const data = {
     whisper: [],
     blind: false
 };
-game.dice3d.show(data).then(displayed => { /*do you stuff after the animation */  }); 
+game.dice3d.show(data).then(displayed => { /*do your stuff after the animation */  }); 
 ```
 The configuration must contain two parameters:
 

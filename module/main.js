@@ -252,6 +252,8 @@ export class Dice3D {
      * Show the 3D Dice animation for the
      *
      * @param roll an instance of Roll class to show 3D dice animation.
+     * @param whisper
+     * @param blind
      * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
      */
     showForRoll(roll, whisper, blind) {
@@ -274,7 +276,7 @@ export class Dice3D {
 
                 game.socket.emit("module.dice-so-nice", mergeObject(data, { user: game.user._id, dsnConfig: game.settings.get('dice-so-nice', 'settings')}), () => {
 
-                    if(!data.blind || data.whisper.includes(game.user._id)) {
+                    if(!data.blind || data.whisper.map(user => user._id).includes(game.user._id)) {
                         this._showAnimation(data.formula, data.results, data.dsnConfig).then(displayed => {
                             resolve(displayed);
                         });
@@ -292,7 +294,7 @@ export class Dice3D {
      *
      * @param formula
      * @param results
-     * @returns {Promise<unknown>}
+     * @returns {Promise<boolean>}
      * @private
      */
     _showAnimation(formula, results, dsnConfig) {
