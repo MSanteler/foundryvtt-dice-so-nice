@@ -79,6 +79,16 @@ export const TEXTURELIST = {
 		composite: 'multiply',
 		source: './textures/astral.png'
 	},
+	'wood': {
+		name: 'DICESONICE.TextureWood',
+		composite: 'multiply',
+		source: './textures/wood.png'
+	},
+	'metal': {
+		name: 'DICESONICE.TextureMetal',
+		composite: 'multiply',
+		source: './textures/metal.png'
+	},
 	'none': {
 		name: 'DICESONICE.TextureNone',
 		composite: 'source-over',

@@ -103,6 +103,8 @@ export class DiceFactory {
 
 	setScale(scale){
 		this.baseScale = scale;
+		this.geometries = {};
+		this.materials_cache = {};
 	}
 
 	register(diceobj) {

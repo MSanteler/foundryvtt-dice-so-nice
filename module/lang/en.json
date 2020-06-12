@@ -45,6 +45,8 @@
     "DICESONICE.TextureTiger" : "Tiger",
     "DICESONICE.TextureCheetah" : "Cheetah",
     "DICESONICE.TextureAstralSea" : "Astral Sea",
+    "DICESONICE.TextureWood" : "Wood",
+    "DICESONICE.TextureMetal" : "Metallo",
     "DICESONICE.TextureNone" : "None / Auto (Theme)",
     "DICESONICE.ColorRadiant" : "Radiant",
     "DICESONICE.ColorFire" : "Fire",

@@ -466,9 +466,11 @@ class DiceConfig extends FormApplication {
 
         this.toggleHideAfterRoll();
         this.toggleAutoScale();
+        this.toggleCustomColors();
 
         html.find('input[name="hideAfterRoll"]').change(this.toggleHideAfterRoll.bind(this));
         html.find('input[name="autoscale"]').change(this.toggleAutoScale.bind(this));
+        html.find('select[name="colorset"]').change(this.toggleCustomColors.bind(this));
         html.find('input,select').change(this.onApply.bind(this));
     }
 
@@ -481,6 +483,17 @@ class DiceConfig extends FormApplication {
     toggleAutoScale() {
         let autoscale = $('input[name="autoscale"]')[0].checked;
         $('input[name="scale"]').prop("disabled", autoscale);
+        $('.range-value').css({ 'opacity' : autoscale ? 0.4 : 1});
+    }
+
+    toggleCustomColors() {
+        let colorset = $('select[name="colorset"]').val() !== 'custom';
+        $('input[name="labelColor"]').prop("disabled", colorset);
+        $('input[name="diceColor"]').prop("disabled", colorset);
+        $('input[name="outlineColor"]').prop("disabled", colorset);
+        $('input[name="labelColorSelector"]').prop("disabled", colorset);
+        $('input[name="diceColorSelector"]').prop("disabled", colorset);
+        $('input[name="outlineColorSelector"]').prop("disabled", colorset);
     }
 
     onApply(event) {
@@ -493,7 +506,7 @@ class DiceConfig extends FormApplication {
                 diceColor: $('input[name="diceColor"]').val(),
                 outlineColor: $('input[name="outlineColor"]').val(),
                 autoscale: false,
-                scale: 300,
+                scale: 70,
                 shadowQuality:$('select[name="shadowQuality"]').val(),
                 colorset: $('select[name="colorset"]').val(),
                 texture: $('select[name="texture"]').val(),

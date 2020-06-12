@@ -243,10 +243,12 @@ export class DiceBox {
 
 	update(config) {
         if(config.autoscale) {
-            this.display.scale = Math.sqrt(this.w * this.w + this.h * this.h) / 13;
+            this.display.scale = Math.sqrt(this.display.containerWidth * this.display.containerWidth + this.display.containerHeight * this.display.containerHeight) / 13;
         } else {
             this.display.scale = config.scale
         }
+		this.dicefactory.setScale(this.display.scale);
+
 		this.speed = parseInt(config.speed,10);
 		this.shadows = config.shadowQuality != "none";
 
