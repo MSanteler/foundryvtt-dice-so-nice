@@ -16,37 +16,16 @@ Hooks.once('init', () => {
 
 Hooks.once('ready', () => {
 
-    let defaultOptions = {
-        enabled: true,
-        labelColor: Utils.contrastOf(game.user.color),
-        diceColor: game.user.color,
-        outlineColor: game.user.color,
-        texture: "none",
-        colorset: "custom",
-        hideAfterRoll: true,
-        timeBeforeHide: 2000,
-        hideFX: 'fadeOut',
-        sounds: true,
-        autoscale: true,
-        scale: 75,
-        speed: 1,
-        shadowQuality: 'high',
-        sounds: true
-    };
-
     game.settings.register("dice-so-nice", "settings", {
         name: "3D Dice Settings",
         scope: "client",
-        default: defaultOptions,
+        default: Dice3D.DEFAULT_OPTIONS,
         type: Object,
         config: false,
         onChange: settings => {
             game.dice3d.update(settings);
         }
     });
-
-    //Force default value for upgraded versions
-    game.settings.set("dice-so-nice", "settings", mergeObject(defaultOptions,game.settings.get("dice-so-nice", "settings")));
 
     game.dice3d = new Dice3D();
 
@@ -161,6 +140,25 @@ class Utils {
  */
 export class Dice3D {
 
+    static get DEFAULT_OPTIONS() {
+        return {
+            enabled: true,
+            labelColor: Utils.contrastOf(game.user.color),
+            diceColor: game.user.color,
+            outlineColor: game.user.color,
+            texture: "none",
+            colorset: "custom",
+            hideAfterRoll: true,
+            timeBeforeHide: 2000,
+            hideFX: 'fadeOut',
+            autoscale: true,
+            scale: 75,
+            speed: 1,
+            shadowQuality: 'high',
+            sounds: true
+        };
+    }
+
     /**
      * Ctor. Create and initialize a new Dice3d.
      */
@@ -198,7 +196,7 @@ export class Dice3D {
      * @private
      */
     _buildDiceBox() {
-        const config = game.settings.get('dice-so-nice', 'settings');
+        const config = mergeObject(Dice3D.DEFAULT_OPTIONS, game.settings.get("dice-so-nice", "settings"));
 
         this.DiceFactory = new DiceFactory();
         this.box = new DiceBox(this.canvas[0], this.DiceFactory, config);
@@ -418,7 +416,7 @@ class DiceConfig extends FormApplication {
             id: "dice-config",
             template: "modules/dice-so-nice/templates/dice-config.html",
             width: 500,
-            height: 600,
+            height: 820,
             closeOnSubmit: true
         })
     }
@@ -487,20 +485,24 @@ class DiceConfig extends FormApplication {
 
     onApply(event) {
         event.preventDefault();
-        let config = {
-            labelColor: $('input[name="labelColor"]').val(),
-            diceColor: $('input[name="diceColor"]').val(),
-            outlineColor: $('input[name="outlineColor"]').val(),
-            autoscale: false,
-            scale: 300,
-            shadowQuality:$('select[name="shadowQuality"]').val(),
-            colorset: $('select[name="colorset"]').val(),
-            texture: $('select[name="texture"]').val(),
-            sounds: $('input[name="sounds"]').val() == "on"
-        };
 
-        this.box.update(config);
-        this.box.showcase(config);
+        setTimeout(() => {
+
+            let config = {
+                labelColor: $('input[name="labelColor"]').val(),
+                diceColor: $('input[name="diceColor"]').val(),
+                outlineColor: $('input[name="outlineColor"]').val(),
+                autoscale: false,
+                scale: 300,
+                shadowQuality:$('select[name="shadowQuality"]').val(),
+                colorset: $('select[name="colorset"]').val(),
+                texture: $('select[name="texture"]').val(),
+                sounds: $('input[name="sounds"]').val() == "on"
+            };
+
+            this.box.update(config);
+            this.box.showcase(config);
+        }, 100);
     }
 
     async _updateObject(event, formData) {
