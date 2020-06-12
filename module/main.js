@@ -1,12 +1,10 @@
 import {DiceFactory} from './DiceFactory.js';
-import {DiceFavorites} from './DiceFavorites.js';
-import {DiceFunctions} from './DiceFunctions.js';
 import {DiceBox} from './DiceBox.js';
 import {DiceColors, TEXTURELIST, COLORSETS} from './DiceColors.js';
 
 Hooks.once('init', () => {
 
-    game.settings.registerMenu("module", "dice-so-nice", {
+    game.settings.registerMenu("dice-so-nice", "dice-so-nice", {
         name: "DICESONICE.config",
         label: "DICESONICE.configTitle",
         hint: "DICESONICE.configHint",
@@ -18,26 +16,37 @@ Hooks.once('init', () => {
 
 Hooks.once('ready', () => {
 
+    let defaultOptions = {
+        enabled: true,
+        labelColor: Utils.contrastOf(game.user.color),
+        diceColor: game.user.color,
+        outlineColor: game.user.color,
+        texture: "none",
+        colorset: "custom",
+        hideAfterRoll: true,
+        timeBeforeHide: 2000,
+        hideFX: 'fadeOut',
+        sounds: true,
+        autoscale: true,
+        scale: 75,
+        speed: 1,
+        shadowQuality: 'high',
+        sounds: true
+    };
+
     game.settings.register("dice-so-nice", "settings", {
         name: "3D Dice Settings",
         scope: "client",
-        default: {
-            enabled: true,
-            labelColor: Utils.contrastOf(game.user.color),
-            diceColor: game.user.color,
-            hideAfterRoll: true,
-            timeBeforeHide: 2000,
-            hideFX: 'fadeOut',
-            autoscale: true,
-            scale: 75,
-            speed: 1
-        },
+        default: defaultOptions,
         type: Object,
         config: false,
         onChange: settings => {
             game.dice3d.update(settings);
         }
     });
+
+    //Force default value for upgraded versions
+    game.settings.set("dice-so-nice", "settings", mergeObject(defaultOptions,game.settings.get("dice-so-nice", "settings")));
 
     game.dice3d = new Dice3D();
 
@@ -58,7 +67,8 @@ Hooks.once('ready', () => {
 
         game.dice3d.showForRoll(this, whisper, blind).then(displayed => {
             chatData = displayed ? mergeObject(chatData, { sound: null }) : chatData;
-            ChatMessage.create(chatData);
+            const messageOptions = {rollMode};
+            CONFIG.ChatMessage.entityClass.create(chatData, messageOptions);
         });
 
         return chatData;
@@ -69,7 +79,6 @@ Hooks.once('ready', () => {
 
 		// init colorset textures
         DiceColors.initColorSets();
-		//DiceColors.applyColorSet('random');
 	});
 });
 
@@ -78,9 +87,9 @@ Hooks.on('chatMessage', (chatLog, message, chatData) => {
     let [command, match] = chatLog.constructor.parse(message);
     if (!match) throw new Error("Unmatched chat command");
 
-    if(command === 'roll') {
+    if(["roll", "gmroll", "blindroll", "selfroll"].includes(command)) {
         chatLog._processDiceCommand(command, match, chatData, {});
-        chatData.roll.toMessage(chatData);
+        chatData.roll.toMessage(chatData, { rollMode: command });
         return false;
     }
 
@@ -129,6 +138,22 @@ class Utils {
 
         return (yiq >= 128) ? '#000000' : '#FFFFFF';
     };
+
+    static prepareTextureList(){
+        return Object.keys(TEXTURELIST).reduce((i18nCfg, key) => {
+                i18nCfg[key] = game.i18n.localize(TEXTURELIST[key].name);
+                return i18nCfg;
+            }, {}
+        );
+    };
+
+    static prepareColorsetList(){
+        return Object.keys(COLORSETS).reduce((i18nCfg, key) => {
+            i18nCfg[key] = game.i18n.localize(COLORSETS[key].description);
+            return i18nCfg;
+        }, {}
+    );
+    };
 }
 
 /**
@@ -175,23 +200,9 @@ export class Dice3D {
     _buildDiceBox() {
         const config = game.settings.get('dice-so-nice', 'settings');
 
-        this.DiceFavorites = new DiceFavorites();
         this.DiceFactory = new DiceFactory();
-        this.box = new DiceBox(this.canvas[0], { w: 500, h: 300 }, this.DiceFactory, this.DiceFavorites);
-		//$t.DiceBox.selector.dice = ['df', 'd4', 'd6', 'd8', 'd10', 'd100', 'd12', 'd20'];
+        this.box = new DiceBox(this.canvas[0], this.DiceFactory, config);
 		this.box.initialize();
-
-		this.box.volume = parseInt(this.DiceFavorites.settings.volume.value);
-		this.box.sounds = this.DiceFavorites.settings.sounds.value == '1';
-
-		this.DiceFunctions = new DiceFunctions(this.box);
-        /*this.box = new DiceBox(this.canvas[0], {
-            labelColor: config.labelColor,
-            diceColor: config.diceColor,
-            autoscale: config.autoscale,
-            scale: config.scale,
-            speed: config.speed ? config.speed : 1
-        });*/
     }
 
     /**
@@ -212,13 +223,9 @@ export class Dice3D {
             }
         });
         game.socket.on('module.dice-so-nice', (data) => {
-            const diceColor = game.users.get(data.user).color;
-            const labelColor = Utils.contrastOf(diceColor);
             if(!data.whisper || data.whisper.map(user => user._id).includes(game.user._id)) {
-                this.box.updateColors(diceColor, labelColor);
-                this._showAnimation(data.formula, data.results).then(() => {
-                    const config = game.settings.get('dice-so-nice', 'settings');
-                    this.box.updateColors(config.diceColor, config.labelColor);
+                this._showAnimation(data.formula, data.results, data.dsnConfig).then(() => {
+                    //??
                 });
             }
         });
@@ -265,10 +272,10 @@ export class Dice3D {
             const isEmpty = data.formula.length === 0 || data.results.length === 0;
             if(!isEmpty) {
 
-                game.socket.emit("module.dice-so-nice", mergeObject(data, { user: game.user._id }), () => {
+                game.socket.emit("module.dice-so-nice", mergeObject(data, { user: game.user._id, dsnConfig: game.settings.get('dice-so-nice', 'settings')}), () => {
 
                     if(!data.blind || data.whisper.includes(game.user._id)) {
-                        this._showAnimation(data.formula, data.results).then(displayed => {
+                        this._showAnimation(data.formula, data.results, data.dsnConfig).then(displayed => {
                             resolve(displayed);
                         });
                     } else {
@@ -288,11 +295,11 @@ export class Dice3D {
      * @returns {Promise<unknown>}
      * @private
      */
-    _showAnimation(formula, results) {
+    _showAnimation(formula, results, dsnConfig) {
         return new Promise((resolve, reject) => {
             if(this.isEnabled() && !this.box.rolling) {
                 this._beforeShow();
-                this.box.start_throw(formula,results,() => {
+                this.box.start_throw(formula, results, dsnConfig, () => {
                         resolve(true);
                         this._afterShow();
                     }
@@ -355,188 +362,6 @@ export class Dice3D {
         if (!obj) return obj;
         return Dice3D.copyto(obj, new obj.constructor());
     }
-
-    hidden(obj, hidden, display = 'block') {
-        if(!obj) return;
-        obj.style.display = (hidden) ? 'none' : display;
-        obj.style.visibility = (hidden) ? 'hidden' : 'visible';
-    }
-
-    element(name, props, place, content) {
-        var dom = document.createElement(name);
-        if (props) for (var i in props) dom.setAttribute(i, props[i]);
-        if (place) place.appendChild(dom);
-        if (content !== undefined) Dice3D.inner(content, dom);
-        return dom;
-    }
-
-    inner(obj, sel) {
-        sel.appendChild(obj.nodeName != undefined ? obj : document.createTextNode(obj));
-        return sel;
-    }
-
-    id(id) {
-        return document.getElementById(id);
-    }
-
-    set(sel, props) {
-        for (var i in props) sel.setAttribute(i, props[i]);
-        return sel;
-    }
-
-    selectByValue(sel, value) {
-        for(var i=0;i<sel.options.length;i++){
-            if (sel.options[i].value == value) {
-                sel.selectedIndex = i;
-                return;
-            }
-        }
-        sel.selectedIndex = -1;
-    }
-
-    clas(sel, oldclass, newclass) {
-        var oc = oldclass ? oldclass.split(/\s+/) : [],
-            nc = newclass ? newclass.split(/\s+/) : [],
-            classes = (sel.getAttribute('class') || '').split(/\s+/);
-        if (!classes[0]) classes = [];
-        for (var i in oc) {
-            var ind = classes.indexOf(oc[i]);
-            if (ind >= 0) classes.splice(ind, 1);
-        }
-        for (var i in nc) {
-            if (nc[i] && classes.indexOf(nc[i]) < 0) classes.push(nc[i]);
-        }
-        sel.setAttribute('class', classes.join(' '));
-    }
-
-    empty(sel) {
-        if (sel.childNodes)
-            while (sel.childNodes.length)
-                sel.removeChild(sel.firstChild);
-    }
-
-    remove(sel) {
-        if (sel) {
-            if (sel.parentNode) sel.parentNode.removeChild(sel);
-            else for (var i = sel.length - 1; i >= 0; --i)
-                sel[i].parentNode.removeChild(sel[i]);
-        }
-    }
-
-    bind(sel, eventname, func, bubble) {
-        if (!sel) return;
-        if (eventname.constructor === Array) {
-            for (var i in eventname)
-                sel.addEventListener(eventname[i], func, bubble ? bubble : false);
-        }
-        else
-            sel.addEventListener(eventname, func, bubble ? bubble : false);
-    }
-
-    unbind(sel, eventname, func, bubble) {
-        if (eventname.constructor === Array) {
-            for (var i in eventname)
-                sel.removeEventListener(eventname[i], func, bubble ? bubble : false);
-        }
-        else
-            sel.removeEventListener(eventname, func, bubble ? bubble : false);
-    }
-
-    one(sel, eventname, func, bubble) {
-        var one_func = function(e) {
-            func.call(this, e);
-            Dice3D.unbind(sel, eventname, one_func, bubble);
-        };
-        Dice3D.bind(sel, eventname, one_func, bubble);
-    }
-
-    raise_event(sel, eventname, bubble, cancelable) {
-        var evt = document.createEvent('UIEvents');
-        evt.initEvent(eventname, bubble == undefined ? true : bubble,
-                cancelable == undefined ? true : cancelable);
-        sel.dispatchEvent(evt);
-    }
-
-    raise(sel, eventname, params, bubble, cancelable) {
-        var ev = document.createEvent("CustomEvent");
-        ev.initCustomEvent(eventname, bubble, cancelable, params);
-        sel.dispatchEvent(ev);
-    }
-
-    get_elements_by_class(classes, node) {
-        return (node || document).getElementsByClassName(classes);
-    }
-
-    uuid() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
-
-    get_url_params() {
-        var params = window.location.search.substring(1).split("&");
-        var res = {};
-        for (var i in params) {
-            var keyvalue = params[i].split("=");
-            res[keyvalue[0]] = decodeURI(keyvalue[1]);
-        }
-        return res;
-    }
-
-    get_mouse_coords(ev) {
-        if (ev && ev.changedTouches && ev.changedTouches.length > 0) return { x: ev.changedTouches[0].clientX, y: ev.changedTouches[0].clientY };
-        return { x: ev.clientX, y: ev.clientY };
-    }
-
-    deferred() {
-        var solved = false, callbacks = [], args = [];
-        function solve() {
-            while (callbacks.length) {
-                callbacks.shift().apply(this, args);
-            }
-        }
-        return {
-            promise: function() {
-                return {
-                    then: function(callback) {
-                        var deferred = Dice3D.deferred(), promise = deferred.promise();
-                        callbacks.push(function() { 
-                            var res = callback.apply(this, arguments);
-                            if (res && 'done' in res) res.done(deferred.resolve);
-                            else deferred.resolve.apply(this, arguments); 
-                        });
-                        return promise;
-                    },
-                    done: function(callback) {
-                        callbacks.push(callback);
-                        if (solved) solve();
-                        return this;
-                    },
-                    cancel: function() {
-                        callbacks = [];
-                    }
-                };
-            },
-            resolve: function() {
-                solved = true;
-                args = Array.prototype.slice.call(arguments, 0);
-                solve();
-            }
-        };
-    }
-
-    when(promises) {
-        var deferred = Dice3D.deferred();
-        var count = promises.length, ind = 0;
-        if (count == 0) deferred.resolve();
-        for (var i = 0; i < count; ++i) {
-            promises[i].done(function() {
-                if (++ind == count) deferred.resolve();
-            });
-        }
-        return deferred.promise();
-    }
 }
 
 
@@ -590,7 +415,7 @@ class DiceConfig extends FormApplication {
             title: game.i18n.localize("DICESONICE.configTitle"),
             id: "dice-config",
             template: "modules/dice-so-nice/templates/dice-config.html",
-            width: 350,
+            width: 500,
             height: 600,
             closeOnSubmit: true
         })
@@ -599,6 +424,11 @@ class DiceConfig extends FormApplication {
     getData(options) {
         return mergeObject({
                 speed: 1,
+                shadowQuality: "high",
+                outlineColor: '#FFFFFF',
+                texture: "none",
+                colorset: "custom",
+                sounds:true,
                 fxList: Utils.localize({
                     "none": "DICESONICE.None",
                     "fadeOut": "DICESONICE.FadeOut"
@@ -607,6 +437,13 @@ class DiceConfig extends FormApplication {
                     "1": "DICESONICE.NormalSpeed",
                     "2": "DICESONICE.2xSpeed",
                     "3": "DICESONICE.3xSpeed"
+                }),
+                textureList: Utils.prepareTextureList(),
+                colorsetList: Utils.prepareColorsetList(),
+                shadowQualityList: Utils.localize({
+                    "none": "DICESONICE.None",
+                    "low": "DICESONICE.Low",
+                    "high" : "DICESONICE.High"
                 })
             },
             game.settings.get('dice-so-nice', 'settings')
@@ -619,10 +456,12 @@ class DiceConfig extends FormApplication {
         let canvas = document.getElementById('dice-gonfiguration-canvas');
         let config = mergeObject(
             game.settings.get('dice-so-nice', 'settings'),
-            {dimensions: { w: 500, h: 300 }, autoscale: false, scale: 300}
+            {dimensions: { w: 500, h: 300 }, autoscale: false, scale: 70}
         );
 
-        this.box = new DiceBox(canvas, config);
+        this.diceFactory = new DiceFactory();
+        this.box = new DiceBox(canvas, this.diceFactory, config);
+        this.box.initialize();
         this.box.showcase();
 
         this.toggleHideAfterRoll();
@@ -630,7 +469,7 @@ class DiceConfig extends FormApplication {
 
         html.find('input[name="hideAfterRoll"]').change(this.toggleHideAfterRoll.bind(this));
         html.find('input[name="autoscale"]').change(this.toggleAutoScale.bind(this));
-        html.find('button[name="apply"]').click(this.onApply.bind(this));
+        html.find('input,select').change(this.onApply.bind(this));
     }
 
     toggleHideAfterRoll() {
@@ -646,14 +485,20 @@ class DiceConfig extends FormApplication {
 
     onApply(event) {
         event.preventDefault();
-
-        this.box.update({
+        let config = {
             labelColor: $('input[name="labelColor"]').val(),
             diceColor: $('input[name="diceColor"]').val(),
+            outlineColor: $('input[name="outlineColor"]').val(),
             autoscale: false,
-            scale: 300
-        });
-        this.box.showcase();
+            scale: 300,
+            shadowQuality:$('select[name="shadowQuality"]').val(),
+            colorset: $('select[name="colorset"]').val(),
+            texture: $('select[name="texture"]').val(),
+            sounds: $('input[name="sounds"]').val() == "on"
+        };
+
+        this.box.update(config);
+        this.box.showcase(config);
     }
 
     async _updateObject(event, formData) {

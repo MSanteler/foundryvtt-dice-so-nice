@@ -27,13 +27,6 @@ export class DiceNotation {
 		}
 
 		let notationdata = this.notation;
-		if (notationdata) {
-			let rage = (notationdata.split('!').length-1) || 0;
-			if (rage > 0) {
-				this.boost = Math.min(Math.max(rage, 0), 3) * 4;
-			}
-			notationdata = notationdata.split('!').join(''); //remove and continue
-		}
 
 		notationdata = notationdata.split(' ').join(''); // remove spaces
 
@@ -44,7 +37,6 @@ export class DiceNotation {
 
 
 		let no = notationdata.split('@');// 0: dice notations, 1: forced results
-		//let rollregex = new RegExp(/(\+|\-|\*|\/|\%|\^|){0,1}(\(*|)(\d*)([a-z]{1,5}\d+|[a-z]{1,5}|)(?:\{([a-z]+)(.*?|)\}|)(\)*|)/, 'i');
 		let rollregex = new RegExp(/(\+|\-|\*|\/|\%|\^|){0,1}()(\d*)([a-z]{1,5}\d+|[a-z]{1,5}|)(?:\{([a-z]+)(.*?|)\}|)()/, 'i');
 		let resultsregex = new RegExp(/(\b)*(\-\d+|\d+)(\b)*/, 'gi'); // forced results: '1, 2, 3' or '1 2 3'
 		let res;
@@ -75,11 +67,6 @@ export class DiceNotation {
 			if (groupstart) {
 				groupLevel += res[2].length;
 			}
-
-			// arguments come in with a leading comma (','), so we split and remove the first entry
-			funcargs = funcargs.split(','); 
-			if (!funcargs || funcargs.length < 1) funcargs = ''; // sanity
-			funcargs.shift(); // remove first blank entry
 
 			// if this is true, we have a single operator and constant as the whole notation string
 			// e.g. '+7', '*4', '-2'
@@ -187,64 +174,6 @@ export class DiceNotation {
 		}
 
 		if (!update) ++this.setid;
-	}
-
-	test_notations(teststring = '') {
-
-		let teststrings = [];
-
-		if (teststring != '') {
-			teststrings.push(teststring);
-		} else {
-			teststrings = [
-				'8',
-				'10',
-				'100',
-				'8h1',
-				'10h1',
-				'100{h1}',
-				'8{h20}',
-				'10{h4000}',
-				'800{l098029384}@8,8,8,8,8',
-				'5ddif{hi4}',
-				'6dpro{hi234}',
-				'((6dpro{hi234}))',
-				'(5ddif{hi4}*6dpro{hi234})',
-				'(5ddif{hi4}*6dpro{hi234})+6dpro{hi234}/10d20+7',
-				'+7',
-				'+10',
-				'+100',
-				'1d4',
-				'1d4+8d6l+4dsex+7',
-				'10d4',
-				'10d20',
-				'10d20+7',
-				'8d4{h4}',
-				'8d4{h4}+7',
-				'10d4{l2}',
-				'10d20',
-				'10d20+7',
-				'4dsex',
-				'4dwww+',
-				'ddab',
-				'ddif',
-				'dpro',
-				'dcha',
-				'dfor',
-				'dboo',
-				'dset'
-			];
-		}
-
-		for(let i = 0, l = teststrings.length; i < l; i++){
-			console.log(i, teststrings[i]);
-
-			let parsed = this.parse_notation(teststrings[i]);
-			console.log('parse_notation', parsed);
-
-			let stringified = this.stringify_notation(parsed);
-			console.log('stringify_notation', stringified);
-		}
 	}
 
 }

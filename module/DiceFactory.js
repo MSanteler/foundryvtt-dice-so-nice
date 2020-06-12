@@ -1,5 +1,5 @@
-"use strict"
 import {DicePreset} from './DicePreset.js';
+import {DiceColors} from './DiceColors.js';
 export class DiceFactory {
 
 	constructor() {
@@ -20,7 +20,7 @@ export class DiceFactory {
 		this.material_options = {
 			specular: 0x0,
 			color: 0xb5b5b5,
-			shininess: 0,
+			shininess: 35,
 			flatShading: true
 		};
 
@@ -43,39 +43,7 @@ export class DiceFactory {
 			'legion': {id: 'legion', name: 'Star Wars™ Legion', dice:[]},
 			'all': {id: 'alldice', name: 'ALL THE DICE', dice:[]},
 		};
-
-		let diceobj = new DicePreset('d1', 'd6');
-		diceobj.name = 'One-sided Dice';
-		diceobj.setLabels(['1']);
-		diceobj.setValues(1,1);
-		diceobj.scale = 0.9;
-		diceobj.system = 'dweird';
-		this.register(diceobj);
-
-		diceobj = new DicePreset('d2', 'd6');
-		diceobj.name = 'Two-Sided Dice';
-		diceobj.setLabels(['1', '2']);
-		diceobj.setValues(1,2);
-		diceobj.scale = 0.9;
-		diceobj.system = 'dweird';
-		this.register(diceobj);
-
-		diceobj = new DicePreset('d3', 'd6');
-		diceobj.name = 'Three-Sided Dice';
-		diceobj.setLabels(['1', '2', '3']);
-		diceobj.setValues(1,3);
-		diceobj.scale = 0.9;
-		diceobj.system = 'dweird';
-		this.register(diceobj);
-
-		diceobj = new DicePreset('df', 'd6');
-		diceobj.name = 'Fudge Dice';
-		diceobj.setLabels(['-', '0', '+']);
-		diceobj.setValues(-1,1);
-		diceobj.scale = 0.9;
-		diceobj.system = 'dweird';
-		this.register(diceobj);
-
+		let diceobj;
 		diceobj = new DicePreset('d4');
 		diceobj.name = 'Four-Sided Dice';
 		diceobj.setLabels(['1', '2', '3', '4']);
@@ -89,24 +57,6 @@ export class DiceFactory {
 		diceobj.setLabels(['1', '2', '3', '4', '5', '6']);
 		diceobj.setValues(1,6);
 		diceobj.scale = 0.9;
-		this.register(diceobj);
-
-		diceobj = new DicePreset('dpip', 'd6');
-		diceobj.name = 'Six-Sided Dice (Pips)';
-		diceobj.setLabels([ '   \n ⬤ \n   ', '⬤  \n   \n  ⬤', '⬤  \n ⬤ \n  ⬤',
-							'⬤ ⬤\n   \n⬤ ⬤', '⬤ ⬤\n ⬤ \n⬤ ⬤', '⬤ ⬤\n⬤ ⬤\n⬤ ⬤']);
-		diceobj.setValues(1,6);
-		diceobj.scale = 0.9;
-		diceobj.font = 'monospace';
-		this.register(diceobj);
-
-		diceobj = new DicePreset('dsex', 'd6');
-		diceobj.name = 'Sex-Sided Emoji Dice';
-		diceobj.setLabels(['🍆', '🍑', '👌', '💦', '🙏', '💥']);
-		diceobj.setValues(1,6);
-		diceobj.scale = 0.9;
-		diceobj.display = 'labels';
-		diceobj.system = 'dweird';
 		this.register(diceobj);
 
 		diceobj = new DicePreset('d8');
@@ -149,231 +99,10 @@ export class DiceFactory {
 		diceobj.mass = 400;
 		diceobj.inertia = 6;
 		this.register(diceobj);
+	}
 
-		//star wars rpg dice
-		// Ability
-		diceobj = new DicePreset('dabi', 'd8');
-		diceobj.name = 'Star Wars RPG: Ability Dice';
-		diceobj.setLabels(['s','a',"s\na","s\ns",'a','s',"a\na",'']);
-		diceobj.setValues(1,8);
-		diceobj.setValueMap([]);
-		diceobj.font = 'SWRPG-Symbol-Regular';
-		diceobj.color = '#00FF00';
-		diceobj.colorset = 'swrpg_abi';
-		diceobj.display = 'labels';
-		diceobj.system = 'swrpg';
-		this.register(diceobj);
-
-		// Difficulty
-		diceobj = new DicePreset('ddif', 'd8');
-		diceobj.name = 'Star Wars RPG: Difficulty Dice';
-		diceobj.setLabels(['t','f',"f\nt",'t','',"t\nt", "f\nf", 't']);
-		diceobj.setValues(1,8);
-		diceobj.font = 'SWRPG-Symbol-Regular';
-		diceobj.color = '#8000FC';
-		diceobj.colorset = 'swrpg_dif';
-		diceobj.display = 'labels';
-		diceobj.system = 'swrpg';
-		this.register(diceobj);
-
-		// Proficiency
-		diceobj = new DicePreset('dpro', 'd12');
-		diceobj.name = 'Star Wars RPG: Proficiency Dice';
-		diceobj.setLabels(["a\na",'a',"a\na",'x','s',"s\na",'s',"s\na","s\ns","s\na","s\ns",'']);
-		diceobj.setValues(1,12);
-		diceobj.mass = 350;
-		diceobj.inertia = 8;
-		diceobj.scale = 0.9;
-		diceobj.font = 'SWRPG-Symbol-Regular';
-		diceobj.color = '#FFFF00';
-		diceobj.colorset = 'swrpg_pro';
-		diceobj.display = 'labels';
-		diceobj.system = 'swrpg';
-		this.register(diceobj);
-
-		// Challenge
-		diceobj = new DicePreset('dcha', 'd12');
-		diceobj.name = 'Star Wars RPG: Challenge Dice';
-		diceobj.setLabels(["t\nt",'t',"t\nt",'t',"t\nf",'f',"t\nf",'f',"f\nf",'y',"f\nf",'']);
-		diceobj.setValues(1,12);
-		diceobj.mass = 350;
-		diceobj.inertia = 8;
-		diceobj.scale = 0.9;
-		diceobj.font = 'SWRPG-Symbol-Regular';
-		diceobj.color = '#FF0000';
-		diceobj.colorset = 'swrpg_cha';
-		diceobj.display = 'labels';
-		diceobj.system = 'swrpg';
-		this.register(diceobj);
-
-		// Force
-		diceobj = new DicePreset('dfor', 'd12');
-		diceobj.name = 'Star Wars RPG: Force Dice';
-		diceobj.setLabels(['z',"Z\nZ",'z',"Z\nZ",'z',"Z\nZ",'z','Z','z','Z','z',"z\nz"]);
-		diceobj.setValues(1,12);
-		diceobj.mass = 350;
-		diceobj.inertia = 8;
-		diceobj.scale = 0.9;
-		diceobj.font = 'SWRPG-Symbol-Regular';
-		diceobj.color = '#FFFFFF';
-		diceobj.colorset = 'swrpg_for';
-		diceobj.display = 'labels';
-		diceobj.system = 'swrpg';
-		this.register(diceobj);
-
-		// Boost
-		diceobj = new DicePreset('dboo', 'd6');
-		diceobj.name = 'Star Wars RPG: Boost Dice';
-		diceobj.setLabels(["s  \n  a","a  \n  a",'s','a','','']);
-		diceobj.setValues(1,6);
-		diceobj.scale = 0.9;
-		diceobj.font = 'SWRPG-Symbol-Regular';
-		diceobj.color = '#00FFFF';
-		diceobj.colorset = 'swrpg_boo';
-		diceobj.display = 'labels';
-		diceobj.system = 'swrpg';
-		this.register(diceobj);
-
-		// Setback
-		diceobj = new DicePreset('dset', 'd6');
-		diceobj.name = 'Star Wars RPG: Setback Dice';
-		diceobj.setLabels(['','t','f']);
-		diceobj.setValues(1,3);
-		diceobj.scale = 0.9;
-		diceobj.font = 'SWRPG-Symbol-Regular';
-		diceobj.color = '#111111';
-		diceobj.colorset = 'swrpg_set';
-		diceobj.display = 'labels';
-		diceobj.system = 'swrpg';
-		this.register(diceobj);
-
-		// star wars armada dice
-		// Attack Red
-		diceobj = new DicePreset('swar', 'd8');
-		diceobj.name = 'Star Wars Armada: Red Attack Dice';
-		diceobj.setLabels(['F','F','F\nF','E','E','G','','']);
-		diceobj.setValues(1,8);
-		diceobj.font = 'Armada-Symbol-Regular';
-		diceobj.color = '#FF0000';
-		diceobj.colorset = 'swa_red';
-		diceobj.display = 'labels';
-		diceobj.system = 'swarmada';
-		this.register(diceobj);
-
-		// Attack Blue
-		diceobj = new DicePreset('swab', 'd8');
-		diceobj.name = 'Star Wars Armada: Blue Attack Dice';
-		diceobj.setLabels(['F','F','F','F','E','E','G','G']);
-		diceobj.setValues(1,8);
-		diceobj.font = 'Armada-Symbol-Regular';
-		diceobj.color = '#0000FF';
-		diceobj.colorset = 'swa_blue';
-		diceobj.display = 'labels';
-		diceobj.system = 'swarmada';
-		this.register(diceobj);
-
-		// Attack Black
-		diceobj = new DicePreset('swak', 'd8');
-		diceobj.name = 'Star Wars Armada: Black Attack Dice';
-		diceobj.setLabels(['F','F','F','F','F\nE','F\nE','','']);
-		diceobj.setValues(1,8);
-		diceobj.font = 'Armada-Symbol-Regular';
-		diceobj.color = '#111111';
-		diceobj.colorset = 'swa_black';
-		diceobj.display = 'labels';
-		diceobj.system = 'swarmada';
-		this.register(diceobj);
-
-
-		// star wars x-wing
-		// Attack - Red
-		diceobj = new DicePreset('xwatk', 'd8');
-		diceobj.name = 'Star Wars X-Wing: Red Attack Dice';
-		diceobj.setLabels(['c','d','d','d','f','f','','']);
-		diceobj.setValues(1,8);
-		diceobj.font = 'XWing-Symbol-Regular';
-		diceobj.color = '#FF0000';
-		diceobj.colorset = 'xwing_red';
-		diceobj.display = 'labels';
-		diceobj.system = 'xwing';
-		this.register(diceobj);
-
-		// Defense - Green
-		diceobj = new DicePreset('xwdef', 'd8');
-		diceobj.name = 'Star Wars X-Wing: Green Defense Dice';
-		diceobj.setLabels(['e','e','e','f','f','','','']);
-		diceobj.setValues(1,8);
-		diceobj.font = 'XWing-Symbol-Regular';
-		diceobj.color = '#00FF00';
-		diceobj.colorset = 'xwing_green';
-		diceobj.display = 'labels';
-		diceobj.system = 'xwing';
-		this.register(diceobj);
-
-
-		// star wars legion
-		// Attack Red
-		diceobj = new DicePreset('swlar', 'd8');
-		diceobj.name = 'Star Wars Legion: Red Attack Dice';
-		diceobj.setLabels(['h','h','h','h','h','c','o','']);
-		diceobj.setValues(1,8);
-		diceobj.font = 'Legion-Symbol-Regular';
-		diceobj.color = '#FF0000';
-		diceobj.colorset = 'swl_atkred';
-		diceobj.display = 'labels';
-		diceobj.system = 'legion';
-		this.register(diceobj);
-
-		// Attack Black
-		diceobj = new DicePreset('swlab', 'd8');
-		diceobj.name = 'Star Wars Legion: Black Attack Dice';
-		diceobj.setLabels(['h','h','h','','','c','o','']);
-		diceobj.setValues(1,8);
-		diceobj.font = 'Legion-Symbol-Regular';
-		diceobj.color = '#111111';
-		diceobj.colorset = 'swl_atkblack';
-		diceobj.display = 'labels';
-		diceobj.system = 'legion';
-		this.register(diceobj);
-
-		// Attack White
-		diceobj = new DicePreset('swlaw', 'd8');
-		diceobj.name = 'Star Wars Legion: White Attack Dice';
-		diceobj.setLabels(['h','','','','','c','o','']);
-		diceobj.setValues(1,8);
-		diceobj.font = 'Legion-Symbol-Regular';
-		diceobj.color = '#FFFFFF';
-		diceobj.colorset = 'swl_atkwhite';
-		diceobj.display = 'labels';
-		diceobj.system = 'legion';
-		this.register(diceobj);
-
-		// Defense Red
-		diceobj = new DicePreset('swldr', 'd6');
-		diceobj.name = 'Star Wars Legion: Red Defense Dice';
-		diceobj.setLabels(['s','s','s','d','','']);
-		diceobj.setValues(1,6);
-		diceobj.scale = 0.9;
-		diceobj.font = 'Legion-Symbol-Regular';
-		diceobj.color = '#FF0000';
-		diceobj.colorset = 'swl_defred';
-		diceobj.display = 'labels';
-		diceobj.system = 'legion';
-		this.register(diceobj);
-
-		// Defense White
-		diceobj = new DicePreset('swldw', 'd6');
-		diceobj.name = 'Star Wars Legion: White Defense Dice';
-		diceobj.setLabels(['s','','','d','','']);
-		diceobj.setValues(1,6);
-		diceobj.scale = 0.9;
-		diceobj.font = 'Legion-Symbol-Regular';
-		diceobj.color = '#FFFFFF';
-		diceobj.colorset = 'swl_defwhite';
-		diceobj.display = 'labels';
-		diceobj.system = 'legion';
-		this.register(diceobj);
-
+	setScale(scale){
+		this.baseScale = scale;
 	}
 
 	register(diceobj) {
@@ -583,8 +312,11 @@ export class DiceFactory {
 			let textstarty = (canvas.height / 2);
 			if(diceobj.shape == 'd10')
 			{
-				console.log(textstarty);
 				textstarty = textstarty*1.25;
+			}
+			else if(diceobj.shape == 'd6')
+			{
+				textstarty = textstarty*1.1;
 			}
 
 			if (textlines.length > 1) {
@@ -621,7 +353,7 @@ export class DiceFactory {
 			var hw = (canvas.width / 2);
 			var hh = (canvas.height / 2);
 
-			context.font =  ((ts - margin) / 1.5)+'pt '+diceobj.font;
+			context.font =  (ts / 128 * 24)+'pt '+diceobj.font;
 
 			//draw the numbers
 			for (let i=0;i<text.length;i++) {
@@ -675,7 +407,7 @@ export class DiceFactory {
 		let prevcolordata = this.colordata;
 
 		if (colorset) {
-			let colordata = getColorSet(colorset);
+			let colordata = DiceColors.getColorSet(colorset);
 
 			if (this.colordata.id != colordata.id) {
 				this.applyColorSet(colordata);

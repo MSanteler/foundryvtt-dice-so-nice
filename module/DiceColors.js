@@ -1,543 +1,335 @@
 export const TEXTURELIST = {
 	'cloudy': {
-		name: 'Clouds',
+		name: 'DICESONICE.TextureClouds',
 		composite: 'destination-in',
 		source: './textures/cloudy.png'
 	},
 	'fire': {
-		name: 'Fire',
+		name: 'DICESONICE.TextureFire',
 		composite: 'multiply',
 		source: './textures/fire.png'
 	},
 	'marble': {
-		name: 'Marble',
+		name: 'DICESONICE.TextureMarble',
 		composite: 'multiply',
 		source: './textures/marble.png'
 	},
 	'water': {
-		name: 'Water',
+		name: 'DICESONICE.TextureWater',
 		composite: 'destination-in',
 		source: './textures/water.png'
 	},
 	'ice': {
-		name: 'Ice',
+		name: 'DICESONICE.TextureIce',
 		composite: 'destination-in',
 		source: './textures/ice.png'
 	},
 	'paper': {
-		name: 'Paper',
+		name: 'DICESONICE.TexturePaper',
 		composite: 'multiply',
 		source: './textures/paper.png'
 	},
 	'speckles': {
-		name: 'Speckles',
+		name: 'DICESONICE.TextureSpeckles',
 		composite: 'multiply',
 		source: './textures/speckles.png'
 	},
 	'glitter': {
-		name: 'Glitter',
+		name: 'DICESONICE.TextureGlitter',
 		composite: 'multiply',
 		source: './textures/glitter.png'
 	},
 	'glitter_2': {
-		name: 'Glitter (Transparent)',
+		name: 'DICESONICE.TextureGlitterTransparent',
 		composite: 'destination-in',
 		source: './textures/glitter-alpha.png'
 	},
 	'stars': {
-		name: 'Stars',
+		name: 'DICESONICE.TextureStars',
 		composite: 'multiply',
 		source: './textures/stars.png'
 	},
 	'stainedglass': {
-		name: 'Stained Glass',
+		name: 'DICESONICE.TextureStainedGlass',
 		composite: 'multiply',
 		source: './textures/stainedglass.png'
 	},
 	'skulls': {
-		name: 'Skulls',
+		name: 'DICESONICE.TextureSkulls',
 		composite: 'multiply',
 		source: './textures/skulls.png'
 	},
 	'leopard': {
-		name: 'Leopard',
+		name: 'DICESONICE.TextureLeopard',
 		composite: 'multiply',
 		source: './textures/leopard.png'
 	},
 	'tiger': {
-		name: 'Tiger',
+		name: 'DICESONICE.TextureTiger',
 		composite: 'multiply',
 		source: './textures/tiger.png'
 	},
 	'cheetah': {
-		name: 'Cheetah',
+		name: 'DICESONICE.TextureCheetah',
 		composite: 'multiply',
 		source: './textures/cheetah.png'
 	},
 	'astral': {
-		name: 'Astral Sea',
+		name: 'DICESONICE.TextureAstralSea',
 		composite: 'multiply',
 		source: './textures/astral.png'
 	},
-	'acleaf': {
-		name: 'AC Leaf',
-		composite: 'multiply',
-		source: './textures/acleaf.png'
-	},
-	'thecage': {
-		name: 'Nicholas Cage',
-		composite: 'multiply',
-		source: './textures/thecage.png'
-	},
-	'isabelle': {
-		name: 'Isabelle',
-		composite: 'source-over',
-		source: './textures/isabelle.png'
-	},
 	'none': {
-		name: 'None',
+		name: 'DICESONICE.TextureNone',
 		composite: 'source-over',
-		source: ''
-	},
-	'': {
-		name: '~ Preset ~',
 		source: ''
 	}
 };
 
 export const COLORSETS = {
 	'radiant': {
-		name: 'Radiant',
+		name: 'radiant',
+		description: 'DICESONICE.ColorRadiant',
 		category: 'Damage Types',
 		foreground: '#F9B333',
 		background: '#FFFFFF',
 		outline: '',
-		texture: 'paper',
-		description: 'Radiant'
+		texture: 'paper'
 	},
 	'fire': {
-		name: 'Fire',
+		name: 'fire',
+		description: 'DICESONICE.ColorFire',
 		category: 'Damage Types',
 		foreground: '#f8d84f',
 		background: ['#f8d84f','#f9b02d','#f43c04','#910200','#4c1009'],
 		outline: 'black',
-		texture: 'fire',
-		description: 'Fire'
+		texture: 'fire'
 	},
 	'ice': {
-		name: 'Ice',
+		name: 'ice',
+		description: 'DICESONICE.ColorIce',
 		category: 'Damage Types',
 		foreground: '#60E9FF',
 		background: ['#214fa3','#3c6ac1','#253f70','#0b56e2','#09317a'],
 		outline: 'black',
-		texture: 'ice',
-		description: 'Ice'
+		texture: 'ice'
 	},
 	'poison': {
-		name: 'Poison',
+		name: 'poison',
+		description: 'DICESONICE.ColorPoison',
 		category: 'Damage Types',
 		foreground: '#D6A8FF',
 		background: ['#313866','#504099','#66409e','#934fc3','#c949fc'],
 		outline: 'black',
-		texture: 'cloudy',
-		description: 'Poison'
+		texture: 'cloudy'
 	},
 	'acid': {
-		name: 'Acid',
+		name: 'acid',
+		description: 'DICESONICE.ColorAcid',
 		category: 'Damage Types',
 		foreground: '#A9FF70',
 		background: ['#a6ff00', '#83b625','#5ace04','#69f006','#b0f006','#93bc25'],
 		outline: 'black',
-		texture: 'marble',
-		description: 'Acid'
+		texture: 'marble'
 	},
 	'thunder': {
-		name: 'Thunder',
+		name: 'thunder',
+		description: 'DICESONICE.ColorThunder',
 		category: 'Damage Types',
 		foreground: '#FFC500',
 		background: '#7D7D7D',
 		outline: 'black',
-		texture: 'cloudy',
-		description: 'Thunder'
+		texture: 'cloudy'
 	},
 	'lightning': {
-		name: 'Lightning',
+		name: 'lightning',
+		description: 'DICESONICE.ColorLightning',
 		category: 'Damage Types',
 		foreground: '#FFC500',
 		background: ['#f17105', '#f3ca40','#eddea4','#df9a57','#dea54b'],
 		outline: '#7D7D7D',
-		texture: 'ice',
-		description: 'Lightning'
+		texture: 'ice'
 	},
 	'air': {
-		name: 'Air',
+		name: 'air',
+		description: 'DICESONICE.ColorAir',
 		category: 'Damage Types',
 		foreground: '#ffffff',
 		background: ['#d0e5ea', '#c3dee5','#a4ccd6','#8dafb7','#80a4ad'],
 		outline: 'black',
-		texture: 'cloudy',
-		description: 'Air'
+		texture: 'cloudy'
 	},
 	'water': {
-		name: 'Water',
+		name: 'water',
+		description: 'DICESONICE.ColorWater',
 		category: 'Damage Types',
 		foreground: '#60E9FF',
 		background: ['#87b8c4', '#77a6b2','#6b98a3','#5b8691','#4b757f'],
 		outline: 'black',
-		texture: 'water',
-		description: 'Water'
+		texture: 'water'
 	},
 	'earth': {
-		name: 'Earth',
+		name: 'earth',
+		description: 'DICESONICE.ColorEarth',
 		category: 'Damage Types',
 		foreground: '#6C9943',
 		background: ['#346804', '#184200','#527f22', '#3a1d04', '#56341a','#331c17','#5a352a','#302210'],
 		outline: 'black',
-		texture: 'speckles',
-		description: 'Earth'
+		texture: 'speckles'
 	},
 	'force': {
-		name: 'Force',
+		name: 'force',
+		description: 'DICESONICE.ColorForce',
 		category: 'Damage Types',
 		foreground: 'white',
 		background: ['#FF97FF', '#FF68FF','#C651C6'],
 		outline: '#570000',
-		texture: 'stars',
-		description: 'Force'
+		texture: 'stars'
 	},
 	'psychic': {
-		name: 'Psychic',
+		name: 'psychic',
+		description: 'DICESONICE.ColorPsychic',
 		category: 'Damage Types',
 		foreground: '#D6A8FF',
 		background: ['#313866','#504099','#66409E','#934FC3','#C949FC','#313866'],
 		outline: 'black',
-		texture: 'speckles',
-		description: 'Psychic'
+		texture: 'speckles'
 	},
 	'necrotic': {
-		name: 'Necrotic',
+		name: 'necrotic',
+		description: 'DICESONICE.ColorNecrotic',
 		category: 'Damage Types',
 		foreground: '#ffffff',
 		background: '#6F0000',
 		outline: 'black',
-		texture: 'skulls',
-		description: 'Necrotic'
+		texture: 'skulls'
 	},
 	'breebaby': {
-		name: 'Pastel Sunset',
+		name: 'breebaby',
+		description: 'DICESONICE.ColorPastelSunset',
 		category: 'Custom Sets',
 		foreground: ['#5E175E', '#564A5E','#45455E','#3D5A5E','#1E595E','#5E3F3D','#5E1E29','#283C5E','#25295E'],
 		background: ['#FE89CF', '#DFD4F2','#C2C2E8','#CCE7FA','#A1D9FC','#F3C3C2','#EB8993','#8EA1D2','#7477AD'],
 		outline: 'white',
-		texture: 'marble',
-		description: 'Pastel Sunset, for Breyanna'
+		texture: 'marble'
 	},
 	'pinkdreams': {
-		name: 'Pink Dreams',
+		name: 'pinkdreams',
+		description: 'DICESONICE.ColorPinkDreams',
 		category: 'Custom Sets',
 		foreground: 'white',
 		background: ['#ff007c', '#df73ff','#f400a1','#df00ff','#ff33cc'],
 		outline: '#570000',
-		texture: 'skulls',
-		description: 'Pink Dreams, for Ethan'
+		texture: 'skulls'
 	},
 	'inspired': {
-		name: 'Inspired',
+		name: 'inspired',
+		description: 'DICESONICE.ColorInspired',
 		category: 'Custom Sets',
 		foreground: '#FFD800',
 		background: '#C4C4B6',
 		outline: '#8E8E86',
-		texture: 'none',
-		description: 'Inspired, for Austin'
+		texture: 'none'
 	},
 	'bloodmoon': {
-		name: 'Blood Moon',
+		name: 'bloodmoon',
+		description: 'DICESONICE.ColorBloodMoon',
 		category: 'Custom Sets',
 		foreground: '#CDB800',
 		background: '#6F0000',
 		outline: 'black',
-		texture: 'marble',
-		description: 'Blood Moon, for Jared'
+		texture: 'marble'
 	},
 	'starynight': {
-		name: 'Stary Night',
+		name: 'starynight',
+		description: 'DICESONICE.ColorStaryNight',
 		category: 'Custom Sets',
 		foreground: '#4F708F',
 		background: ['#091636','#233660','#4F708F','#8597AD','#E2E2E2'],
 		outline: 'white',
-		texture: 'speckles',
-		description: 'Stary Night, for Mai'
+		texture: 'speckles'
 	},
 	'glitterparty': {
-		name: 'Glitter Party',
+		name: 'glitterparty',
+		description: 'DICESONICE.ColorGlitterParty',
 		category: 'Custom Sets',
 		foreground: 'white',
 		background: ['#FFB5F5','#7FC9FF','#A17FFF'],
 		outline: 'none',
-		texture: 'glitter',
-		description: 'Glitter Party, for Austin'
+		texture: 'glitter'
 	},
 	'astralsea': {
-		name: 'Astral Sea',
+		name: 'astralsea',
+		description: 'DICESONICE.ColorAstralSea',
 		category: 'Custom Sets',
 		foreground: '#565656',
 		background: 'white',
 		outline: 'none',
-		texture: 'astral',
-		description: 'The Astral Sea, for Austin'
+		texture: 'astral'
 	},
 	'tigerking': {
-		name: 'Tiger King',
+		name: 'tigerking',
+		description: 'DICESONICE.ColorTigerKing',
 		category: 'Other',
 		foreground: '#ffffff',
 		background: '#FFCC40',
 		outline: 'black',
-		texture: ['leopard', 'tiger', 'cheetah'],
-		description: 'Leopard Print'
+		texture: ['leopard', 'tiger', 'cheetah']
 	},
-	'covid': {
-		name: 'COViD',
+	'toxic': {
+		name: 'toxic',
+		description: 'DICESONICE.ColorToxic',
 		category: 'Other',
 		foreground: '#A9FF70',
 		background: ['#a6ff00', '#83b625','#5ace04','#69f006','#b0f006','#93bc25'],
 		outline: 'black',
-		texture: 'fire',
-		description: 'Covid-19'
-	},
-	'acleaf': {
-		name: 'Animal Crossing',
-		category: 'Other',
-		foreground: '#00FF00',
-		background: '#07540A',
-		outline: 'black',
-		texture: 'acleaf',
-		description: 'Animal Crossing Leaf'
-	},
-	'isabelle': {
-		name: 'Isabelle',
-		category: 'Other',
-		foreground: 'white',
-		background: '#FEE5CC',
-		outline: 'black',
-		texture: 'isabelle',
-		description: 'Isabelle'
-	},
-	'thecage': {
-		name: 'Nicholas Cage',
-		category: 'Other',
-		foreground: '#ffffff',
-		background: '#ffffff',
-		outline: 'black',
-		texture: 'thecage',
-		description: 'Nicholas Cage'
-	},
-	'test': {
-		name: 'Test',
-		category: 'Colors',
-		foreground: ['#00FF00','#0000FF','#FF0000'],
-		background: ['#FF0000','#00FF00','#0000FF'],
-		outline: 'black',
-		texture: 'none',
-		description: 'Test'
+		texture: 'fire'
 	},
 	'rainbow': {
-		name: 'Rainblow',
+		name: 'rainbow',
+		description: 'DICESONICE.ColorRainblow',
 		category: 'Colors',
 		foreground: ['#FF5959','#FFA74F','#FFFF56','#59FF59','#2374FF','#00FFFF','#FF59FF'],
 		background: ['#900000','#CE3900','#BCBC00','#00B500','#00008E','#008282','#A500A5'],
 		outline: 'black',
-		texture: 'none',
-		description: 'Rainblow'
+		texture: 'none'
 	},
 	'random': {
-		name: 'RaNdOm',
+		name: 'random',
+		description: 'DICESONICE.ColorRaNdOm',
 		category: 'Colors',
 		foreground: [],
 		outline: [],
 		background: [],
-		texture: [],
-		description: 'RaNdOm'
+		texture: []
 	},
 	'black': {
-		name: 'Black',
+		name: 'black',
+		description: 'DICESONICE.ColorBlack',
 		category: 'Colors',
 		foreground: '#ffffff',
 		background: '#000000',
 		outline: 'black',
-		texture: 'none',
-		description: 'Black',
+		texture: 'none'
 	},
 	'white': {
-		name: 'White',
+		name: 'white',
+		description: 'DICESONICE.ColorWhite',
 		category: 'Colors',
 		foreground: '#000000',
 		background: '#FFFFFF',
 		outline: '#FFFFFF',
-		texture: 'none',
-		description: 'White'
+		texture: 'none'
 	},
-
-
-	'swrpg_abi': {
-		name: 'Star Wars RPG - Ability',
-		category: 'Star Wars™ RPG',
-		foreground: '#00FF00',
-		background: ['#3D9238','#52B848','#5EAC56','#9ECB9A'],
-		outline: '#000000',
-		texture: 'cloudy',
-		description: 'Star Wars™ RPG Ability Dice'
-	},
-	'swrpg_pro': {
-		name: 'Star Wars RPG - Proficiency',
-		category: 'Star Wars™ RPG',
-		foreground: '#FFFF00',
-		background: ['#CABB1C','#F9E33B','#FFE900','#F0E49D'],
-		outline: '#000000',
-		texture: 'paper',
-		description: 'Star Wars™ RPG Proficiency Dice'
-	},
-	'swrpg_dif': {
-		name: 'Star Wars RPG - Difficulty',
-		category: 'Star Wars™ RPG',
-		foreground: '#8000FC',
-		background: ['#39165F','#664B84','#50247E','#745F88'],
-		outline: '#000000',
-		texture: 'cloudy',
-		description: 'Star Wars™ RPG Difficulty Dice'
-	},
-	'swrpg_cha': {
-		name: 'Star Wars RPG - Challenge',
-		category: 'Star Wars™ RPG',
-		foreground: '#FF0000',
-		background: ['#A91F32','#EB4254','#E51836','#BA3645'],
-		outline: '#000000',
-		texture: 'paper',
-		description: 'Star Wars™ RPG Challenge Dice'
-	},
-	'swrpg_boo': {
-		name: 'Star Wars RPG - Boost',
-		category: 'Star Wars™ RPG',
-		foreground: '#00FFFF',
-		background: ['#4B9DC6','#689FC4','#85CFF2','#8FC0D8'],
-		outline: '#000000',
-		texture: 'glitter',
-		description: 'Star Wars™ RPG Boost Dice'
-	},
-	'swrpg_set': {
-		name: 'Star Wars RPG - Setback',
-		category: 'Star Wars™ RPG',
-		foreground: '#111111',
-		background: ['#252223','#241F21','#282828','#111111'],
-		outline: '#ffffff',
-		texture: 'glitter',
-		description: 'Star Wars™ RPG Setback Dice'
-	},
-	'swrpg_for': {
-		name: 'Star Wars RPG - Force',
-		category: 'Star Wars™ RPG',
-		foreground: '#000000',
-		background: ['#F3F3F3','#D3D3D3','#BABABA','#FFFFFF'],
-		outline: '#FFFFFF',
-		texture: 'stars',
-		description: 'Star Wars™ RPG Force Dice'
-	},
-
-
-	'swa_red': {
-		name: 'Armada Attack - Red',
-		category: 'Star Wars™ Armada',
-		foreground: '#ffffff',
-		background: ['#440D19','#8A1425','#C72336','#C04551'],
-		outline: 'none',
-		texture: 'stainedglass',
-		description: 'Star Wars™ Armada Red Attack Dice'
-	},
-	'swa_blue': {
-		name: 'Armada Attack - Blue',
-		category: 'Star Wars™ Armada',
-		foreground: '#ffffff',
-		background: ['#212642','#28286E','#2B348C','#3D4BB5','#5D64AB'],
-		outline: 'none',
-		texture: 'stainedglass',
-		description: 'Star Wars™ Armada Blue Attack Dice'
-	},
-	'swa_black': {
-		name: 'Armada Attack - Black',
-		category: 'Star Wars™ Armada',
-		foreground: '#ffffff',
-		background: ['#252223','#241F21','#282828','#111111'],
-		outline: 'none',
-		texture: 'stainedglass',
-		description: 'Star Wars™ Armada Black Attack Dice'
-	},
-
-
-	'xwing_red': {
-		name: 'X-Wing Attack - Red',
-		category: 'Star Wars™ X-Wing',
-		foreground: '#ffffff',
-		background: ['#440D19','#8A1425','#C72336','#C04551'],
-		outline: 'none',
-		texture: 'stars',
-		description: 'Star Wars™ X-Wing Red Attack Dice'
-	},
-	'xwing_green': {
-		name: 'X-Wing Attack - Green',
-		category: 'Star Wars™ X-Wing',
-		foreground: '#ffffff',
-		background: ['#3D9238','#52B848','#5EAC56','#9ECB9A'],
-		outline: 'none',
-		texture: 'stars',
-		description: 'Star Wars™ X-Wing Green Attack Dice'
-	},
-
-
-	'swl_atkred': {
-		name: 'Legion Attack - Red',
-		category: 'Star Wars™ Legion',
-		foreground: '#ffffff',
-		background: ['#440D19','#8A1425','#C72336','#C04551'],
-		outline: 'none',
-		texture: 'fire',
-		description: 'Star Wars™ Legion Red Attack Dice'
-	},
-	'swl_atkblack': {
-		name: 'Legion Attack - Black',
-		category: 'Star Wars™ Legion',
-		foreground: '#ffffff',
-		background: ['#252223','#241F21','#282828','#111111'],
-		outline: 'none',
-		texture: 'fire',
-		description: 'Star Wars™ Legion Black Attack Dice'
-	},
-	'swl_atkwhite': {
-		name: 'Legion Attack - White',
-		category: 'Star Wars™ Legion',
-		foreground: '#000000',
-		background: ['#ffffff','#DFF4FA','#BCBCBC','#F1EDE2','#F2ECE0'],
-		outline: 'none',
-		texture: 'fire',
-		description: 'Star Wars™ Legion White Attack Dice'
-	},
-	'swl_defred': {
-		name: 'Legion Defense - Red',
-		category: 'Star Wars™ Legion',
-		foreground: '#ffffff',
-		background: ['#440D19','#8A1425','#C72336','#C04551'],
-		outline: 'none',
-		texture: 'fire',
-		description: 'Star Wars™ Legion Red Defense Dice'
-	},
-	'swl_defwhite': {
-		name: 'Legion Defense - White',
-		category: 'Star Wars™ Legion',
-		foreground: '#000000',
-		background: ['#ffffff','#DFF4FA','#BCBCBC','#F1EDE2','#F2ECE0'],
-		outline: 'none',
-		texture: 'fire',
-		description: 'Star Wars™ Legion White Defense Dice'
+	'custom': {
+		name: 'custom',
+		description: 'DICESONICE.ColorCustom',
+		category: 'Colors',
+		foreground: '',
+		background: '',
+		outline: '',
+		texture: 'none'
 	}
-
 };
 
 export class DiceColors {
@@ -627,6 +419,7 @@ export class DiceColors {
 		for (const [name, data] of sets) {
 			COLORSETS[name].id = name;
 			COLORSETS[name].texture = this.getTexture(data.texture);
+			COLORSETS[name].texture.id = data.texture;
 		}
 	
 		// generate the colors and textures for the random set
@@ -653,37 +446,28 @@ export class DiceColors {
 		return colorset;
 	}
 
-	static applyColorSet(colorset, texture = null, update = true) {
-	
-		var urlargs = [];
+	static setColorCustom(foreground = '#FFFFFF', background = '#000000', outline = '#FFFFFF'){
+		COLORSETS['custom'].foreground = foreground;
+		COLORSETS['custom'].background = background;
+		COLORSETS['custom'].outline = outline;
+	}
+
+	static applyColorSet(dicefactory, colorset, texture = null) {
 		var colordata = DiceColors.getColorSet(colorset);
-	
+		
 		if (colorset && colorset.length > 0) {
 	
-			game.dice3d.DiceFactory.applyColorSet(colordata);
-	
-			if (update) {
-				game.dice3d.DiceFavorites.settings.colorset.value = colorset;
-			}
+			dicefactory.applyColorSet(colordata);
 		}
 	
 		if (texture || (colordata.texture && !Array.isArray(colordata.texture))) {
 	
-			var texturedata = getTexture((texture || colordata.texture.name));
-	
-			let tex = Array.isArray(texturedata) ? '' : texturedata;
+			var texturedata = this.getTexture((texture || colordata.texture.name));
 	
 			if (texturedata.name) {
-				game.dice3d.DiceFactory.applyTexture(texturedata);
+				dicefactory.applyTexture(texturedata);
 			}
 	
-			if (update) {
-				game.dice3d.DiceFavorites.settings.texture.value = tex.name;
-			}
-		} else {
-			if (update) {
-				game.dice3d.DiceFavorites.settings.texture.value = '';
-			}
 		}
 	}
 }
