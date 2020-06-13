@@ -535,7 +535,7 @@ class DiceConfig extends FormApplication {
 
         this.box = new DiceBox(canvas, game.dice3d.box.dicefactory, config);
         this.box.initialize();
-        this.box.showcase();
+        this.box.showcase(config);
 
         this.toggleHideAfterRoll();
         this.toggleAutoScale();
