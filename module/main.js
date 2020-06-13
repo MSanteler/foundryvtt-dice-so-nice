@@ -52,13 +52,6 @@ Hooks.once('ready', () => {
 
         return chatData;
     };
-
-    DiceColors.ImageLoader(TEXTURELIST, function(images) {
-		game.dice3d.diceTextures = images;
-
-		// init colorset textures
-        DiceColors.initColorSets();
-	});
 });
 
 Hooks.on('chatMessage', (chatLog, message, chatData) => {
@@ -202,9 +195,11 @@ export class Dice3D {
      * Ctor. Create and initialize a new Dice3d.
      */
     constructor() {
+        Hooks.call("diceSoNiceInit", this);
         this._buildCanvas();
         this._buildDiceBox();
         this._initListeners();
+        Hooks.call("diceSoNiceReady", this);
     }
 
     /**
@@ -238,6 +233,12 @@ export class Dice3D {
         this.DiceFactory = new DiceFactory();
         this.box = new DiceBox(this.canvas[0], this.DiceFactory, Dice3D.CONFIG);
 		this.box.initialize();
+        DiceColors.ImageLoader(TEXTURELIST, function(images) {
+            game.dice3d.diceTextures = images;
+
+            // init colorset textures
+            DiceColors.initColorSets();
+        });
     }
 
     /**
