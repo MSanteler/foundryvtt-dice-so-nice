@@ -145,7 +145,8 @@ class Utils {
     static prepareSystemList(){
         let systems = game.dice3d.box.dicefactory.systems;
         return Object.keys(systems).reduce((i18nCfg, key) => {
-                i18nCfg[key] = game.i18n.localize(systems[key].name);
+                if(!game.dice3d.box.dicefactory.systemForced || game.dice3d.box.dicefactory.systemActivated == key)
+                    i18nCfg[key] = game.i18n.localize(systems[key].name);
                 return i18nCfg;
             }, {}
         );
@@ -191,7 +192,8 @@ export class Dice3D {
      */
     addSystem(system, forceActivate = false){
         this.box.dicefactory.addSystem(system);
-        this.box.dicefactory.setSystem(system.id, forceActivate);
+        if(forceActivate)
+            this.box.dicefactory.setSystem(system.id, forceActivate);
     }
 
     /**
