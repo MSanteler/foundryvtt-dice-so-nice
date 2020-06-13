@@ -21,6 +21,7 @@
     "DICESONICE.Save": "Save",
     "DICESONICE.Apply": "Apply",
     "DICESONICE.outlineColor": "Outline Color",
+    "DICESONICE.edgeColor": "Edge Color",
     "DICESONICE.texture": "Texture",
     "DICESONICE.colorset" : "Theme",
     "DICESONICE.colorsetDesc" : "If you prefer a custom color, select 'Custom' in this list",
@@ -28,6 +29,7 @@
     "DICESONICE.High" : "High",
     "DICESONICE.shadowQuality" : "Shadows Quality",
     "DICESONICE.sounds" : "Sound Effects",
+    "DICESONICE.system" : "System",
 
     "DICESONICE.TextureClouds" : "Clouds",
     "DICESONICE.TextureFire" : "Fire",
@@ -48,6 +50,7 @@
     "DICESONICE.TextureWood" : "Wood",
     "DICESONICE.TextureMetal" : "Metallo",
     "DICESONICE.TextureNone" : "None / Auto (Theme)",
+    "DICESONICE.TextureRadial" : "Radial",
     "DICESONICE.ColorRadiant" : "Radiant",
     "DICESONICE.ColorFire" : "Fire",
     "DICESONICE.ColorIce" : "Ice",
@@ -74,5 +77,13 @@
     "DICESONICE.ColorRaNdOm" : "Random",
     "DICESONICE.ColorBlack" : "Black",
     "DICESONICE.ColorWhite" : "White",
-    "DICESONICE.ColorCustom" : "Custom"
+    "DICESONICE.ColorCustom" : "Custom",
+    "DICESONICE.ColorFoundry" : "Foundry VTT",
+
+    "DICESONICE.DamageTypes" : "Damage Types",
+    "DICESONICE.ThemesSoNice" : "Themes So Nice",
+    "DICESONICE.AcquiredTaste" : "Acquired Taste",
+    "DICESONICE.Colors" : "Colors",
+
+    "DICESONICE.System.Standard" : "Standard"
 }

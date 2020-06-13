@@ -28,6 +28,8 @@ Hooks.once('ready', () => {
     });
 
     game.dice3d = new Dice3D();
+    //Only call the hook once "game.dice3d" is set
+    Hooks.call("diceSoNiceReady", game.dice3d);
 
     const original = Roll.prototype.toMessage;
     Roll.prototype.toMessage = function (chatData={}, {rollMode=null, create=true}={}) {
@@ -120,11 +122,34 @@ class Utils {
     };
 
     static prepareColorsetList(){
-        return Object.keys(COLORSETS).reduce((i18nCfg, key) => {
-            i18nCfg[key] = game.i18n.localize(COLORSETS[key].description);
-            return i18nCfg;
-        }, {}
-    );
+        let groupedSetsList = Object.values(COLORSETS);
+        groupedSetsList.sort((set1, set2) => {
+            //if(game.i18n.localize(set1.category) < game.i18n.localize(set2.category)) return -1;
+            //if(game.i18n.localize(set1.category) > game.i18n.localize(set2.category)) return 1;
+
+            if(game.i18n.localize(set1.description) < game.i18n.localize(set2.description)) return -1;
+            if(game.i18n.localize(set1.description) > game.i18n.localize(set2.description)) return 1;
+        });
+        let preparedList = {};
+        for(let i = 0;i<groupedSetsList.length;i++){
+            let locCategory = game.i18n.localize(groupedSetsList[i].category);
+            if(!preparedList.hasOwnProperty(locCategory))
+                preparedList[locCategory] = {};
+
+            preparedList[locCategory][groupedSetsList[i].name] = game.i18n.localize(groupedSetsList[i].description);
+        }
+
+        return preparedList;
+    };
+
+    static prepareSystemList(){
+        let systems = game.dice3d.box.dicefactory.systems;
+        return Object.keys(systems).reduce((i18nCfg, key) => {
+                if(!game.dice3d.box.dicefactory.systemForced || game.dice3d.box.dicefactory.systemActivated == key)
+                    i18nCfg[key] = game.i18n.localize(systems[key].name);
+                return i18nCfg;
+            }, {}
+        );
     };
 }
 
@@ -139,6 +164,7 @@ export class Dice3D {
             labelColor: Utils.contrastOf(game.user.color),
             diceColor: game.user.color,
             outlineColor: game.user.color,
+            edgeColor: game.user.color,
             texture: "none",
             colorset: "custom",
             hideAfterRoll: true,
@@ -148,12 +174,65 @@ export class Dice3D {
             scale: 75,
             speed: 1,
             shadowQuality: 'high',
-            sounds: true
+            sounds: true,
+            system: "standard"
         };
     }
 
     static get CONFIG() {
         return mergeObject(Dice3D.DEFAULT_OPTIONS, game.settings.get("dice-so-nice", "settings"));
+    }
+
+    /**
+     * Register a new system
+     * The id is to be used with addDicePreset
+     * The name can be a localized string
+     * @param {Object} system {id, name}
+     * @param {Boolean} forceActivate Will force activate this model. Other models won't be available
+     */
+    addSystem(system, forceActivate = false){
+        this.box.dicefactory.addSystem(system);
+        if(forceActivate)
+            this.box.dicefactory.setSystem(system.id, forceActivate);
+    }
+
+    /**
+     * Register a new dice preset
+     * Type should be a known dice type (d4,d6,d8,d10,d12,d20,d100)
+     * Labels contains either strings (unicode) or a path to a texture (png, gif, jpg, webp)
+     * The texture file size should be 256*256
+     * The system should be a system id already registered
+     * @param {Object} dice {type:"",labels:[],system:""}
+     */
+    addDicePreset(dice){
+        this.box.dicefactory.addDicePreset(dice);
+    }
+
+    /**
+     * Add a texture to the list of textures and preload it
+     * @param {String} textureID 
+     * @param {Object} textureData 
+     * @returns {Promise}
+     */
+    addTexture(textureID, textureData){
+        return new Promise((resolve) => {
+            let textureEntry = {};
+            textureEntry[textureID] = textureData;
+            TEXTURELIST[textureID] = textureData;
+            DiceColors.ImageLoader(textureEntry, function(images) {
+                game.dice3d.diceTextures = mergeObject(images, game.dice3d.diceTextures);
+                resolve();
+            });
+        });
+    }
+
+    /**
+     * Add a colorset (theme)
+     * @param {Object} colorset 
+     */
+    addColorset(colorset){
+        COLORSETS[colorset.name] = colorset;
+        DiceColors.initColorSets(colorset);
     }
 
     /**
@@ -164,7 +243,6 @@ export class Dice3D {
         this._buildCanvas();
         this._buildDiceBox();
         this._initListeners();
-        Hooks.call("diceSoNiceReady", this);
     }
 
     /**
@@ -200,7 +278,6 @@ export class Dice3D {
 		this.box.initialize();
         DiceColors.ImageLoader(TEXTURELIST, function(images) {
             game.dice3d.diceTextures = images;
-
             // init colorset textures
             DiceColors.initColorSets();
         });
@@ -333,14 +410,14 @@ export class Dice3D {
         if(Dice3D.CONFIG.hideAfterRoll) {
             this.timeoutHandle = setTimeout(() => {
                 if(!this.box.rolling) {
-                    if(config.hideFX === 'none') {
+                    if(Dice3D.CONFIG.hideFX === 'none') {
                         this.canvas.hide();
                     }
-                    if(config.hideFX === 'fadeOut') {
+                    if(Dice3D.CONFIG.hideFX === 'fadeOut') {
                         this.canvas.fadeOut(1000);
                     }
                 }
-            }, config.timeBeforeHide);
+            }, Dice3D.CONFIG.timeBeforeHide);
         }
     }
 
@@ -439,7 +516,8 @@ class DiceConfig extends FormApplication {
                     "none": "DICESONICE.None",
                     "low": "DICESONICE.Low",
                     "high" : "DICESONICE.High"
-                })
+                }),
+                systemList : Utils.prepareSystemList()
             },
             Dice3D.CONFIG
         );
@@ -453,9 +531,9 @@ class DiceConfig extends FormApplication {
             Dice3D.CONFIG,
             {dimensions: { w: 500, h: 300 }, autoscale: false, scale: 70}
         );
+        config = mergeObject(Dice3D.DEFAULT_OPTIONS, config);
 
-        this.diceFactory = new DiceFactory();
-        this.box = new DiceBox(canvas, this.diceFactory, config);
+        this.box = new DiceBox(canvas, game.dice3d.box.dicefactory, config);
         this.box.initialize();
         this.box.showcase();
 
@@ -486,9 +564,11 @@ class DiceConfig extends FormApplication {
         $('input[name="labelColor"]').prop("disabled", colorset);
         $('input[name="diceColor"]').prop("disabled", colorset);
         $('input[name="outlineColor"]').prop("disabled", colorset);
+        $('input[name="edgeColor"]').prop("disabled", colorset);
         $('input[name="labelColorSelector"]').prop("disabled", colorset);
         $('input[name="diceColorSelector"]').prop("disabled", colorset);
         $('input[name="outlineColorSelector"]').prop("disabled", colorset);
+        $('input[name="edgeColorSelector"]').prop("disabled", colorset);
     }
 
     onApply(event) {
@@ -500,12 +580,14 @@ class DiceConfig extends FormApplication {
                 labelColor: $('input[name="labelColor"]').val(),
                 diceColor: $('input[name="diceColor"]').val(),
                 outlineColor: $('input[name="outlineColor"]').val(),
+                edgeColor: $('input[name="edgeColor"]').val(),
                 autoscale: false,
                 scale: 70,
                 shadowQuality:$('select[name="shadowQuality"]').val(),
                 colorset: $('select[name="colorset"]').val(),
                 texture: $('select[name="texture"]').val(),
-                sounds: $('input[name="sounds"]').val() == "on"
+                sounds: $('input[name="sounds"]').val() == "on",
+                system: $('select[name="system"]').val()
             };
 
             this.box.update(config);

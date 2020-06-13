@@ -8,6 +8,9 @@ export class DiceFactory {
 
 		this.baseScale = 50;
 
+		this.systemForced = false;
+		this.systemActivated = "standard";
+
 		this.materials_cache = {};
 		this.cache_hits = 0;
 		this.cache_misses = 0;
@@ -16,11 +19,12 @@ export class DiceFactory {
 		this.dice_color = '';
 		this.label_outline = '';
 		this.dice_texture = '';
+		this.edge_color = '';
 
 		this.material_options = {
-			specular: 0x0,
+			specular: 0xffffff,
 			color: 0xb5b5b5,
-			shininess: 35,
+			shininess: 5,
 			flatShading: true
 		};
 
@@ -29,45 +33,38 @@ export class DiceFactory {
 		// fixes texture rotations on specific dice models
 		this.rotate = {
 			d8: {even: -7.5, odd: -127.5},
-			d10: {all: -6},
 			d12: {all: 5},
-			d20: {all: -7.5},
+			d20: {all: -8.5},
 		};
 
 		this.systems = {
-			'd20': {id: 'd20', name: 'D20', dice:[]},
-			'dweird': {id: 'dweird', name: 'D-Weird', dice:[]},
-			'swrpg': {id: 'swrpg', name: 'Star Wars™ RPG', dice:[]},
-			'swarmada': {id: 'swarmada', name: 'Star Wars™ Armada', dice:[]},
-			'xwing': {id: 'xwing', name: 'Star Wars™ X-Wing', dice:[]},
-			'legion': {id: 'legion', name: 'Star Wars™ Legion', dice:[]},
-			'all': {id: 'alldice', name: 'ALL THE DICE', dice:[]},
+			'standard': {id: 'standard', name: game.i18n.localize("DICESONICE.System.Standard"), dice:[]}
 		};
 		let diceobj;
 		diceobj = new DicePreset('d4');
-		diceobj.name = 'Four-Sided Dice';
-		diceobj.setLabels(['1', '2', '3', '4']);
+		diceobj.name = 'd4';
+		diceobj.setLabels(['1','2','3','4']);
 		diceobj.setValues(1,4);
 		diceobj.inertia = 5;
 		diceobj.scale = 1.2;
 		this.register(diceobj);
 
 		diceobj = new DicePreset('d6');
-		diceobj.name = 'Six-Sided Dice (Numbers)';
+		diceobj.name = 'd6';
 		diceobj.setLabels(['1', '2', '3', '4', '5', '6']);
 		diceobj.setValues(1,6);
 		diceobj.scale = 0.9;
 		this.register(diceobj);
 
 		diceobj = new DicePreset('d8');
-		diceobj.name = 'Eight-Sided Dice';
-		diceobj.setLabels(['1', '2', '3', '4', '5', '6', '7', '8']);
+		diceobj.name = 'd8';
+		diceobj.setLabels(['1','2','3','4','5','6','7','8']);
 		diceobj.setValues(1,8);
 		this.register(diceobj);
 
 		diceobj = new DicePreset('d10');
-		diceobj.name = 'Ten-Sided Dice (Single Digit)';
-		diceobj.setLabels(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']);
+		diceobj.name = 'd10';
+		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','0']);
 		diceobj.setValues(1,10);
 		diceobj.mass = 350;
 		diceobj.inertia = 9;
@@ -75,7 +72,7 @@ export class DiceFactory {
 		this.register(diceobj);
 
 		diceobj = new DicePreset('d100', 'd10');
-		diceobj.name = 'Ten-Sided Dice (Tens Digit)';
+		diceobj.name = 'd100';
 		diceobj.setLabels(['10', '20', '30', '40', '50', '60', '70', '80', '90', '00']);
 		diceobj.setValues(10, 100, 10);
 		diceobj.mass = 350;
@@ -84,8 +81,8 @@ export class DiceFactory {
 		this.register(diceobj);
 
 		diceobj = new DicePreset('d12');
-		diceobj.name = 'Twelve-Sided Dice';
-		diceobj.setLabels(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']);
+		diceobj.name = 'd12';
+		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','10','11','12']);
 		diceobj.setValues(1,12);
 		diceobj.mass = 350;
 		diceobj.inertia = 8;
@@ -93,12 +90,27 @@ export class DiceFactory {
 		this.register(diceobj);
 
 		diceobj = new DicePreset('d20');
-		diceobj.name = 'Twenty-Sided Dice';
-		diceobj.setLabels(['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20']);
+		diceobj.name = 'd20';
+		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20']);
 		diceobj.setValues(1,20);
 		diceobj.mass = 400;
 		diceobj.inertia = 6;
 		this.register(diceobj);
+
+		/*diceobj = new DicePreset('d6');
+		diceobj.name = 'd6';
+		diceobj.setLabels([
+			'modules/dice-so-nice/textures/mootest/d1c.png', 
+			'modules/dice-so-nice/textures/mootest/d2c.png', 
+			'modules/dice-so-nice/textures/mootest/d3c.png', 
+			'modules/dice-so-nice/textures/mootest/d4c.png', 
+			'modules/dice-so-nice/textures/mootest/d5c.png', 
+			'modules/dice-so-nice/textures/mootest/d6c.png'
+		]);
+		diceobj.setValues(1,6);
+		diceobj.scale = 0.9;
+		diceobj.system = "degenesis";
+		this.register(diceobj);*/
 	}
 
 	setScale(scale){
@@ -108,8 +120,50 @@ export class DiceFactory {
 	}
 
 	register(diceobj) {
-		this.dice[diceobj.type] = diceobj;
-		this.systems[diceobj.system].dice.push(diceobj.type);
+		if(diceobj.system == "standard")
+			this.dice[diceobj.type] = diceobj;
+		this.systems[diceobj.system].dice.push(diceobj);
+	}
+
+	//{id: 'standard', name: game.i18n.localize("DICESONICE.System.Standard")}
+	addSystem(system){
+		system.dice = [];
+		this.systems[system.id] = system;
+	}
+	//{type:"",labels:[],system:""}
+	addDicePreset(dice){
+		let model = this.systems["standard"].dice.find(el => el.type == dice.type);
+		let preset = new DicePreset(dice.type, model.shape);
+		preset.name = dice.type;
+		preset.setLabels(dice.labels);
+		preset.values = model.values;
+		preset.valueMap = model.valueMap;
+		preset.mass = model.mass;
+		preset.scale = model.scale;
+		preset.inertia = model.inertia;
+		preset.system = dice.system;
+		this.register(preset);
+		if(this.systemActivated == dice.system)
+			this.setSystem(dice.system);
+	}
+
+	setSystem(systemId, force=false){
+		if(this.systemForced && systemId != this.systemActivated)
+			return;
+		//first we reset to standard
+		let dices = this.systems["standard"].dice;
+		for(let i=0;i<dices.length;i++)
+			this.dice[dices[i].type] = dices[i];
+		//Then we apply override
+		if(systemId!= "standard" && this.systems.hasOwnProperty(systemId))
+		{
+			dices = this.systems[systemId].dice;
+			for(let i=0;i<dices.length;i++)
+				this.dice[dices[i].type] = dices[i];
+		}
+		if(force)
+			this.systemForced = true;
+		this.systemActivated = systemId;
 	}
 
 	// returns a dicemesh (THREE.Mesh) object
@@ -124,7 +178,7 @@ export class DiceFactory {
 		}
 		if (!geom) return null;
 
-		if (diceobj.colorset && DiceFavorites.settings.allowDiceOverride.value == '1') {
+		if (diceobj.colorset) {
 			this.setMaterialInfo(diceobj.colorset);
 		} else {
 			this.setMaterialInfo();
@@ -163,8 +217,7 @@ export class DiceFactory {
 
 			let value = diceobj.values[((matindex-1) % diceobj.values.length)];
 			let label = diceobj.labels[(((matindex-1) % (diceobj.labels.length-2))+2)];
-			console.log("Rolled a "+value);
-			console.log(label);
+
 			return {value: value, label: label, reason: reason};
 		}
 
@@ -221,16 +274,27 @@ export class DiceFactory {
 			size = this.baseScale / 2;
 			margin = this.baseScale * 2;
 		}
-
+		
 		for (var i = 0; i < labels.length; ++i) {
 			var mat = new THREE.MeshPhongMaterial(this.material_options);
-			mat.map = this.createTextMaterial(diceobj, labels, i, size, margin, this.dice_texture_rand, this.label_color_rand, this.label_outline_rand, this.dice_color_rand, allowcache)
+			if(i==0)//edge
+			{
+				//if the texture is fully opaque, we do not use it for edge
+				let texture = {name:"none"};
+				if(this.dice_texture_rand.composite != "source-over")
+					texture = this.dice_texture_rand;
+				mat.map = this.createTextMaterial(diceobj, labels, i, size, margin, texture, this.label_color_rand, this.label_outline_rand, this.edge_color_rand, allowcache);
+			}
+			else
+				mat.map = this.createTextMaterial(diceobj, labels, i, size, margin, this.dice_texture_rand, this.label_color_rand, this.label_outline_rand, this.dice_color_rand, allowcache);
 			mat.opacity = 1;
 			mat.transparent = true;
 			mat.depthTest = false;
 			mat.needUpdate = true;
 			materials.push(mat);
 		}
+		//Edge mat
+
 		return materials;
 	}
 
@@ -242,7 +306,7 @@ export class DiceFactory {
         outlinecolor = outlinecolor || this.label_outline_rand;
         backcolor = backcolor || this.dice_color_rand;
         allowcache = allowcache == undefined ? true : allowcache;
-
+		
 		let text = labels[index];
 
 		// an attempt at materials caching
@@ -282,6 +346,7 @@ export class DiceFactory {
 		} else {
 			context.globalCompositeOperation = 'source-over';
 		}
+		
 
 		// create text
 		context.globalCompositeOperation = 'source-over';
@@ -293,7 +358,7 @@ export class DiceFactory {
 			// fix for some faces being weirdly rotated
 			let rotateface = this.rotate[diceobj.shape];
 			if(rotateface) {
-				let degrees = rotateface.all || (index > 0 && (index % 2) != 0) ? rotateface.odd : rotateface.even;
+				let degrees = rotateface.hasOwnProperty("all") ? rotateface.all:false || (index > 0 && (index % 2) != 0) ? rotateface.odd : rotateface.even;
 
 				if (degrees && degrees != 0) {
 
@@ -306,48 +371,73 @@ export class DiceFactory {
 				}
 			}
 
-			let fontsize = ts / (1 + 2 * margin);
-			context.font =  fontsize+ 'pt '+diceobj.font;
-
-			var lineHeight = context.measureText("M").width * 1.4;
-			let textlines = text.split("\n");
-			let textstarty = (canvas.height / 2);
-			if(diceobj.shape == 'd10')
-			{
-				textstarty = textstarty*1.25;
-			}
-			else if(diceobj.shape == 'd6')
-			{
-				textstarty = textstarty*1.1;
-			}
-
-			if (textlines.length > 1) {
-				fontsize = fontsize / textlines.length;
-				context.font =  fontsize+ 'pt '+diceobj.font;
-				lineHeight = context.measureText("M").width * 1.2;
-				textstarty -= (lineHeight * textlines.length) / 2;
-			}
-
-			for(let i = 0, l = textlines.length; i < l; i++){
-				let textline = textlines[i].trim();
-
-				// attempt to outline the text with a meaningful color
-				if (outlinecolor != 'none') {
-					context.strokeStyle = outlinecolor;
-					context.lineWidth = 5;
-					context.strokeText(textlines[i], canvas.width / 2, textstarty);
-					if (textline == '6' || textline == '9') {
-						context.strokeText('  .', canvas.width / 2, textstarty);
-					}
+			//custom texture face
+			if(text instanceof HTMLImageElement){
+				let scaleTexture = text.width / canvas.width;
+				switch(diceobj.shape){
+					case 'd6':
+						context.drawImage(text, 0,0,text.width,text.height,48/scaleTexture,48/scaleTexture,160/scaleTexture,160/scaleTexture);
+						break;
+					case 'd12':
+						context.drawImage(text, 0,0,text.width,text.height,10/scaleTexture,10/scaleTexture,236/scaleTexture,236/scaleTexture);
+						break;
+					default:
+						context.drawImage(text, 0,0,text.width,text.height,0,0,canvas.width,canvas.height);
 				}
-
-				context.fillStyle = forecolor;
-				context.fillText(textlines[i], canvas.width / 2, textstarty);
-				if (textline == '6' || textline == '9') {
-					context.fillText('  .', canvas.width / 2, textstarty);
-				}
-				textstarty += (lineHeight * 1.5);
 				
+		
+
+				//console.log([canvas.width*scaleTexture, canvas.height*scaleTexture, canvas.width - canvas.width*scaleTexture, canvas.height - canvas.height*scaleTexture]);
+			}
+			else{
+				let fontsize = ts / (1 + 2 * margin);
+				let textstarty = (canvas.height / 2);
+				let textstartx = (canvas.width / 2);
+				if(diceobj.shape == 'd10')
+				{
+					fontsize = fontsize*0.75;
+					textstarty = textstarty*1.15;
+				}
+				else if(diceobj.shape == 'd6')
+				{
+					textstarty = textstarty*1.1;
+				}
+				else if(diceobj.shape == 'd20')
+				{
+					textstartx = textstartx*0.98;
+				}
+				context.font =  fontsize+ 'pt '+diceobj.font;
+				var lineHeight = context.measureText("M").width * 1.4;
+				let textlines = text.split("\n");
+
+				if (textlines.length > 1) {
+					fontsize = fontsize / textlines.length;
+					context.font =  fontsize+ 'pt '+diceobj.font;
+					lineHeight = context.measureText("M").width * 1.2;
+					textstarty -= (lineHeight * textlines.length) / 2;
+				}
+
+				for(let i = 0, l = textlines.length; i < l; i++){
+					let textline = textlines[i].trim();
+
+					// attempt to outline the text with a meaningful color
+					if (outlinecolor != 'none') {
+						context.strokeStyle = outlinecolor;
+						context.lineWidth = 5;
+						context.strokeText(textlines[i], textstartx, textstarty);
+						if (textline == '6' || textline == '9') {
+							context.strokeText('  .', textstartx, textstarty);
+						}
+					}
+
+					context.fillStyle = forecolor;
+					context.fillText(textlines[i], textstartx, textstarty);
+					if (textline == '6' || textline == '9') {
+						context.fillText('  .', textstartx, textstarty);
+					}
+					textstarty += (lineHeight * 1.5);
+					
+				}
 			}
 
 		} else {
@@ -359,17 +449,23 @@ export class DiceFactory {
 
 			//draw the numbers
 			for (let i=0;i<text.length;i++) {
-
-				// attempt to outline the text with a meaningful color
-				if (outlinecolor != 'none') {
-					context.strokeStyle = outlinecolor;
-					context.lineWidth = 5;
-					context.strokeText(text[i], hw, hh - ts * 0.3);
+				//custom texture face
+				if(text[i] instanceof HTMLImageElement){
+					let scaleTexture = text[i].width / canvas.width;
+					context.drawImage(text[i], 0,0,text[i].width,text[i].height,100/scaleTexture,25/scaleTexture,60/scaleTexture,60/scaleTexture);
 				}
+				else{
+					// attempt to outline the text with a meaningful color
+					if (outlinecolor != 'none') {
+						context.strokeStyle = outlinecolor;
+						context.lineWidth = 5;
+						context.strokeText(text[i], hw, hh - ts * 0.3);
+					}
 
-				//draw label in top middle section
-				context.fillStyle = forecolor;
-				context.fillText(text[i], hw, hh - ts * 0.3);
+					//draw label in top middle section
+					context.fillStyle = forecolor;
+					context.fillText(text[i], hw, hh - ts * 0.3);
+				}
 
 				//rotate 1/3 for next label
 				context.translate(hw, hh);
@@ -398,6 +494,7 @@ export class DiceFactory {
 		this.dice_color = colordata.background;
 		this.label_outline = colordata.outline;
 		this.dice_texture = colordata.texture;
+		this.edge_color = colordata.hasOwnProperty("edge") ? colordata.edge:colordata.background;
 	}
 
 	applyTexture(texture) {
@@ -421,6 +518,7 @@ export class DiceFactory {
 		this.label_color_rand = '';
 		this.label_outline_rand = '';
 		this.dice_texture_rand = '';
+		this.edge_color_rand = '';
 
 		// set base color first
 		if (Array.isArray(this.dice_color)) {
@@ -441,9 +539,26 @@ export class DiceFactory {
 				this.dice_texture_rand = this.dice_texture[colorindex];
 			}
 
+			//if edge list and color list are same length, treat them as a parallel list
+			if (Array.isArray(this.edge_color) && this.edge_color.length == this.dice_color.length) {
+				this.edge_color_rand = this.edge_color[colorindex];
+			}
+
 			this.dice_color_rand = this.dice_color[colorindex];
 		} else {
 			this.dice_color_rand = this.dice_color;
+		}
+
+		// set edge color if not set
+		if(this.edge_color_rand == ''){
+			if (Array.isArray(this.edge_color)) {
+
+				var colorindex = Math.floor(Math.random() * this.edge_color.length);
+
+				this.edge_color_rand = this.edge_color[colorindex];
+			} else {
+				this.edge_color_rand = this.edge_color;
+			}
 		}
 
 		// if selected label color is still not set, pick one
@@ -636,8 +751,10 @@ export class DiceFactory {
         for (var i = 0; i < faces.length; ++i) {
             var ii = faces[i], fl = ii.length - 1;
             var aa = Math.PI * 2 / fl;
-            var v0 = 1 - 1*1;
-            var v1 = 1 - (0.895/1.105)*1;
+            var w = 0.65;
+            var h = 0.85;
+            var v0 = 1 - 1*h;
+            var v1 = 1 - (0.895/1.105)*h;
             var v2 = 1;
             for (var j = 0; j < fl - 2; ++j) {
                 geom.faces.push(new THREE.Face3(ii[0], ii[j + 1], ii[j + 2], [geom.vertices[ii[0]],
@@ -652,14 +769,14 @@ export class DiceFactory {
                             (Math.sin(aa * (j + 2) + af) + 1 + tab) / 2 / (1 + tab))]);
                 } else if(j==0) {
                     geom.faceVertexUvs[0].push([
-                        new THREE.Vector2(0, v1),
+                        new THREE.Vector2(0.5-w/2, v1),
                         new THREE.Vector2(0.5, v0),
-                        new THREE.Vector2(1, v1)
+                        new THREE.Vector2(0.5+w/2, v1)
                     ]);
                 } else if(j==1) {
                     geom.faceVertexUvs[0].push([
-                        new THREE.Vector2(0, v1),
-                        new THREE.Vector2(1, v1),
+                        new THREE.Vector2(0.5-w/2, v1),
+                        new THREE.Vector2(0.5+w/2, v1),
                         new THREE.Vector2(0.5, v2)
                     ]);
                 }

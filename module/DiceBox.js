@@ -122,6 +122,8 @@ export class DiceBox {
 
 	initialize() {
 		game.audio.pending.push(this.preloadSounds);
+		if(this.config.system != "standard")
+			this.dicefactory.setSystem(this.config.system);
 		this.sounds = this.config.sounds == '1';
 		this.shadows = this.config.shadowQuality != "none";
 		this.speed = this.config.speed;
@@ -255,6 +257,7 @@ export class DiceBox {
 		this.renderer.shadowMap.enabled = this.shadows;
 		this.renderer.shadowMap.type = config.shadowQuality == "high" ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
 		this.sounds = config.sounds;
+		this.dicefactory.setSystem(config.system);
         this.applyColorsForRoll(config);
     }
 
@@ -679,7 +682,7 @@ export class DiceBox {
 	applyColorsForRoll(dsnConfig){
 		let texture = null;
 		if(dsnConfig.colorset == "custom")
-			DiceColors.setColorCustom(dsnConfig.labelColor, dsnConfig.diceColor, dsnConfig.outlineColor);
+			DiceColors.setColorCustom(dsnConfig.labelColor, dsnConfig.diceColor, dsnConfig.outlineColor, dsnConfig.edgeColor);
 
 		if(dsnConfig.texture != "none")
 			texture = dsnConfig.texture;

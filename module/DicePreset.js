@@ -1,5 +1,4 @@
-"use strict"
-
+import {DiceColors} from './DiceColors.js';
 export class DicePreset {
 
 	constructor(type, shape = '') {
@@ -19,7 +18,7 @@ export class DicePreset {
 		this.inertia = 13;
 		this.geometry = null;
 		this.display = 'values';
-		this.system = 'd20';
+		this.system = 'standard';
 	}
 
 	setValues(min = 1, max = 20, step = 1) {
@@ -34,8 +33,7 @@ export class DicePreset {
 		}
 	}
 
-	setLabels(labels) {
-
+	registerLabels(labels){
 		this.labels.push('');
 		if(this.shape != 'd10') this.labels.push('');
 
@@ -55,6 +53,33 @@ export class DicePreset {
 		} else {
 			Array.prototype.push.apply(this.labels, labels)
 		}
+	}
+
+	setLabels(labels) {
+		let loadedImages = 0;
+		let numImages = labels.length;
+		let regexTexture = /\.(PNG|JPG|GIF|WEBP)/i;
+		let preparedLabels=[labels.length];
+		let hasTextures = false;
+		for (let i = 0;i<numImages;i++) {
+			if(labels[i] == '' || !labels[i].match(regexTexture)) {
+				preparedLabels[i] = labels[i];
+				++loadedImages
+				continue;
+			}
+			hasTextures = true;
+			preparedLabels[i] = new Image();
+			let that = this;
+			preparedLabels[i].onload = function() {
+	
+				if (++loadedImages >= numImages) {
+					that.registerLabels(preparedLabels);
+				}
+			};
+			preparedLabels[i].src = labels[i];
+		}
+		if(!hasTextures)
+			this.registerLabels(preparedLabels);
 	}
 
 	range(start, stop, step = 1) {
