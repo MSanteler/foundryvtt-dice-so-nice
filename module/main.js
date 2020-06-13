@@ -29,7 +29,10 @@ Hooks.once('ready', () => {
 
     game.dice3d = new Dice3D();
     //Only call the hook once "game.dice3d" is set
-    Hooks.call("diceSoNiceReady", game.dice3d);
+    if(!game.dice3d.readySequence)
+        game.dice3d.readySequence = 1;
+    else
+        Hooks.call("diceSoNiceReady", game.dice3d);
 
     const original = Roll.prototype.toMessage;
     Roll.prototype.toMessage = function (chatData={}, {rollMode=null, create=true}={}) {
@@ -280,6 +283,10 @@ export class Dice3D {
             game.dice3d.diceTextures = images;
             // init colorset textures
             DiceColors.initColorSets();
+            if(!game.dice3d.readySequence)
+                game.dice3d.readySequence = 1;
+            else
+                Hooks.call("diceSoNiceReady", game.dice3d);
         });
     }
 
