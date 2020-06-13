@@ -159,6 +159,10 @@ export class Dice3D {
         };
     }
 
+    static get CONFIG() {
+        return mergeObject(Dice3D.DEFAULT_OPTIONS, game.settings.get("dice-so-nice", "settings"));
+    }
+
     /**
      * Ctor. Create and initialize a new Dice3d.
      */
@@ -196,10 +200,8 @@ export class Dice3D {
      * @private
      */
     _buildDiceBox() {
-        const config = mergeObject(Dice3D.DEFAULT_OPTIONS, game.settings.get("dice-so-nice", "settings"));
-
         this.DiceFactory = new DiceFactory();
-        this.box = new DiceBox(this.canvas[0], this.DiceFactory, config);
+        this.box = new DiceBox(this.canvas[0], this.DiceFactory, Dice3D.CONFIG);
 		this.box.initialize();
     }
 
@@ -215,7 +217,7 @@ export class Dice3D {
             //this.box.resetCache();
         });
         $('body,html').click(() => {
-            const config = game.settings.get('dice-so-nice', 'settings');
+            const config = Dice3D.CONFIG;
             if(!config.hideAfterRoll && this.canvas.is(":visible")) {
                 this.canvas.hide();
             }
@@ -233,8 +235,7 @@ export class Dice3D {
      * Check if 3D simulation is enabled from the settings.
      */
     isEnabled() {
-        const config = game.settings.get('dice-so-nice', 'settings');
-        return config.enabled;
+        return Dice3D.CONFIG.enabled;
     }
 
     /**
@@ -272,7 +273,7 @@ export class Dice3D {
             const isEmpty = data.formula.length === 0 || data.results.length === 0;
             if(!isEmpty) {
 
-                game.socket.emit("module.dice-so-nice", mergeObject(data, { user: game.user._id, dsnConfig: game.settings.get('dice-so-nice', 'settings')}), () => {
+                game.socket.emit("module.dice-so-nice", mergeObject(data, { user: game.user._id, dsnConfig: Dice3D.CONFIG}), () => {
 
                     if(!data.blind || data.whisper.map(user => user._id).includes(game.user._id)) {
                         this._showAnimation(data.formula, data.results, data.dsnConfig).then(displayed => {
@@ -328,8 +329,7 @@ export class Dice3D {
      * @private
      */
     _afterShow() {
-        const config = game.settings.get('dice-so-nice', 'settings');
-        if(config.hideAfterRoll) {
+        if(Dice3D.CONFIG.hideAfterRoll) {
             this.timeoutHandle = setTimeout(() => {
                 if(!this.box.rolling) {
                     if(config.hideFX === 'none') {
@@ -423,12 +423,6 @@ class DiceConfig extends FormApplication {
 
     getData(options) {
         return mergeObject({
-                speed: 1,
-                shadowQuality: "high",
-                outlineColor: '#FFFFFF',
-                texture: "none",
-                colorset: "custom",
-                sounds:true,
                 fxList: Utils.localize({
                     "none": "DICESONICE.None",
                     "fadeOut": "DICESONICE.FadeOut"
@@ -446,7 +440,7 @@ class DiceConfig extends FormApplication {
                     "high" : "DICESONICE.High"
                 })
             },
-            game.settings.get('dice-so-nice', 'settings')
+            Dice3D.CONFIG
         );
     }
 
@@ -455,7 +449,7 @@ class DiceConfig extends FormApplication {
 
         let canvas = document.getElementById('dice-gonfiguration-canvas');
         let config = mergeObject(
-            game.settings.get('dice-so-nice', 'settings'),
+            Dice3D.CONFIG,
             {dimensions: { w: 500, h: 300 }, autoscale: false, scale: 70}
         );
 
@@ -520,7 +514,7 @@ class DiceConfig extends FormApplication {
 
     async _updateObject(event, formData) {
         let settings = mergeObject(
-            game.settings.get('dice-so-nice', 'settings'),
+            Dice3D.CONFIG,
             formData
         );
         await game.settings.set('dice-so-nice', 'settings', settings);

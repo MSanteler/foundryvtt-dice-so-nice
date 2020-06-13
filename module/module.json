@@ -37,6 +37,10 @@
 		"lang": "ko",
 		"name": "Korean",
 		"path": "./lang/ko.json"
+	}, {
+		"lang": "pt-BR",
+		"name": "Português (Brasil)",
+		"path": "./lang/pt-BR.json"
 	}],
 	"url": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice",
 	"manifest": "https://gitlab.com/riccisi/foundryvtt-dice-so-nice/raw/master/module/module.json",
