@@ -8,6 +8,17 @@
         </div>
 
         <div class="form-group">
+            <label>{{localize "DICESONICE.system"}}</label>
+            <select name="system" style="flex: 1;">
+                {{#select system}}
+                {{#each systemList as |name key|}}
+                <option value="{{key}}">{{name}}</option>
+                {{/each}}
+                {{/select}}
+            </select>
+        </div>
+
+        <div class="form-group">
             <label>{{localize "DICESONICE.colorset"}}</label>
             <select name="colorset" style="flex: 1;">
                 {{#select colorset}}

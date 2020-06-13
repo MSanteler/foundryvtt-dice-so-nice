@@ -128,10 +128,19 @@ class Utils {
 
     static prepareColorsetList(){
         return Object.keys(COLORSETS).reduce((i18nCfg, key) => {
-            i18nCfg[key] = game.i18n.localize(COLORSETS[key].description);
-            return i18nCfg;
-        }, {}
-    );
+                i18nCfg[key] = game.i18n.localize(COLORSETS[key].description);
+                return i18nCfg;
+            }, {}
+        );
+    };
+
+    static prepareSystemList(){
+        let systems = game.dice3d.box.dicefactory.systems;
+        return Object.keys(systems).reduce((i18nCfg, key) => {
+                i18nCfg[key] = game.i18n.localize(systems[key].name);
+                return i18nCfg;
+            }, {}
+        );
     };
 }
 
@@ -155,7 +164,8 @@ export class Dice3D {
             scale: 75,
             speed: 1,
             shadowQuality: 'high',
-            sounds: true
+            sounds: true,
+            system: "standard"
         };
     }
 
@@ -438,7 +448,8 @@ class DiceConfig extends FormApplication {
                     "none": "DICESONICE.None",
                     "low": "DICESONICE.Low",
                     "high" : "DICESONICE.High"
-                })
+                }),
+                systemList : Utils.prepareSystemList()
             },
             Dice3D.CONFIG
         );
@@ -452,9 +463,9 @@ class DiceConfig extends FormApplication {
             Dice3D.CONFIG,
             {dimensions: { w: 500, h: 300 }, autoscale: false, scale: 70}
         );
+        config = mergeObject(Dice3D.DEFAULT_OPTIONS, config);
 
-        this.diceFactory = new DiceFactory();
-        this.box = new DiceBox(canvas, this.diceFactory, config);
+        this.box = new DiceBox(canvas, game.dice3d.box.dicefactory, config);
         this.box.initialize();
         this.box.showcase();
 
@@ -504,7 +515,8 @@ class DiceConfig extends FormApplication {
                 shadowQuality:$('select[name="shadowQuality"]').val(),
                 colorset: $('select[name="colorset"]').val(),
                 texture: $('select[name="texture"]').val(),
-                sounds: $('input[name="sounds"]').val() == "on"
+                sounds: $('input[name="sounds"]').val() == "on",
+                system: $('select[name="system"]').val()
             };
 
             this.box.update(config);

@@ -28,6 +28,7 @@
     "DICESONICE.High" : "High",
     "DICESONICE.shadowQuality" : "Shadows Quality",
     "DICESONICE.sounds" : "Sound Effects",
+    "DICESONICE.system" : "System",
 
     "DICESONICE.TextureClouds" : "Clouds",
     "DICESONICE.TextureFire" : "Fire",
@@ -74,5 +75,7 @@
     "DICESONICE.ColorRaNdOm" : "Random",
     "DICESONICE.ColorBlack" : "Black",
     "DICESONICE.ColorWhite" : "White",
-    "DICESONICE.ColorCustom" : "Custom"
+    "DICESONICE.ColorCustom" : "Custom",
+
+    "DICESONICE.System.Standard" : "Standard"
 }
