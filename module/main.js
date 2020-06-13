@@ -155,6 +155,7 @@ export class Dice3D {
             labelColor: Utils.contrastOf(game.user.color),
             diceColor: game.user.color,
             outlineColor: game.user.color,
+            edgeColor: game.user.color,
             texture: "none",
             colorset: "custom",
             hideAfterRoll: true,
@@ -171,6 +172,30 @@ export class Dice3D {
 
     static get CONFIG() {
         return mergeObject(Dice3D.DEFAULT_OPTIONS, game.settings.get("dice-so-nice", "settings"));
+    }
+
+    /**
+     * Register a new system
+     * The id is to be used with addDicePreset
+     * The name can be a localized string
+     * @param {Object} system {id, name}
+     * @param {Boolean} forceActivate Will force activate this model. Other models won't be available
+     */
+    static addSystem(system, forceActivate = false){
+        game.dice3d.box.dicefactory.addSystem(system);
+        game.dice3d.box.dicefactory.setSystem(system,true);
+    }
+
+    /**
+     * Register a new dice preset
+     * Type should be a known dice type (d4,d6,d8,d10,d12,d20,d100)
+     * Labels contains either strings (unicode) or a path to a texture (png, gif, jpg, webp)
+     * The texture file size should be 256*256
+     * The system should be a system id already registered
+     * @param {Object} dice {type:"",labels:[],system:""}
+     */
+    static addDicePreset(dice){
+        ame.dice3d.box.dicefactory.addDicePreset(dice);
     }
 
     /**
@@ -342,14 +367,14 @@ export class Dice3D {
         if(Dice3D.CONFIG.hideAfterRoll) {
             this.timeoutHandle = setTimeout(() => {
                 if(!this.box.rolling) {
-                    if(config.hideFX === 'none') {
+                    if(Dice3D.CONFIG.hideFX === 'none') {
                         this.canvas.hide();
                     }
-                    if(config.hideFX === 'fadeOut') {
+                    if(Dice3D.CONFIG.hideFX === 'fadeOut') {
                         this.canvas.fadeOut(1000);
                     }
                 }
-            }, config.timeBeforeHide);
+            }, Dice3D.CONFIG.timeBeforeHide);
         }
     }
 
@@ -496,9 +521,11 @@ class DiceConfig extends FormApplication {
         $('input[name="labelColor"]').prop("disabled", colorset);
         $('input[name="diceColor"]').prop("disabled", colorset);
         $('input[name="outlineColor"]').prop("disabled", colorset);
+        $('input[name="edgeColor"]').prop("disabled", colorset);
         $('input[name="labelColorSelector"]').prop("disabled", colorset);
         $('input[name="diceColorSelector"]').prop("disabled", colorset);
         $('input[name="outlineColorSelector"]').prop("disabled", colorset);
+        $('input[name="edgeColorSelector"]').prop("disabled", colorset);
     }
 
     onApply(event) {
@@ -510,6 +537,7 @@ class DiceConfig extends FormApplication {
                 labelColor: $('input[name="labelColor"]').val(),
                 diceColor: $('input[name="diceColor"]').val(),
                 outlineColor: $('input[name="outlineColor"]').val(),
+                edgeColor: $('input[name="edgeColor"]').val(),
                 autoscale: false,
                 scale: 70,
                 shadowQuality:$('select[name="shadowQuality"]').val(),

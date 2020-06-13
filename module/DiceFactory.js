@@ -8,6 +8,8 @@ export class DiceFactory {
 
 		this.baseScale = 50;
 
+		this.systemForced = false;
+
 		this.materials_cache = {};
 		this.cache_hits = 0;
 		this.cache_misses = 0;
@@ -16,6 +18,7 @@ export class DiceFactory {
 		this.dice_color = '';
 		this.label_outline = '';
 		this.dice_texture = '';
+		this.edge_color = '';
 
 		this.material_options = {
 			specular: 0xffffff,
@@ -87,7 +90,7 @@ export class DiceFactory {
 
 		diceobj = new DicePreset('d20');
 		diceobj.name = 'd20';
-		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','modules/dice-so-nice/textures/mootest/nat20.png']);
+		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20']);
 		diceobj.setValues(1,20);
 		diceobj.mass = 400;
 		diceobj.inertia = 6;
@@ -121,23 +124,42 @@ export class DiceFactory {
 		this.systems[diceobj.system].dice.push(diceobj);
 	}
 
-	//{'standard': {id: 'standard', name: game.i18n.localize("DICESONICE.System.Standard"), dice:[]}}
+	//{id: 'standard', name: game.i18n.localize("DICESONICE.System.Standard")}
 	addSystem(system){
+		system.dice = [];
 		this.systems[system.id] = system;
 	}
+	//{type:"",labels:[],system:""}
+	addDicePreset(dice){
+		let model = this.systems["standard"].dice[dice.type];
+		let preset = new DicePreset(dice.type, model.shape);
+		preset.name = dice.type;
+		preset.setLabels(dice.labels);
+		preset.values = model.values;
+		preset.valueMap = model.valueMap;
+		preset.mass = model.mass;
+		preset.scale = model.scale;
+		preset.inertia = model.inertia;
+		preset.system = dice.system;
+		this.register(preset);
+	}
 
-	setSystem(systemId){
+	setSystem(systemId, force=false){
+		if(this.systemForced)
+			return;
 		//first we reset to standard
 		let dices = this.systems["standard"].dice;
 		for(let i=0;i<dices.length;i++)
 			this.dice[dices[i].type] = dices[i];
 		//Then we apply override
-		if(systemId!= "standard")
+		if(systemId!= "standard" && this.systems.hasOwnProperty(systemId))
 		{
 			dices = this.systems[systemId].dice;
 			for(let i=0;i<dices.length;i++)
 				this.dice[dices[i].type] = dices[i];
 		}
+		if(force)
+			this.systemForced = true;
 	}
 
 	// returns a dicemesh (THREE.Mesh) object
@@ -152,7 +174,7 @@ export class DiceFactory {
 		}
 		if (!geom) return null;
 
-		if (diceobj.colorset && DiceFavorites.settings.allowDiceOverride.value == '1') {
+		if (diceobj.colorset) {
 			this.setMaterialInfo(diceobj.colorset);
 		} else {
 			this.setMaterialInfo();
@@ -164,6 +186,7 @@ export class DiceFactory {
 		dicemesh.shape = diceobj.shape;
 		dicemesh.rerolls = 0;
 		dicemesh.resultReason = 'natural';
+		console.log(dicemesh);
 
 		dicemesh.getFaceValue = function() {
 			let reason = this.resultReason;
@@ -251,13 +274,18 @@ export class DiceFactory {
 		
 		for (var i = 0; i < labels.length; ++i) {
 			var mat = new THREE.MeshPhongMaterial(this.material_options);
-			mat.map = this.createTextMaterial(diceobj, labels, i, size, margin, this.dice_texture_rand, this.label_color_rand, this.label_outline_rand, this.dice_color_rand, allowcache)
+			if(i==0)//edge
+				mat.map = this.createTextMaterial(diceobj, labels, i, size, margin, this.dice_texture_rand, this.label_color_rand, this.label_outline_rand, this.edge_color_rand, allowcache);
+			else
+				mat.map = this.createTextMaterial(diceobj, labels, i, size, margin, this.dice_texture_rand, this.label_color_rand, this.label_outline_rand, this.dice_color_rand, allowcache);
 			mat.opacity = 1;
 			mat.transparent = true;
 			mat.depthTest = false;
 			mat.needUpdate = true;
 			materials.push(mat);
 		}
+		//Edge mat
+
 		return materials;
 	}
 
@@ -452,6 +480,7 @@ export class DiceFactory {
 		this.dice_color = colordata.background;
 		this.label_outline = colordata.outline;
 		this.dice_texture = colordata.texture;
+		this.edge_color = colordata.hasOwnProperty("edge") ? colordata.edge:colordata.background;
 	}
 
 	applyTexture(texture) {
@@ -475,6 +504,7 @@ export class DiceFactory {
 		this.label_color_rand = '';
 		this.label_outline_rand = '';
 		this.dice_texture_rand = '';
+		this.edge_color_rand = '';
 
 		// set base color first
 		if (Array.isArray(this.dice_color)) {
@@ -498,6 +528,16 @@ export class DiceFactory {
 			this.dice_color_rand = this.dice_color[colorindex];
 		} else {
 			this.dice_color_rand = this.dice_color;
+		}
+
+		// set edge color
+		if (Array.isArray(this.edge_color)) {
+
+			var colorindex = Math.floor(Math.random() * this.edge_color.length);
+
+			this.edge_color_rand = this.edge_color[colorindex];
+		} else {
+			this.edge_color_rand = this.edge_color;
 		}
 
 		// if selected label color is still not set, pick one

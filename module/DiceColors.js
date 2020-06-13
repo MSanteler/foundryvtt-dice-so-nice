@@ -338,6 +338,7 @@ export const COLORSETS = {
 		foreground: '',
 		background: '',
 		outline: '',
+		edge: '',
 		texture: 'none'
 	}
 };
@@ -456,10 +457,11 @@ export class DiceColors {
 		return colorset;
 	}
 
-	static setColorCustom(foreground = '#FFFFFF', background = '#000000', outline = '#FFFFFF'){
+	static setColorCustom(foreground = '#FFFFFF', background = '#000000', outline = '#FFFFFF', edge = '#FFFFFF'){
 		COLORSETS['custom'].foreground = foreground;
 		COLORSETS['custom'].background = background;
 		COLORSETS['custom'].outline = outline;
+		COLORSETS['custom'].edge = edge;
 	}
 
 	static applyColorSet(dicefactory, colorset, texture = null) {

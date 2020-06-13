@@ -21,6 +21,7 @@
     "DICESONICE.Save": "Save",
     "DICESONICE.Apply": "Apply",
     "DICESONICE.outlineColor": "Outline Color",
+    "DICESONICE.edgeColor": "Edge Color",
     "DICESONICE.texture": "Texture",
     "DICESONICE.colorset" : "Theme",
     "DICESONICE.colorsetDesc" : "If you prefer a custom color, select 'Custom' in this list",

@@ -682,7 +682,7 @@ export class DiceBox {
 	applyColorsForRoll(dsnConfig){
 		let texture = null;
 		if(dsnConfig.colorset == "custom")
-			DiceColors.setColorCustom(dsnConfig.labelColor, dsnConfig.diceColor, dsnConfig.outlineColor);
+			DiceColors.setColorCustom(dsnConfig.labelColor, dsnConfig.diceColor, dsnConfig.outlineColor, dsnConfig.edgeColor);
 
 		if(dsnConfig.texture != "none")
 			texture = dsnConfig.texture;
