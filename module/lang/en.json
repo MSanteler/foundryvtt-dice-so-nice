@@ -78,5 +78,10 @@
     "DICESONICE.ColorWhite" : "White",
     "DICESONICE.ColorCustom" : "Custom",
 
+    "DICESONICE.DamageTypes" : "Damage Types",
+    "DICESONICE.ThemesSoNice" : "Themes So Nice",
+    "DICESONICE.AcquiredTaste" : "Acquired Taste",
+    "DICESONICE.Colors" : "Colors",
+
     "DICESONICE.System.Standard" : "Standard"
 }

@@ -9,6 +9,7 @@ export class DiceFactory {
 		this.baseScale = 50;
 
 		this.systemForced = false;
+		this.systemActivated = "standard";
 
 		this.materials_cache = {};
 		this.cache_hits = 0;
@@ -131,7 +132,7 @@ export class DiceFactory {
 	}
 	//{type:"",labels:[],system:""}
 	addDicePreset(dice){
-		let model = this.systems["standard"].dice[dice.type];
+		let model = this.systems["standard"].dice.find(el => el.type == dice.type);
 		let preset = new DicePreset(dice.type, model.shape);
 		preset.name = dice.type;
 		preset.setLabels(dice.labels);
@@ -142,10 +143,12 @@ export class DiceFactory {
 		preset.inertia = model.inertia;
 		preset.system = dice.system;
 		this.register(preset);
+		if(this.systemActivated == dice.system)
+			this.setSystem(dice.system);
 	}
 
 	setSystem(systemId, force=false){
-		if(this.systemForced)
+		if(this.systemForced && systemId != this.systemActivated)
 			return;
 		//first we reset to standard
 		let dices = this.systems["standard"].dice;
@@ -160,6 +163,7 @@ export class DiceFactory {
 		}
 		if(force)
 			this.systemForced = true;
+		this.systemActivated = systemId;
 	}
 
 	// returns a dicemesh (THREE.Mesh) object
@@ -186,7 +190,6 @@ export class DiceFactory {
 		dicemesh.shape = diceobj.shape;
 		dicemesh.rerolls = 0;
 		dicemesh.resultReason = 'natural';
-		console.log(dicemesh);
 
 		dicemesh.getFaceValue = function() {
 			let reason = this.resultReason;
@@ -383,6 +386,7 @@ export class DiceFactory {
 			else{
 				let fontsize = ts / (1 + 2 * margin);
 				let textstarty = (canvas.height / 2);
+				let textstartx = (canvas.width / 2);
 				if(diceobj.shape == 'd10')
 				{
 					fontsize = fontsize*0.75;
@@ -391,6 +395,10 @@ export class DiceFactory {
 				else if(diceobj.shape == 'd6')
 				{
 					textstarty = textstarty*1.1;
+				}
+				else if(diceobj.shape == 'd20')
+				{
+					textstartx = textstartx*0.95;
 				}
 				context.font =  fontsize+ 'pt '+diceobj.font;
 				var lineHeight = context.measureText("M").width * 1.4;
@@ -410,16 +418,16 @@ export class DiceFactory {
 					if (outlinecolor != 'none') {
 						context.strokeStyle = outlinecolor;
 						context.lineWidth = 5;
-						context.strokeText(textlines[i], canvas.width / 2, textstarty);
+						context.strokeText(textlines[i], textstartx, textstarty);
 						if (textline == '6' || textline == '9') {
-							context.strokeText('  .', canvas.width / 2, textstarty);
+							context.strokeText('  .', textstartx, textstarty);
 						}
 					}
 
 					context.fillStyle = forecolor;
-					context.fillText(textlines[i], canvas.width / 2, textstarty);
+					context.fillText(textlines[i], textstartx, textstarty);
 					if (textline == '6' || textline == '9') {
-						context.fillText('  .', canvas.width / 2, textstarty);
+						context.fillText('  .', textstartx, textstarty);
 					}
 					textstarty += (lineHeight * 1.5);
 					
@@ -525,19 +533,26 @@ export class DiceFactory {
 				this.dice_texture_rand = this.dice_texture[colorindex];
 			}
 
+			//if edge list and color list are same length, treat them as a parallel list
+			if (Array.isArray(this.edge_color) && this.edge_color.length == this.dice_color.length) {
+				this.edge_color_rand = this.edge_color[colorindex];
+			}
+
 			this.dice_color_rand = this.dice_color[colorindex];
 		} else {
 			this.dice_color_rand = this.dice_color;
 		}
 
-		// set edge color
-		if (Array.isArray(this.edge_color)) {
+		// set edge color if not set
+		if(this.edge_color_rand == ''){
+			if (Array.isArray(this.edge_color)) {
 
-			var colorindex = Math.floor(Math.random() * this.edge_color.length);
+				var colorindex = Math.floor(Math.random() * this.edge_color.length);
 
-			this.edge_color_rand = this.edge_color[colorindex];
-		} else {
-			this.edge_color_rand = this.edge_color;
+				this.edge_color_rand = this.edge_color[colorindex];
+			} else {
+				this.edge_color_rand = this.edge_color;
+			}
 		}
 
 		// if selected label color is still not set, pick one

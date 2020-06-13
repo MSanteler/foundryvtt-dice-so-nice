@@ -28,6 +28,8 @@ Hooks.once('ready', () => {
     });
 
     game.dice3d = new Dice3D();
+    //Only call the hook once "game.dice3d" is set
+    Hooks.call("diceSoNiceReady", game.dice3d);
 
     const original = Roll.prototype.toMessage;
     Roll.prototype.toMessage = function (chatData={}, {rollMode=null, create=true}={}) {
@@ -120,11 +122,24 @@ class Utils {
     };
 
     static prepareColorsetList(){
-        return Object.keys(COLORSETS).reduce((i18nCfg, key) => {
-                i18nCfg[key] = game.i18n.localize(COLORSETS[key].description);
-                return i18nCfg;
-            }, {}
-        );
+        let groupedSetsList = Object.values(COLORSETS);
+        groupedSetsList.sort((set1, set2) => {
+            //if(game.i18n.localize(set1.category) < game.i18n.localize(set2.category)) return -1;
+            //if(game.i18n.localize(set1.category) > game.i18n.localize(set2.category)) return 1;
+
+            if(game.i18n.localize(set1.description) < game.i18n.localize(set2.description)) return -1;
+            if(game.i18n.localize(set1.description) > game.i18n.localize(set2.description)) return 1;
+        });
+        let preparedList = {};
+        for(let i = 0;i<groupedSetsList.length;i++){
+            let locCategory = game.i18n.localize(groupedSetsList[i].category);
+            if(!preparedList.hasOwnProperty(locCategory))
+                preparedList[locCategory] = {};
+
+            preparedList[locCategory][groupedSetsList[i].name] = game.i18n.localize(groupedSetsList[i].description);
+        }
+
+        return preparedList;
     };
 
     static prepareSystemList(){
@@ -174,9 +189,9 @@ export class Dice3D {
      * @param {Object} system {id, name}
      * @param {Boolean} forceActivate Will force activate this model. Other models won't be available
      */
-    static addSystem(system, forceActivate = false){
-        game.dice3d.box.dicefactory.addSystem(system);
-        game.dice3d.box.dicefactory.setSystem(system,true);
+    addSystem(system, forceActivate = false){
+        this.box.dicefactory.addSystem(system);
+        this.box.dicefactory.setSystem(system.id, forceActivate);
     }
 
     /**
@@ -187,8 +202,35 @@ export class Dice3D {
      * The system should be a system id already registered
      * @param {Object} dice {type:"",labels:[],system:""}
      */
-    static addDicePreset(dice){
-        ame.dice3d.box.dicefactory.addDicePreset(dice);
+    addDicePreset(dice){
+        this.box.dicefactory.addDicePreset(dice);
+    }
+
+    /**
+     * Add a texture to the list of textures and preload it
+     * @param {String} textureID 
+     * @param {Object} textureData 
+     * @returns {Promise}
+     */
+    addTexture(textureID, textureData){
+        return new Promise((resolve) => {
+            let textureEntry = {};
+            textureEntry[textureID] = textureData;
+            TEXTURELIST[textureID] = textureData;
+            DiceColors.ImageLoader(textureEntry, function(images) {
+                game.dice3d.diceTextures = mergeObject(images, game.dice3d.diceTextures);
+                resolve();
+            });
+        });
+    }
+
+    /**
+     * Add a colorset (theme)
+     * @param {Object} colorset 
+     */
+    addColorset(colorset){
+        COLORSETS[colorset.name] = colorset;
+        DiceColors.initColorSets(colorset);
     }
 
     /**
@@ -199,7 +241,6 @@ export class Dice3D {
         this._buildCanvas();
         this._buildDiceBox();
         this._initListeners();
-        Hooks.call("diceSoNiceReady", this);
     }
 
     /**
@@ -235,7 +276,6 @@ export class Dice3D {
 		this.box.initialize();
         DiceColors.ImageLoader(TEXTURELIST, function(images) {
             game.dice3d.diceTextures = images;
-
             // init colorset textures
             DiceColors.initColorSets();
         });

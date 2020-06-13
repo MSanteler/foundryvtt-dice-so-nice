@@ -22,8 +22,12 @@
             <label>{{localize "DICESONICE.colorset"}}</label>
             <select name="colorset" style="flex: 1;">
                 {{#select colorset}}
-                {{#each colorsetList as |name key|}}
-                <option value="{{key}}">{{name}}</option>
+                {{#each colorsetList as |group key|}}
+                <optgroup label="{{key}}">
+                    {{#each group as |name id|}}
+                    <option value="{{id}}">{{name}}</option>
+                    {{/each}}
+                </optgroup>
                 {{/each}}
                 {{/select}}
             </select>
