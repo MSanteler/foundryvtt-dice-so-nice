@@ -398,7 +398,7 @@ export class DiceFactory {
 				}
 				else if(diceobj.shape == 'd20')
 				{
-					textstartx = textstartx*0.95;
+					textstartx = textstartx*0.97;
 				}
 				context.font =  fontsize+ 'pt '+diceobj.font;
 				var lineHeight = context.measureText("M").width * 1.4;
