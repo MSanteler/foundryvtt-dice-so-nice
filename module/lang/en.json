@@ -50,6 +50,7 @@
     "DICESONICE.TextureWood" : "Wood",
     "DICESONICE.TextureMetal" : "Metallo",
     "DICESONICE.TextureNone" : "None / Auto (Theme)",
+    "DICESONICE.TextureRadial" : "Radial",
     "DICESONICE.ColorRadiant" : "Radiant",
     "DICESONICE.ColorFire" : "Fire",
     "DICESONICE.ColorIce" : "Ice",
@@ -77,6 +78,7 @@
     "DICESONICE.ColorBlack" : "Black",
     "DICESONICE.ColorWhite" : "White",
     "DICESONICE.ColorCustom" : "Custom",
+    "DICESONICE.ColorFoundry" : "Foundry VTT",
 
     "DICESONICE.DamageTypes" : "Damage Types",
     "DICESONICE.ThemesSoNice" : "Themes So Nice",

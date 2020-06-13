@@ -89,6 +89,11 @@ export const TEXTURELIST = {
 		composite: 'multiply',
 		source: 'modules/dice-so-nice/textures/metal.png'
 	},
+	'radial': {
+		name: 'DICESONICE.TextureRadial',
+		composite: 'source-over',
+		source: 'modules/dice-so-nice/textures/radial.png'
+	},
 	'none': {
 		name: 'DICESONICE.TextureNone',
 		composite: 'source-over',
@@ -276,6 +281,16 @@ export const COLORSETS = {
 		background: 'white',
 		outline: 'none',
 		texture: 'astral'
+	},
+	'foundry': {
+		name: 'foundry',
+		description: 'DICESONICE.ColorFoundry',
+		category: 'DICESONICE.ThemesSoNice',
+		foreground: '#000000',
+		background: '#ffffff',
+		outline: 'none',
+		edge: '#000000',
+		texture: 'radial'
 	},
 	'tigerking': {
 		name: 'tigerking',

@@ -278,7 +278,13 @@ export class DiceFactory {
 		for (var i = 0; i < labels.length; ++i) {
 			var mat = new THREE.MeshPhongMaterial(this.material_options);
 			if(i==0)//edge
-				mat.map = this.createTextMaterial(diceobj, labels, i, size, margin, this.dice_texture_rand, this.label_color_rand, this.label_outline_rand, this.edge_color_rand, allowcache);
+			{
+				//if the texture is fully opaque, we do not use it for edge
+				let texture = {name:"none"};
+				if(this.dice_texture_rand.composite != "source-over")
+					texture = this.dice_texture_rand;
+				mat.map = this.createTextMaterial(diceobj, labels, i, size, margin, texture, this.label_color_rand, this.label_outline_rand, this.edge_color_rand, allowcache);
+			}
 			else
 				mat.map = this.createTextMaterial(diceobj, labels, i, size, margin, this.dice_texture_rand, this.label_color_rand, this.label_outline_rand, this.dice_color_rand, allowcache);
 			mat.opacity = 1;
@@ -398,7 +404,7 @@ export class DiceFactory {
 				}
 				else if(diceobj.shape == 'd20')
 				{
-					textstartx = textstartx*0.97;
+					textstartx = textstartx*0.98;
 				}
 				context.font =  fontsize+ 'pt '+diceobj.font;
 				var lineHeight = context.measureText("M").width * 1.4;
