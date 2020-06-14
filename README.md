@@ -94,6 +94,7 @@ The configuration must contain two parameters:
 
 #### What is not supported yet
 - **Per dice color/texture**: For now, you can't link a single dice type to a specific color or texture.
+- **Force a colorset to all players**: While we are working on this, it is not yet possible to force the activation of a colorset.
 
 ### Listening to DiceSoNiceReady hook
 Before using the customization API, you must make sure that "Dice So Nice" is ready.
