@@ -29,7 +29,7 @@
     "DICESONICE.High" : "High",
     "DICESONICE.shadowQuality" : "Shadows Quality",
     "DICESONICE.sounds" : "Sound Effects",
-    "DICESONICE.system" : "System",
+    "DICESONICE.system" : "Dice Presets (Faces)",
 
     "DICESONICE.TextureClouds" : "Clouds",
     "DICESONICE.TextureFire" : "Fire",
@@ -85,5 +85,6 @@
     "DICESONICE.AcquiredTaste" : "Acquired Taste",
     "DICESONICE.Colors" : "Colors",
 
-    "DICESONICE.System.Standard" : "Standard"
+    "DICESONICE.System.Standard" : "Standard",
+    "DICESONICE.System.Dot" : "Dot"
 }

@@ -38,7 +38,8 @@ export class DiceFactory {
 		};
 
 		this.systems = {
-			'standard': {id: 'standard', name: game.i18n.localize("DICESONICE.System.Standard"), dice:[]}
+			'standard': {id: 'standard', name: game.i18n.localize("DICESONICE.System.Standard"), dice:[]},
+			'dot': {id: 'dot', name: game.i18n.localize("DICESONICE.System.Dot"), dice:[]}
 		};
 		let diceobj;
 		diceobj = new DicePreset('d4');
@@ -97,20 +98,20 @@ export class DiceFactory {
 		diceobj.inertia = 6;
 		this.register(diceobj);
 
-		/*diceobj = new DicePreset('d6');
+		diceobj = new DicePreset('d6');
 		diceobj.name = 'd6';
 		diceobj.setLabels([
-			'modules/dice-so-nice/textures/mootest/d1c.png', 
-			'modules/dice-so-nice/textures/mootest/d2c.png', 
-			'modules/dice-so-nice/textures/mootest/d3c.png', 
-			'modules/dice-so-nice/textures/mootest/d4c.png', 
-			'modules/dice-so-nice/textures/mootest/d5c.png', 
-			'modules/dice-so-nice/textures/mootest/d6c.png'
+			'modules/dice-so-nice/textures/dot/d6-1.png',
+			'modules/dice-so-nice/textures/dot/d6-2.png',
+			'modules/dice-so-nice/textures/dot/d6-3.png',
+			'modules/dice-so-nice/textures/dot/d6-4.png',
+			'modules/dice-so-nice/textures/dot/d6-5.png',
+			'modules/dice-so-nice/textures/dot/d6-6.png',
 		]);
 		diceobj.setValues(1,6);
 		diceobj.scale = 0.9;
-		diceobj.system = "degenesis";
-		this.register(diceobj);*/
+		diceobj.system = "dot";
+		this.register(diceobj);
 	}
 
 	setScale(scale){
@@ -142,6 +143,7 @@ export class DiceFactory {
 		preset.scale = model.scale;
 		preset.inertia = model.inertia;
 		preset.system = dice.system;
+		preset.font = dice.font || 'Arial';
 		this.register(preset);
 		if(this.systemActivated == dice.system)
 			this.setSystem(dice.system);
