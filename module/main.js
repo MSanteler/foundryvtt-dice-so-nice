@@ -28,11 +28,6 @@ Hooks.once('ready', () => {
     });
 
     game.dice3d = new Dice3D();
-    //Only call the hook once "game.dice3d" is set
-    if(!game.dice3d.readySequence)
-        game.dice3d.readySequence = 1;
-    else
-        Hooks.call("diceSoNiceReady", game.dice3d);
 
     const original = Roll.prototype.toMessage;
     Roll.prototype.toMessage = function (chatData={}, {rollMode=null, create=true}={}) {
@@ -222,8 +217,7 @@ export class Dice3D {
             let textureEntry = {};
             textureEntry[textureID] = textureData;
             TEXTURELIST[textureID] = textureData;
-            DiceColors.ImageLoader(textureEntry, function(images) {
-                game.dice3d.diceTextures = mergeObject(images, game.dice3d.diceTextures);
+            DiceColors.loadTextures(textureEntry, (images) => {
                 resolve();
             });
         });
@@ -244,8 +238,12 @@ export class Dice3D {
     constructor() {
         Hooks.call("diceSoNiceInit", this);
         this._buildCanvas();
-        this._buildDiceBox();
         this._initListeners();
+        this._buildDiceBox();
+        DiceColors.loadTextures(TEXTURELIST, (images) => {
+            DiceColors.initColorSets();
+            Hooks.call("diceSoNiceReady", this);
+        });
     }
 
     /**
@@ -279,15 +277,6 @@ export class Dice3D {
         this.DiceFactory = new DiceFactory();
         this.box = new DiceBox(this.canvas[0], this.DiceFactory, Dice3D.CONFIG);
 		this.box.initialize();
-        DiceColors.ImageLoader(TEXTURELIST, function(images) {
-            game.dice3d.diceTextures = images;
-            // init colorset textures
-            DiceColors.initColorSets();
-            if(!game.dice3d.readySequence)
-                game.dice3d.readySequence = 1;
-            else
-                Hooks.call("diceSoNiceReady", game.dice3d);
-        });
     }
 
     /**

@@ -186,13 +186,13 @@ export class DiceFactory {
 			this.setMaterialInfo();
 		}
 
-
 		let dicemesh = new THREE.Mesh(geom, this.createMaterials(diceobj, this.baseScale / 2, 1.0));
 		dicemesh.result = [];
 		dicemesh.shape = diceobj.shape;
 		dicemesh.rerolls = 0;
 		dicemesh.resultReason = 'natural';
 
+		let factory = this;
 		dicemesh.getFaceValue = function() {
 			let reason = this.resultReason;
 			let vector = new THREE.Vector3(0, 0, this.shape == 'd4' ? -1 : 1);
@@ -209,8 +209,7 @@ export class DiceFactory {
 			}
 			let matindex = closest_face.materialIndex - 1;
 
-			const diceobj = game.dice3d.DiceFactory.dice[this.notation.type];
-			
+			const diceobj = factory.dice[this.notation.type];
 
 			if (this.shape == 'd4') {
 				return {value: matindex, label: diceobj.labels[matindex-1], reason: reason};
@@ -221,24 +220,24 @@ export class DiceFactory {
 			let label = diceobj.labels[(((matindex-1) % (diceobj.labels.length-2))+2)];
 
 			return {value: value, label: label, reason: reason};
-		}
+		};
 
 		dicemesh.storeRolledValue = function() {
 			this.result.push(this.getFaceValue());
-		}
+		};
 
 		dicemesh.getLastValue = function() {
 			if (!this.result || this.result.length < 1) return {value: undefined, label: '', reason: ''};
 
 			return this.result[this.result.length-1];
-		}
+		};
 
 		dicemesh.setLastValue = function(result) {
 			if (!this.result || this.result.length < 1) return;
 			if (!result || result.length < 1) return;
 
 			return this.result[this.result.length-1] = result;
-		}
+		};
 
 		if (diceobj.color) {
 			dicemesh.material[0].color = new THREE.Color(diceobj.color);

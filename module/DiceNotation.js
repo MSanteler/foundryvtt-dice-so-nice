@@ -2,7 +2,7 @@
 
 export class DiceNotation {
 
-	constructor(notation) {
+	constructor(notation, factory) {
 
 		/* if (typeof notation == 'object') {
 			notation = notation.notation;
@@ -21,6 +21,7 @@ export class DiceNotation {
 		this.notation = notation;
 		this.vectors = [];
 		this.owner = -1;
+		this.factory = factory;
 
 		if (!notation || notation =='0') {
 			this.error = true;
@@ -132,7 +133,7 @@ export class DiceNotation {
 
 	addSet(amount, type, groupID = 0, groupLevel = 0, funcname = '', funcargs = '', operator = '+') {
 
-		let diceobj = game.dice3d.DiceFactory.get(type);
+		let diceobj = this.factory.get(type);
 		if (diceobj == null) { this.error = true; return; }
 
 		amount = Math.abs(parseInt(amount || 1));

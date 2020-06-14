@@ -31,7 +31,7 @@ export class DiceBox {
 			pos: new THREE.Vector2(),
 			startDrag: undefined,
 			startDragTime: undefined
-		}
+		};
 
 		this.cameraHeight = {
 			max: null,
@@ -99,14 +99,14 @@ export class DiceBox {
 		];
 
 		for (const [surface, numsounds] of surfaces) {
-			game.dice3d.box.sounds_table[surface] = [];
+			this.sounds_table[surface] = [];
 			for (let s=1; s <= numsounds; ++s) {
 				let path = `modules/dice-so-nice/sounds/${surface}/surface_${surface}${s}.wav`;
 				AudioHelper.play({
 					src:path,
 					autoplay:false
 				},false);
-				game.dice3d.box.sounds_table[surface].push(path);
+				this.sounds_table[surface].push(path);
 			}
 		}
 
@@ -115,13 +115,14 @@ export class DiceBox {
 			AudioHelper.play({
 				src:path,
 				autoplay:false
-			},false)
-			game.dice3d.box.sounds_dice.push(path);
+			},false);
+			this.sounds_dice.push(path);
 		}
 	}
 
 	initialize() {
-		game.audio.pending.push(this.preloadSounds);
+		game.audio.pending.push(this.preloadSounds.bind(this));
+
 		if(this.config.system != "standard")
 			this.dicefactory.setSystem(this.config.system);
 		this.sounds = this.config.sounds == '1';
@@ -276,7 +277,7 @@ export class DiceBox {
 	//returns an array of vectordata objects
 	getNotationVectors(notation, vector, boost, dist){
 
-		let notationVectors = new DiceNotation(notation);
+		let notationVectors = new DiceNotation(notation, this.dicefactory);
 
 		for (let i in notationVectors.set) {
 
@@ -474,7 +475,7 @@ export class DiceBox {
 		dicemesh.body.linearDamping = 0.1;
 		dicemesh.body.angularDamping = 0.1;
 
-		dicemesh.body.addEventListener('collide', this.eventCollide);
+		dicemesh.body.addEventListener('collide', this.eventCollide.bind(this));
 
 		this.scene.add(dicemesh);
 		this.diceList.push(dicemesh);
@@ -484,10 +485,10 @@ export class DiceBox {
 	eventCollide({body, target}) {
 		// collision events happen simultaneously for both colliding bodies
 		// all this sanity checking helps limits sounds being played
-		let dicebox = game.dice3d.box;
+
 		// don't play sounds if we're simulating
-		if (dicebox.animstate == 'simulate') return;
-		if (!dicebox.sounds || !body) return;
+		if (this.animstate === 'simulate') return;
+		if (!this.sounds || !body) return;
 
 		let now = Date.now();
 		let currentSoundType = (body.mass > 0) ? 'dice' : 'table';
@@ -495,9 +496,9 @@ export class DiceBox {
 		// 
 		// the idea here is that a dice clack should never be skipped in favor of a table sound
 		// if ((don't play sounds if we played one this world step, or there hasn't been enough delay) AND 'this sound IS NOT a dice clack') then 'skip it'
-		if ((dicebox.lastSoundStep == body.world.stepnumber || dicebox.lastSound > now) && currentSoundType != 'dice') return;
+		if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType != 'dice') return;
 		// also skip if it's too early and both last sound and this sound are the same
-		if ((dicebox.lastSoundStep == body.world.stepnumber || dicebox.lastSound > now) && currentSoundType == 'dice' && dicebox.lastSoundType == 'dice') return;
+		if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType == 'dice' && this.lastSoundType == 'dice') return;
 
 		if (body.mass > 0) { // dice to dice collision
 
@@ -510,11 +511,11 @@ export class DiceBox {
 			let low = 250;
 			strength = Math.max(Math.min(speed / (high-low), 1), strength);
 
-			let sound = dicebox.sounds_dice[Math.floor(Math.random() * dicebox.sounds_dice.length)];
+			let sound = this.sounds_dice[Math.floor(Math.random() * this.sounds_dice.length)];
 			AudioHelper.play({
 				src:sound
 			},false);
-			dicebox.lastSoundType = 'dice';
+			this.lastSoundType = 'dice';
 
 
 		} else { // dice to table collision
@@ -528,17 +529,17 @@ export class DiceBox {
 			let low = 250;
 			strength = Math.max(Math.min(speed / (high-low), 1), strength);
 
-			let soundlist = dicebox.sounds_table[surface];
+			let soundlist = this.sounds_table[surface];
 			let sound = soundlist[Math.floor(Math.random() * soundlist.length)];
 
 			AudioHelper.play({
 				src:sound
 			},false);
-			dicebox.lastSoundType = 'table';
+			this.lastSoundType = 'table';
 		}
 
-		dicebox.lastSoundStep = body.world.stepnumber;
-		dicebox.lastSound = now + dicebox.soundDelay;
+		this.lastSoundStep = body.world.stepnumber;
+		this.lastSound = now + this.soundDelay;
 	}
 
 	//resets vectors on dice back to startign notation values for a roll after simulation.
@@ -553,7 +554,7 @@ export class DiceBox {
 		dicemesh.body.velocity.set(velocity.x, velocity.y, velocity.z);
 		dicemesh.body.linearDamping = 0.1;
 		dicemesh.body.angularDamping = 0.1;
-		dicemesh.body.addEventListener('collide', this.eventCollide);
+		dicemesh.body.addEventListener('collide', this.eventCollide.bind(this));
 		this.world.add(dicemesh.body);
 		dicemesh.body.sleepState = 0;
 		
@@ -672,7 +673,7 @@ export class DiceBox {
 		
 		this.applyColorsForRoll(dsnConfig);
 
-		let notationVectors = new DiceNotation(res.notation);
+		let notationVectors = new DiceNotation(res.notation, this.dicefactory);
 		notationVectors.result = result;
 		notationVectors.vectors = res.vectors;
 

@@ -359,21 +359,18 @@ export const COLORSETS = {
 };
 
 export class DiceColors {
-	constructor() {
-		
-	}
-	static ImageLoader(sources, callback) {
+
+	static loadTextures(sources, callback) {
+
 		let images = {};
 		let loadedImages = 0;
 	
 		let itemprops = Object.entries(sources);
 		let numImages = itemprops.length;
 		for (const [key, value] of itemprops) {
-	
-		//for (var src in sources) {
-	
-			if(value.source == '') {
-				++loadedImages
+
+			if(value.source === '') {
+				++loadedImages;
 				continue;
 			}
 	
@@ -381,6 +378,7 @@ export class DiceColors {
 			images[key].onload = function() {
 	
 				if (++loadedImages >= numImages) {
+					DiceColors.diceTextures = mergeObject(images, DiceColors.diceTextures || {});
 					callback(images);
 				}
 			};
@@ -410,17 +408,17 @@ export class DiceColors {
 		}
 	
 		if(texturename == 'random') {
-			let names = Object.keys(game.dice3d.diceTextures);
+			let names = Object.keys(DiceColors.diceTextures);
 			// add 'none' for possibility of no texture
 			names.pop(); //remove 'random' from this list
 	
 			return this.getTexture(names[Math.floor(Math.random() * names.length)]);
 		}
 		//Init not done yet, let the init load the texture
-		if(!game.dice3d.diceTextures)
+		if(!DiceColors.diceTextures)
 			return texturename;
-		if (game.dice3d.diceTextures[texturename] != null) {
-			return { name: texturename, texture: game.dice3d.diceTextures[texturename], composite: TEXTURELIST[texturename].composite };
+		if (DiceColors.diceTextures[texturename] != null) {
+			return { name: texturename, texture: DiceColors.diceTextures[texturename], composite: TEXTURELIST[texturename].composite };
 		}
 		return {name:'',texture:''};
 	}
