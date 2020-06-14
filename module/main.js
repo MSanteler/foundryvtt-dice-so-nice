@@ -148,7 +148,12 @@ class Utils {
     };
 
     static prepareColorsetList(){
-        let groupedSetsList = Object.values(COLORSETS);
+        let sets = {};
+        if(DiceColors.colorsetForced)
+            sets[DiceColors.colorsetForced] = COLORSETS[DiceColors.colorsetForced];
+        else
+            sets = COLORSETS;
+        let groupedSetsList = Object.values(sets);
         groupedSetsList.sort((set1, set2) => {
             //if(game.i18n.localize(set1.category) < game.i18n.localize(set2.category)) return -1;
             //if(game.i18n.localize(set1.category) > game.i18n.localize(set2.category)) return 1;
@@ -200,7 +205,7 @@ export class Dice3D {
 
     static DEFAULT_APPEARANCE(user = game.user) {
         return {
-            labelColor: Utils.contrastOf(game.user.color),
+            labelColor: Utils.contrastOf(user.color),
             diceColor: user.color,
             outlineColor: user.color,
             edgeColor: user.color,
@@ -271,10 +276,25 @@ export class Dice3D {
     /**
      * Add a colorset (theme)
      * @param {Object} colorset 
+     * @param {Object} apply = "no", "default", "force"
      */
-    addColorset(colorset){
+    addColorset(colorset,apply = "no"){
         COLORSETS[colorset.name] = colorset;
         DiceColors.initColorSets(colorset);
+        
+        switch(apply){
+            case "force":
+                DiceColors.colorsetForced = colorset.name;
+                //note: there's no break here on purpose 
+            case "default":
+                //If there's no apperance already selected by the player, save this custom colorset as his own
+                let savedAppearance = game.user.getFlag("dice-so-nice", "appearance");
+                if(!savedAppearance){
+                    let appearance = Dice3D.DEFAULT_APPEARANCE();
+                    appearance.colorset = colorset.name;
+                    game.user.setFlag("dice-so-nice", "appearance", appearance);
+                }
+        }
     }
 
     /**

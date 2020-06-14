@@ -94,7 +94,6 @@ The configuration must contain two parameters:
 
 #### What is not supported yet
 - **Per dice color/texture**: For now, you can't link a single dice type to a specific color or texture.
-- **Force a colorset to all players**: While we are working on this, it is not yet possible to force the activation of a colorset.
 
 ### Listening to DiceSoNiceReady hook
 Before using the customization API, you must make sure that "Dice So Nice" is ready.
@@ -185,7 +184,12 @@ dice3d.addTexture("13Ared", {
  * (Optional) edge: Colors of the edges
  * texture: ID of the texture to use if "None / Auto (Theme)" is selected in the settings. 
  * If it is a custom texture, make sure to call this function after the Promise from "addTexture" is resolved.
+ * The "apply" parameter have 3 modes :
+ * - "no" just register the colorset. 
+ * - "default" apply the colorset if the player didn't already change his dices appearance for this world. 
+ * - "force" apply the colorset and the player can't change the colors himself
  * @param {Object} colorset 
+ * @param {String} apply = "no" (default)|"default"|"force"
  */
 dice3d.addColorset({
     name: '13a',
@@ -195,7 +199,7 @@ dice3d.addColorset({
     background: "#9F8",
     texture: '13Ared',
     edge: '#9F8003'
-});
+},"default");
 
 dice3d.addColorset({
     name: 'rainbow',
@@ -277,6 +281,16 @@ Hooks.once('diceSoNiceReady', (dice3d) => {
     ],
     system:"degenesis"
   });
+
+  dice3d.addColorset({
+    name: 'degenesis',
+    description: 'Degenesis Black',
+    category: 'Colors',
+    foreground: "#FFFFFF",
+    background: "#000000",
+    outline: 'none',
+    texture: 'none'
+  },"force");
 });
 ```
 ## Known limitations
