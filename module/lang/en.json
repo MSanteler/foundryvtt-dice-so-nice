@@ -19,6 +19,7 @@
     "DICESONICE.3xSpeed": "3x",
     "DICESONICE.fps": "Max FPS",
     "DICESONICE.Save": "Save",
+    "DICESONICE.Reset": "Reset to Default",
     "DICESONICE.Apply": "Apply",
     "DICESONICE.outlineColor": "Outline Color",
     "DICESONICE.edgeColor": "Edge Color",
@@ -30,6 +31,9 @@
     "DICESONICE.shadowQuality" : "Shadows Quality",
     "DICESONICE.sounds" : "Sound Effects",
     "DICESONICE.system" : "Dice Presets (Faces)",
+    "DICESONICE.maxDiceNumber" : "Max Number of Dice",
+    "DICESONICE.maxDiceNumberHint" : "Maximum number of displayed dice in an animation. Higher numbers will reduce performances",
+    "DICESONICE.saveMessage": "Updated 3D Dice Settings Configuration.",
 
     "DICESONICE.TextureClouds" : "Clouds",
     "DICESONICE.TextureFire" : "Fire",

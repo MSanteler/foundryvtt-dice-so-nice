@@ -1,5 +1,5 @@
 <div class="tab active" data-tab="general">
-    <div id="dice-gonfiguration-canvas" style="width: 500px; height: 300px"></div>
+    <div id="dice-configuration-canvas" style="width: 500px; height: 245px"></div>
     <form autocomplete="off" class="dice-so-nice">
 
         <div class="form-group">
@@ -139,6 +139,9 @@
         </div>
 
         <div class="form-group" style="margin-top: 20px;">
+            <button type="button" name="reset">
+                <i class="fas fa-refresh"></i> {{localize "DICESONICE.Reset"}}
+            </button>
             <button type="submit" name="submit">
                 <i class="fas fa-save"></i> {{localize "DICESONICE.Save"}}
             </button>

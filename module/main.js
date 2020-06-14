@@ -27,6 +27,20 @@ Hooks.once('ready', () => {
         }
     });
 
+    game.settings.register("dice-so-nice", "maxDiceNumber", {
+        name: "DICESONICE.maxDiceNumber",
+        hint: "DICESONICE.maxDiceNumberHint",
+        scope: "world",
+        type: Number,
+        default: 20,
+        range: {
+            min: 20,
+            max: 50,
+            step: 5
+        },
+        config: true
+    });
+
     game.dice3d = new Dice3D();
 
     const original = Roll.prototype.toMessage;
@@ -458,7 +472,7 @@ class RollData {
         roll.dice.forEach(dice => {
             if([4, 6, 8, 10, 12, 20, 100].includes(dice.faces)) {
                 let separator = this.formula.length > 1 ? ' + ' : '';
-                let rolls = Math.min(dice.rolls.length, 20);
+                let rolls = Math.min(dice.rolls.length, game.settings.get("dice-so-nice", "maxDiceNumber"));
                 this.formula += separator + (dice.rolls.length > 1 ? `${rolls}d${dice.faces}` : `d${dice.faces}`);
                 if(dice.faces === 100) {
                     this.formula += ' + ' + (dice.rolls.length > 1 ? `${rolls}d10` : `d10`);
@@ -515,19 +529,18 @@ class DiceConfig extends FormApplication {
                 }),
                 systemList : Utils.prepareSystemList()
             },
-            Dice3D.CONFIG
+            this.reset ? Dice3D.DEFAULT_OPTIONS : Dice3D.CONFIG
         );
     }
 
     activateListeners(html) {
         super.activateListeners(html);
 
-        let canvas = document.getElementById('dice-gonfiguration-canvas');
+        let canvas = document.getElementById('dice-configuration-canvas');
         let config = mergeObject(
-            Dice3D.CONFIG,
-            {dimensions: { w: 500, h: 300 }, autoscale: false, scale: 70}
+            this.reset ? Dice3D.DEFAULT_OPTIONS : Dice3D.CONFIG,
+            {dimensions: { w: 500, h: 245 }, autoscale: false, scale: 60}
         );
-        config = mergeObject(Dice3D.DEFAULT_OPTIONS, config);
 
         this.box = new DiceBox(canvas, game.dice3d.box.dicefactory, config);
         this.box.initialize();
@@ -541,6 +554,9 @@ class DiceConfig extends FormApplication {
         html.find('input[name="autoscale"]').change(this.toggleAutoScale.bind(this));
         html.find('select[name="colorset"]').change(this.toggleCustomColors.bind(this));
         html.find('input,select').change(this.onApply.bind(this));
+        html.find('button[name="reset"]').click(this.onReset.bind(this));
+
+        this.reset = false;
     }
 
     toggleHideAfterRoll() {
@@ -578,7 +594,7 @@ class DiceConfig extends FormApplication {
                 outlineColor: $('input[name="outlineColor"]').val(),
                 edgeColor: $('input[name="edgeColor"]').val(),
                 autoscale: false,
-                scale: 70,
+                scale: 60,
                 shadowQuality:$('select[name="shadowQuality"]').val(),
                 colorset: $('select[name="colorset"]').val(),
                 texture: $('select[name="texture"]').val(),
@@ -591,13 +607,18 @@ class DiceConfig extends FormApplication {
         }, 100);
     }
 
+    onReset() {
+        this.reset = true;
+        this.render();
+    }
+
     async _updateObject(event, formData) {
         let settings = mergeObject(
             Dice3D.CONFIG,
             formData
         );
         await game.settings.set('dice-so-nice', 'settings', settings);
-        ui.notifications.info(`Updated 3D Dice Settings Configuration.`);
+        ui.notifications.info(game.i18n.localize("DICESONICE.saveMessage"));
     }
 
 }
