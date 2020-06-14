@@ -2,7 +2,7 @@
 
 This module for Foundry VTT adds the ability to show a 3D dice simulation when a roll is made.
 
-[TOC]
+[[_TOC_]]
 
 ## Installation
 
@@ -110,7 +110,8 @@ A system (or "Dice Presets" for players) allows you to store a list of custom di
  * The id is to be used with addDicePreset method
  * The name can be a localized string
  * @param {Object} system {id, name}
- * @param {Boolean} forceActivate Will force the activation of this system for all players. Other systems won't be available if you do so
+ * @param {Boolean} forceActivate Will force the activation of this system for all players. 
+ * Other systems won't be available if you do so
  */
 dice3d.addSystem({id: "13A", name: "13th Age"}, true);
 ```
@@ -181,7 +182,8 @@ dice3d.addTexture("13Ared", {
  * background: Colors of the dice
  * outline: Colors of the label outline. Can be 'none'.
  * (Optional) edge: Colors of the edges
- * texture: ID of the texture to use if "None / Auto (Theme)" is selected in the settings. If it is a custom texture, make sure to call this function after the Promise from "addTexture" is resolved.
+ * texture: ID of the texture to use if "None / Auto (Theme)" is selected in the settings. 
+ * If it is a custom texture, make sure to call this function after the Promise from "addTexture" is resolved.
  * @param {Object} colorset 
  */
 dice3d.addColorset({
