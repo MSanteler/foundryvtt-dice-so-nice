@@ -1,4 +1,3 @@
-import {DiceColors} from './DiceColors.js';
 export class DicePreset {
 
 	constructor(type, shape = '') {
