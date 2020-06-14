@@ -759,9 +759,7 @@ export class DiceBox {
 		this.animateThrow(this,this.running, callback, notationVectors);
 	}
 
-	showcase(config = null) {
-		if(config === null)
-			config = game.settings.get('dice-so-nice', 'settings');
+	showcase(config) {
 		this.clearDice();
 		let step = this.display.containerWidth / 4 *1.15;
 
@@ -837,5 +835,4 @@ export class DiceBox {
 			}).bind(this)(this.animateSelector, threadid, this.adaptive_timestep);
 		}
 	}
-
 }

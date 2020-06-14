@@ -481,7 +481,7 @@ export class DiceColors {
 	}
 	
 	static getColorSet(colorsetname) {
-		let colorset = COLORSETS[colorsetname] || COLORSETS['random'];
+		let colorset = COLORSETS[colorsetname] || COLORSETS['custom'];
 		return colorset;
 	}
 
