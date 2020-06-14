@@ -2,6 +2,9 @@ import {DiceFactory} from './DiceFactory.js';
 import {DiceBox} from './DiceBox.js';
 import {DiceColors, TEXTURELIST, COLORSETS} from './DiceColors.js';
 
+/**
+ * Registers the exposed settings for the various 3D dice options.
+ */
 Hooks.once('init', () => {
 
     game.settings.registerMenu("dice-so-nice", "dice-so-nice", {
@@ -12,9 +15,6 @@ Hooks.once('init', () => {
         type: DiceConfig,
         restricted: false
     });
-});
-
-Hooks.once('ready', () => {
 
     game.settings.register("dice-so-nice", "settings", {
         name: "3D Dice Settings",
@@ -23,7 +23,9 @@ Hooks.once('ready', () => {
         type: Object,
         config: false,
         onChange: settings => {
-            game.dice3d.update(settings);
+            if(game.dice3d) {
+                game.dice3d.update(settings);
+            }
         }
     });
 
@@ -40,51 +42,63 @@ Hooks.once('ready', () => {
         },
         config: true
     });
-
-    game.dice3d = new Dice3D();
-
-    const original = Roll.prototype.toMessage;
-    Roll.prototype.toMessage = function (chatData={}, {rollMode=null, create=true}={}) {
-
-        if(!create) {
-            return original.apply(this, arguments);
-        }
-
-        chatData = original.apply(this, [chatData, {rollMode, create:false}]);
-
-        let blind = false, whisper;
-        rollMode = rollMode || game.settings.get("core", "rollMode");
-        if ( ["gmroll", "blindroll"].includes(rollMode) ) whisper = ChatMessage.getWhisperRecipients("GM");
-        if ( rollMode === "blindroll" ) blind = true;
-        if ( rollMode === "selfroll" ) whisper = [game.user.id];
-
-        game.dice3d.showForRoll(this, whisper, blind).then(displayed => {
-            chatData = displayed ? mergeObject(chatData, { sound: null }) : chatData;
-            const messageOptions = {rollMode};
-            CONFIG.ChatMessage.entityClass.create(chatData, messageOptions);
-        });
-
-        return chatData;
-    };
 });
 
-Hooks.on('chatMessage', (chatLog, message, chatData) => {
+/**
+ * Foundry is ready, let's create a new Dice3D!
+ */
+Hooks.once('ready', () => {
 
-    let [command, match] = chatLog.constructor.parse(message);
-    if (!match) throw new Error("Unmatched chat command");
+    Utils.migrateOldSettings();
 
-    if(["roll", "gmroll", "blindroll", "selfroll"].includes(command)) {
-        chatLog._processDiceCommand(command, match, chatData, {});
-        chatData.roll.toMessage(chatData, { rollMode: command });
-        return false;
+    game.dice3d = new Dice3D();
+});
+
+/**
+ * Intercepts all roll-type messages hiding the content until the animation is finished
+ */
+Hooks.on('createChatMessage', (chatMessage) => {
+    if (!chatMessage.isRoll || !chatMessage.isContentVisible) {
+        return;
     }
 
+    if(Dice3D.CONFIG.sounds) {
+        mergeObject(chatMessage.data, { "-=sound": null });
+    }
+
+    chatMessage._dice3danimating = true;
+    game.dice3d.showForRoll(chatMessage.roll, chatMessage.user).then(displayed => {
+        delete chatMessage._dice3danimating;
+        $(`#chat-log .message[data-message-id="${chatMessage.id}"]`).show();
+        ui.chat.scrollBottom();
+    });
+});
+
+/**
+ * Hide messages which are animating rolls.
+ */
+Hooks.on("renderChatMessage", (message, html, data) => {
+    if (message._dice3danimating ) html.hide();
 });
 
 /**
  * Generic utilities class...
  */
 class Utils {
+
+    /**
+     * Migrate old 1.0 setting to new 2.0 format.
+     */
+    static async migrateOldSettings() {
+        let settings = game.settings.get("dice-so-nice", "settings");
+        if(settings.diceColor || settings.labelColor) {
+            let newSettings = mergeObject(Dice3D.DEFAULT_OPTIONS, settings, { insertKeys: false, insertValues: false });
+            let appearance = mergeObject(Dice3D.DEFAULT_APPEARANCE(), settings, { insertKeys: false, insertValues: false });
+            await game.settings.set('dice-so-nice', 'settings', mergeObject(newSettings, { "-=dimensions": null, "-=fxList": null }));
+            await game.user.setFlag("dice-so-nice", "appearance", appearance);
+            ui.notifications.info(game.i18n.localize("DICESONICE.migrateMessage"));
+        }
+    }
 
     /**
      *
@@ -173,12 +187,6 @@ export class Dice3D {
     static get DEFAULT_OPTIONS() {
         return {
             enabled: true,
-            labelColor: Utils.contrastOf(game.user.color),
-            diceColor: game.user.color,
-            outlineColor: game.user.color,
-            edgeColor: game.user.color,
-            texture: "none",
-            colorset: "custom",
             hideAfterRoll: true,
             timeBeforeHide: 2000,
             hideFX: 'fadeOut',
@@ -186,13 +194,36 @@ export class Dice3D {
             scale: 75,
             speed: 1,
             shadowQuality: 'high',
-            sounds: true,
+            sounds: true
+        };
+    }
+
+    static DEFAULT_APPEARANCE(user = game.user) {
+        return {
+            labelColor: Utils.contrastOf(game.user.color),
+            diceColor: user.color,
+            outlineColor: user.color,
+            edgeColor: user.color,
+            texture: "none",
+            colorset: "custom",
             system: "standard"
         };
     }
 
+    static ALL_DEFAULT_OPTIONS(user = game.user) {
+        return mergeObject(Dice3D.DEFAULT_OPTIONS, Dice3D.DEFAULT_APPEARANCE(user));
+    }
+
     static get CONFIG() {
         return mergeObject(Dice3D.DEFAULT_OPTIONS, game.settings.get("dice-so-nice", "settings"));
+    }
+
+    static APPEARANCE(user = game.user) {
+        return mergeObject(Dice3D.DEFAULT_APPEARANCE(user), user.getFlag("dice-so-nice", "appearance"));
+    }
+
+    static ALL_CONFIG(user = game.user) {
+        return mergeObject(Dice3D.CONFIG, Dice3D.APPEARANCE(user));
     }
 
     /**
@@ -310,13 +341,6 @@ export class Dice3D {
                 this.canvas.hide();
             }
         });
-        game.socket.on('module.dice-so-nice', (data) => {
-            if(!data.whisper || data.whisper.map(user => user._id).includes(game.user._id)) {
-                this._showAnimation(data.formula, data.results, data.dsnConfig).then(() => {
-                    //??
-                });
-            }
-        });
     }
 
     /**
@@ -339,12 +363,11 @@ export class Dice3D {
      * Show the 3D Dice animation for the
      *
      * @param roll an instance of Roll class to show 3D dice animation.
-     * @param whisper
-     * @param blind
+     * @param user
      * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
      */
-    showForRoll(roll, whisper, blind) {
-        return this.show(new RollData(roll, whisper, blind));
+    showForRoll(roll, user) {
+        return this.show(new RollData(roll, user));
     }
 
     /**
@@ -358,21 +381,12 @@ export class Dice3D {
 
             if (!data) throw new Error("Roll data should be not null");
 
-            const isEmpty = data.formula.length === 0 || data.results.length === 0;
-            if(!isEmpty) {
-
-                game.socket.emit("module.dice-so-nice", mergeObject(data, { user: game.user._id, dsnConfig: Dice3D.CONFIG}), () => {
-
-                    if(!data.blind || data.whisper.map(user => user._id).includes(game.user._id)) {
-                        this._showAnimation(data.formula, data.results, data.dsnConfig).then(displayed => {
-                            resolve(displayed);
-                        });
-                    } else {
-                        resolve(false);
-                    }
-                });
-            } else {
+            if(data.formula.length === 0 || data.results.length === 0) {
                 resolve(false);
+            } else {
+                this._showAnimation(data.formula, data.results, Dice3D.APPEARANCE(data.user)).then(displayed => {
+                    resolve(displayed);
+                });
             }
         });
     }
@@ -381,6 +395,7 @@ export class Dice3D {
      *
      * @param formula
      * @param results
+     * @param dsnConfig
      * @returns {Promise<boolean>}
      * @private
      */
@@ -458,7 +473,7 @@ export class Dice3D {
  */
 class RollData {
 
-    constructor(roll, whisper, blind) {
+    constructor(roll, user) {
 
         if (!roll) throw new Error("Roll instance should be not null");
 
@@ -466,8 +481,7 @@ class RollData {
 
         this.formula = '';
         this.results = [];
-        this.whisper = whisper;
-        this.blind = blind;
+        this.user = user;
 
         roll.dice.forEach(dice => {
             if([4, 6, 8, 10, 12, 20, 100].includes(dice.faces)) {
@@ -529,7 +543,7 @@ class DiceConfig extends FormApplication {
                 }),
                 systemList : Utils.prepareSystemList()
             },
-            this.reset ? Dice3D.DEFAULT_OPTIONS : Dice3D.CONFIG
+            this.reset ? Dice3D.ALL_DEFAULT_OPTIONS() : Dice3D.ALL_CONFIG()
         );
     }
 
@@ -538,7 +552,7 @@ class DiceConfig extends FormApplication {
 
         let canvas = document.getElementById('dice-configuration-canvas');
         let config = mergeObject(
-            this.reset ? Dice3D.DEFAULT_OPTIONS : Dice3D.CONFIG,
+            this.reset ? Dice3D.ALL_DEFAULT_OPTIONS() : Dice3D.ALL_CONFIG(),
             {dimensions: { w: 500, h: 245 }, autoscale: false, scale: 60}
         );
 
@@ -613,11 +627,10 @@ class DiceConfig extends FormApplication {
     }
 
     async _updateObject(event, formData) {
-        let settings = mergeObject(
-            Dice3D.CONFIG,
-            formData
-        );
+        let settings = mergeObject(Dice3D.CONFIG, formData, { insertKeys: false, insertValues: false });
+        let appearance = mergeObject(Dice3D.APPEARANCE(), formData, { insertKeys: false, insertValues: false });
         await game.settings.set('dice-so-nice', 'settings', settings);
+        await game.user.setFlag("dice-so-nice", "appearance", appearance);
         ui.notifications.info(game.i18n.localize("DICESONICE.saveMessage"));
     }
 

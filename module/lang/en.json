@@ -33,7 +33,8 @@
     "DICESONICE.system" : "Dice Presets (Faces)",
     "DICESONICE.maxDiceNumber" : "Max Number of Dice",
     "DICESONICE.maxDiceNumberHint" : "Maximum number of displayed dice in an animation. Higher numbers will reduce performances",
-    "DICESONICE.saveMessage": "Updated 3D Dice Settings Configuration.",
+    "DICESONICE.saveMessage": "Updated 3D Dice Settings Configuration",
+    "DICESONICE.migrateMessage": "'Dice So Nice' setting was successfully migrated to 2.0 version!",
 
     "DICESONICE.TextureClouds" : "Clouds",
     "DICESONICE.TextureFire" : "Fire",

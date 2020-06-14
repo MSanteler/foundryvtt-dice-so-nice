@@ -125,6 +125,7 @@ export class DiceBox {
 
 		if(this.config.system != "standard")
 			this.dicefactory.setSystem(this.config.system);
+
 		this.sounds = this.config.sounds == '1';
 		this.shadows = this.config.shadowQuality != "none";
 		this.speed = this.config.speed;
