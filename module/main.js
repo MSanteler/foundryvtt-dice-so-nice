@@ -58,7 +58,7 @@ Hooks.once('ready', () => {
  * Intercepts all roll-type messages hiding the content until the animation is finished
  */
 Hooks.on('createChatMessage', (chatMessage) => {
-    if (game.dice3d.messageHookDisabled || !chatMessage.isRoll || !chatMessage.isContentVisible) {
+    if (!chatMessage.isRoll || !chatMessage.isContentVisible || (game.dice3d && game.dice3d.messageHookDisabled)) {
         return;
     }
 
@@ -78,7 +78,7 @@ Hooks.on('createChatMessage', (chatMessage) => {
  * Hide messages which are animating rolls.
  */
 Hooks.on("renderChatMessage", (message, html, data) => {
-    if (game.dice3d.messageHookDisabled) {
+    if (game.dice3d && game.dice3d.messageHookDisabled) {
         return;
     }
     if (message._dice3danimating ) html.hide();
@@ -393,11 +393,12 @@ export class Dice3D {
      * @param roll an instance of Roll class to show 3D dice animation.
      * @param user the user who made the roll (game.user by default).
      * @param synchronize if the animation needs to be synchronized for each players (true/false).
+     * @param blind
      * @param users list of users who can see the roll, leave it empty if everyone can see.
      * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
      */
-    showForRoll(roll, user = game.user, synchronize, users = null) {
-        return this.show(new RollData(roll), user, synchronize, users);
+    showForRoll(roll, user = game.user, synchronize, blind, users = null) {
+        return this.show(new RollData(roll), user, synchronize, blind, users);
     }
 
     /**
@@ -406,10 +407,11 @@ export class Dice3D {
      * @param data data containing the formula and the result to show in the 3D animation.
      * @param user the user who made the roll (game.user by default).
      * @param synchronize
+     * @param blind
      * @param users
      * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
      */
-    show(data, user = game.user, synchronize = false, users = null) {
+    show(data, user = game.user, synchronize = false, blind, users = null) {
         return new Promise((resolve, reject) => {
 
             if (!data) throw new Error("Roll data should be not null");
@@ -422,9 +424,13 @@ export class Dice3D {
                     game.socket.emit("module.dice-so-nice", { data: data, user: user.id, users: users });
                 }
 
-                this._showAnimation(data.formula, data.results, Dice3D.APPEARANCE(user)).then(displayed => {
-                    resolve(displayed);
-                });
+                if(!blind) {
+                    this._showAnimation(data.formula, data.results, Dice3D.APPEARANCE(user)).then(displayed => {
+                        resolve(displayed);
+                    });
+                } else {
+                    resolve(false);
+                }
             }
         });
     }
