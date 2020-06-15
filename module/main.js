@@ -389,8 +389,8 @@ export class Dice3D {
      *
      * @param roll an instance of Roll class to show 3D dice animation.
      * @param user the user who made the roll (game.user by default).
-     * @param synchronize if the animation needs to be synchronized for each players.
-     * @param users
+     * @param synchronize if the animation needs to be synchronized for each players (true/false).
+     * @param users list of users who can see the roll, leave it empty if everyone can see.
      * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
      */
     showForRoll(roll, user = game.user, synchronize, users = null) {
