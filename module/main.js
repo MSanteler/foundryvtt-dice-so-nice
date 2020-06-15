@@ -361,6 +361,11 @@ export class Dice3D {
                 this.canvas.hide();
             }
         });
+        game.socket.on('module.dice-so-nice', (request) => {
+            if(!request.users || request.users.includes(game.user.id)) {
+                this.show(request.data, game.users.get(request.user));
+            }
+        });
     }
 
     /**
@@ -380,23 +385,28 @@ export class Dice3D {
     }
 
     /**
-     * Show the 3D Dice animation for the
+     * Show the 3D Dice animation for the Roll made by the User.
      *
      * @param roll an instance of Roll class to show 3D dice animation.
-     * @param user
+     * @param user the user who made the roll (game.user by default).
+     * @param synchronize if the animation needs to be synchronized for each players.
+     * @param users
      * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
      */
-    showForRoll(roll, user) {
-        return this.show(new RollData(roll, user));
+    showForRoll(roll, user = game.user, synchronize, users = null) {
+        return this.show(new RollData(roll), user, synchronize, users);
     }
 
     /**
-     * Show
+     * Show the 3D Dice animation based on data configuration made by the User.
      *
      * @param data data containing the formula and the result to show in the 3D animation.
+     * @param user the user who made the roll (game.user by default).
+     * @param synchronize
+     * @param users
      * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
      */
-    show(data) {
+    show(data, user = game.user, synchronize = false, users = null) {
         return new Promise((resolve, reject) => {
 
             if (!data) throw new Error("Roll data should be not null");
@@ -404,7 +414,12 @@ export class Dice3D {
             if(data.formula.length === 0 || data.results.length === 0) {
                 resolve(false);
             } else {
-                this._showAnimation(data.formula, data.results, Dice3D.APPEARANCE(data.user)).then(displayed => {
+
+                if(synchronize) {
+                    game.socket.emit("module.dice-so-nice", { data: data, user: user.id, users: users });
+                }
+
+                this._showAnimation(data.formula, data.results, Dice3D.APPEARANCE(user)).then(displayed => {
                     resolve(displayed);
                 });
             }
@@ -493,7 +508,7 @@ export class Dice3D {
  */
 class RollData {
 
-    constructor(roll, user) {
+    constructor(roll) {
 
         if (!roll) throw new Error("Roll instance should be not null");
 
@@ -501,7 +516,6 @@ class RollData {
 
         this.formula = '';
         this.results = [];
-        this.user = user;
 
         roll.dice.forEach(dice => {
             if([4, 6, 8, 10, 12, 20, 100].includes(dice.faces)) {
