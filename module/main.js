@@ -365,7 +365,7 @@ export class Dice3D {
             }
         });
         game.socket.on('module.dice-so-nice', (request) => {
-            if(!request.users || request.users.map(user => user._id).includes(game.user.id)) {
+            if(!request.users || request.users.includes(game.user.id)) {
                 this.show(request.data, game.users.get(request.user));
             }
         });
