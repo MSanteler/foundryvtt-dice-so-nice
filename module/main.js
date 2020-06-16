@@ -343,7 +343,7 @@ export class Dice3D {
      */
     _buildDiceBox() {
         this.DiceFactory = new DiceFactory();
-        this.box = new DiceBox(this.canvas[0], this.DiceFactory, Dice3D.CONFIG);
+        this.box = new DiceBox(this.canvas[0], this.DiceFactory, Dice3D.ALL_CONFIG());
 		this.box.initialize();
     }
 
