@@ -227,7 +227,8 @@ export class Dice3D {
     }
 
     static APPEARANCE(user = game.user) {
-        return mergeObject(Dice3D.DEFAULT_APPEARANCE(user), user.getFlag("dice-so-nice", "appearance"));
+        let appearance =  mergeObject(Dice3D.DEFAULT_APPEARANCE(user), user.getFlag("dice-so-nice", "appearance"));
+        return mergeObject(appearance, { "-=dimensions": null });
     }
 
     static ALL_CONFIG(user = game.user) {
