@@ -674,6 +674,7 @@ export class DiceBox {
 		let res = this.getNotationVectors(notation, vector, boost, dist);
 		
 		this.applyColorsForRoll(dsnConfig);
+		this.dicefactory.setSystem(dsnConfig.system);
 
 		let notationVectors = new DiceNotation(res.notation, this.dicefactory);
 		notationVectors.result = result;

@@ -84,6 +84,37 @@ The configuration must contain two parameters:
 * **formula**: a string containing the dice to show formatted as `[n of dices if > 0]d[n of faces] [+...n]`, where the 'n of faces' can take only these values: 4,6,8,10,12,20,100. 
 * **results** an array containing the ordered list of the roll results. In the example above 20 is the result of the d20, 6 and 6 of the 2d6.  
 
+## 2.0 API break! 
+Since version 2.0, the signature of the method ``showForRoll`` and ``show`` have undergone a slightly change to support the new features, below the new signatures: 
+
+```javascript
+/**
+ * Show the 3D Dice animation for the Roll made by the User.
+ *
+ * @param roll an instance of Roll class to show 3D dice animation.
+ * @param user the user who made the roll (game.user by default).
+ * @param synchronize if the animation needs to be synchronized for each players (true/false by default).
+ * @param whisper list of users or userId who can see the roll, leave it empty if everyone can see.
+ * @param blind if the roll is blind for the current user
+ * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
+ */
+game.dice3d.showForRoll(roll, user, synchronize, whisper, blind)
+```   
+
+```javascript
+/**
+ * Show the 3D Dice animation based on data configuration made by the User.
+ *
+ * @param data data containing the formula and the result to show in the 3D animation.
+ * @param user the user who made the roll (game.user by default).
+ * @param synchronize if the animation needs to be synchronized for each players (true/false by default).
+ * @param whisper list of users or userId who can see the roll, leave it empty if everyone can see.
+ * @param blind if the roll is blind for the current user
+ * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
+ */
+game.dice3d.show(data, user, synchronize, whisper, blind)
+```
+
 ## Customization API
 'Dice So Nice' expose an API for systems and modules to add their own customizations.
 

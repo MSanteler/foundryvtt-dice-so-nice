@@ -393,12 +393,12 @@ export class Dice3D {
      * @param roll an instance of Roll class to show 3D dice animation.
      * @param user the user who made the roll (game.user by default).
      * @param synchronize if the animation needs to be synchronized for each players (true/false).
-     * @param blind
-     * @param users list of users who can see the roll, leave it empty if everyone can see.
+     * @param users list of users or userId who can see the roll, leave it empty if everyone can see.
+     * @param blind if the roll is blind for the current user
      * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
      */
-    showForRoll(roll, user = game.user, synchronize, blind, users = null) {
-        return this.show(new RollData(roll), user, synchronize, blind, users);
+    showForRoll(roll, user = game.user, synchronize, users = null, blind) {
+        return this.show(new RollData(roll), user, synchronize, users, blind);
     }
 
     /**
@@ -407,11 +407,11 @@ export class Dice3D {
      * @param data data containing the formula and the result to show in the 3D animation.
      * @param user the user who made the roll (game.user by default).
      * @param synchronize
-     * @param blind
-     * @param users
+     * @param users list of users or userId who can see the roll, leave it empty if everyone can see.
+     * @param blind if the roll is blind for the current user
      * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
      */
-    show(data, user = game.user, synchronize = false, blind, users = null) {
+    show(data, user = game.user, synchronize = false, users = null, blind) {
         return new Promise((resolve, reject) => {
 
             if (!data) throw new Error("Roll data should be not null");
@@ -421,6 +421,7 @@ export class Dice3D {
             } else {
 
                 if(synchronize) {
+                    users = users && users.length > 0 ? (users[0].id ? users.map(user => user.id) : users ) : users;
                     game.socket.emit("module.dice-so-nice", { data: data, user: user.id, users: users });
                 }
 
