@@ -259,7 +259,8 @@ export class DiceBox {
 		this.renderer.shadowMap.enabled = this.shadows;
 		this.renderer.shadowMap.type = config.shadowQuality == "high" ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
 		this.sounds = config.sounds;
-		this.dicefactory.setSystem(config.system);
+		if(config.system)
+			this.dicefactory.setSystem(config.system);
         this.applyColorsForRoll(config);
     }
 
