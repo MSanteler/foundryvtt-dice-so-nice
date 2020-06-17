@@ -201,7 +201,7 @@ export class DiceFactory {
 			for (let i = 0, l = this.geometry.faces.length; i < l; ++i) {
 				let face = this.geometry.faces[i];
 				if (face.materialIndex == 0) continue;
-				let angle = face.normal.clone().applyQuaternion(this.body.quaternion).angleTo(vector);
+				let angle = face.normal.clone().applyQuaternion(this.body_sim.quaternion).angleTo(vector);
 				if (angle < closest_angle) {
 					closest_angle = angle;
 					closest_face = face;
