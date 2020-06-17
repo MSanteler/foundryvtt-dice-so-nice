@@ -223,9 +223,10 @@ export class DiceBox {
 
 		if (this.light) this.scene.remove(this.light);
 		this.light = new THREE.SpotLight(this.colors.spotlight, 1.0);
-		this.light.position.set(-maxwidth / 2, maxwidth / 2, maxwidth * 2);
+		this.light.position.set(-maxwidth / 2, maxwidth / 2, maxwidth * 3);
 		this.light.target.position.set(0, 0, 0);
 		this.light.distance = maxwidth * 5;
+		this.light.angle = Math.PI/4;
 		this.light.castShadow = this.shadows;
 		this.light.shadow.camera.near = maxwidth / 10;
 		this.light.shadow.camera.far = maxwidth * 5;
