@@ -313,6 +313,7 @@ export class Dice3D {
             DiceColors.initColorSets();
             Hooks.call("diceSoNiceReady", this);
         });
+        this._startQueueHandler();
     }
 
     /**
@@ -373,6 +374,22 @@ export class Dice3D {
     }
 
     /**
+     * Start polling and watching te queue for animation requests.
+     * Each request is resolved in sequence.
+     *
+     * @private
+     */
+    _startQueueHandler() {
+        this.queue = [];
+        setInterval(() => {
+            if(this.queue.length > 0 && !this.box.rolling) {
+                let animate = this.queue.shift();
+                animate();
+            }
+        }, 100);
+    }
+
+    /**
      * Check if 3D simulation is enabled from the settings.
      */
     isEnabled() {
@@ -396,7 +413,7 @@ export class Dice3D {
      * @param synchronize if the animation needs to be synchronized for each players (true/false).
      * @param users list of users or userId who can see the roll, leave it empty if everyone can see.
      * @param blind if the roll is blind for the current user
-     * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
+     * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
      */
     showForRoll(roll, user = game.user, synchronize, users = null, blind) {
         return this.show(new RollData(roll), user, synchronize, users, blind);
@@ -410,7 +427,7 @@ export class Dice3D {
      * @param synchronize
      * @param users list of users or userId who can see the roll, leave it empty if everyone can see.
      * @param blind if the roll is blind for the current user
-     * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
+     * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
      */
     show(data, user = game.user, synchronize = false, users = null, blind) {
         return new Promise((resolve, reject) => {
@@ -447,13 +464,15 @@ export class Dice3D {
      */
     _showAnimation(formula, results, dsnConfig) {
         return new Promise((resolve, reject) => {
-            if(this.isEnabled() && !this.box.rolling) {
-                this._beforeShow();
-                this.box.start_throw(formula, results, dsnConfig, () => {
-                        resolve(true);
-                        this._afterShow();
-                    }
-                );
+            if(this.isEnabled()) {
+                this.queue.push(() => {
+                    this._beforeShow();
+                    this.box.start_throw(formula, results, dsnConfig, () => {
+                            resolve(true);
+                            this._afterShow();
+                        }
+                    );
+                });
             } else {
                 resolve(false);
             }
@@ -660,6 +679,8 @@ class DiceConfig extends FormApplication {
                 sounds: $('input[name="sounds"]').val() == "on",
                 system: $('select[name="system"]').val()
             };
+
+            $('input[type="color"]').each(index => console.log( $( this ) ))
 
             this.box.update(config);
             this.box.showcase(config);

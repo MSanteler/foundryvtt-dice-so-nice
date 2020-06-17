@@ -55,20 +55,12 @@ If the Roll class is still used, activating the animation could be done using th
 ```javascript
 const r = new Roll('1d20');
 r.roll();
-game.dice3d.showForRoll(r).then(displayed => { /*do you stuff after the animation */  });
+game.dice3d.showForRoll(r).then(displayed => { /* do you stuff after the animation */  });
 ```
 `game.dice3d.showForRoll` returns a promise that is resolved once the animation has ended. The returned parameter is a boolean that 
 informs if the animation took place or not.
 
-Since version 2.0, the function can take extra parameters to synchronize the rolls with other players:   
-```javascript
-game.dice3d.showForRoll(r, user, whisper, blind, sync)
-```
-where: 
-* `user`: User object of the player currently rolling (game.user most of the time)
-* `whisper`: array containing the User objects or user ids of other users who can see the roll. If set to `null`, shows to everybody
-* `blind`: when true the roll is not displayed, unless the id of the user is contained in the whisper array. 
-* `sync`: when true, send an event to other players through the socket to start the roll animation
+Since version 2.0, the function can take extra parameters to synchronize the rolls with other players, see the 2.0 API break part below for the details.
 
 If the `Roll` class is not used, you can alternatively call the `game.dice3d.show` method passing a JSON configuration data like so:
 
@@ -79,7 +71,7 @@ const data = {
     whisper: null,
     blind: false
 };
-game.dice3d.show(data).then(displayed => { /*do your stuff after the animation */  }); 
+game.dice3d.show(data).then(displayed => { /* do your stuff after the animation */  }); 
 ```
 The configuration must contain two parameters:
 
@@ -98,7 +90,7 @@ Since version 2.0, the signature of the method ``showForRoll`` and ``show`` have
  * @param synchronize if the animation needs to be synchronized for each players (true/false by default).
  * @param whisper list of users or userId who can see the roll, leave it empty if everyone can see.
  * @param blind if the roll is blind for the current user
- * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
+ * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
  */
 game.dice3d.showForRoll(roll, user, synchronize, whisper, blind)
 ```   
@@ -112,7 +104,7 @@ game.dice3d.showForRoll(roll, user, synchronize, whisper, blind)
  * @param synchronize if the animation needs to be synchronized for each players (true/false by default).
  * @param whisper list of users or userId who can see the roll, leave it empty if everyone can see.
  * @param blind if the roll is blind for the current user
- * @returns {Promise<boolean>} when resolved true if roll is if the animation was displayed, false if not.
+ * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
  */
 game.dice3d.show(data, user, synchronize, whisper, blind)
 ```
@@ -328,7 +320,6 @@ Hooks.once('diceSoNiceReady', (dice3d) => {
 ```
 ## Known limitations
 
-- The maximum number of dice displayed simultaneously is equal to 20.
 - Works with vanilla foundry and with modules that do not substantially modify the Roll API.
 
 ## Compatibility
@@ -348,7 +339,7 @@ D10 Geometry created by Greewi who did all the maths for this custom "Pentagonal
 
 ## Feedback
 
-Every suggestions/feedback are appreciated, if so, please contact me on discord (Simone#6710)
+Every suggestions/feedback are appreciated, if so, please contact (Simone#6710) or JDW (JDW#6422) me on discord 
 
 ## License
 
