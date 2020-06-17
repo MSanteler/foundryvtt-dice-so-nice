@@ -255,7 +255,8 @@ export class DiceBox {
 
 		this.speed = parseInt(config.speed,10);
 		this.shadows = config.shadowQuality != "none";
-
+		this.light.castShadow = this.shadows;
+		this.desk.receiveShadow = this.shadows;
 		this.renderer.shadowMap.enabled = this.shadows;
 		this.renderer.shadowMap.type = config.shadowQuality == "high" ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
 		this.sounds = config.sounds;
@@ -593,9 +594,9 @@ export class DiceBox {
 		me.last_time = me.last_time || time - (me.framerate*1000);
 		let time_diff = (time - me.last_time) / 1000;
 		++me.iteration;
-		let neededSteps = Math.floor(time_diff / me.framerate)*me.speed;
+		let neededSteps = Math.floor(time_diff / me.framerate);
 
-		for(let i =0; i < neededSteps; i++) {
+		for(let i =0; i < neededSteps*me.speed; i++) {
 			me.world.step(me.framerate);
 			me.steps++;
 		}
