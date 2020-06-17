@@ -60,13 +60,15 @@ game.dice3d.showForRoll(r).then(displayed => { /*do you stuff after the animatio
 `game.dice3d.showForRoll` returns a promise that is resolved once the animation has ended. The returned parameter is a boolean that 
 informs if the animation took place or not.
 
-Since version 1.3 it is possible to view other player's rolls so, two optionals parameters have been added to the signature:   
+Since version 2.0, the function can take extra parameters to synchronize the rolls with other players:   
 ```javascript
-game.dice3d.showForRoll(r, whisper, blind)
+game.dice3d.showForRoll(r, user, whisper, blind, sync)
 ```
 where: 
-* `whisper`: array containing the User objects of other users who can see the roll (typically the DM)
+* `user`: User object of the player currently rolling (game.user most of the time)
+* `whisper`: array containing the User objects or user ids of other users who can see the roll. If set to `null`, shows to everybody
 * `blind`: when true the roll is not displayed, unless the id of the user is contained in the whisper array. 
+* `sync`: when true, send an event to other players through the socket to start the roll animation
 
 If the `Roll` class is not used, you can alternatively call the `game.dice3d.show` method passing a JSON configuration data like so:
 
@@ -350,6 +352,6 @@ Every suggestions/feedback are appreciated, if so, please contact me on discord 
 
 ## License
 
-FoundryVTT Dice So Nice is a module for Foundry VTT by Simone and is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).
+FoundryVTT Dice So Nice is a module for Foundry VTT by Simone and JDW and is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).
 
 This work is licensed under Foundry Virtual Tabletop [EULA - Limited License Agreement for module development v 0.1.6](http://foundryvtt.com/pages/license.html).
