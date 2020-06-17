@@ -487,8 +487,7 @@ export class Dice3D {
         if(this.timeoutHandle) {
             clearTimeout(this.timeoutHandle);
         }
-
-        this.canvas.stop(true, true);
+        this.canvas.stop(true);
         this.canvas.show();
     }
 
@@ -502,9 +501,18 @@ export class Dice3D {
                 if(!this.box.rolling) {
                     if(Dice3D.CONFIG.hideFX === 'none') {
                         this.canvas.hide();
+                        this.box.clearAll();
                     }
                     if(Dice3D.CONFIG.hideFX === 'fadeOut') {
-                        this.canvas.fadeOut(1000);
+                        this.canvas.fadeOut({
+                            duration: 1000,
+                            complete: () => {
+                                this.box.clearAll();
+                            },
+                            fail: ()=>{
+                                this.canvas.fadeIn(0);
+                            }
+                        });
                     }
                 }
             }, Dice3D.CONFIG.timeBeforeHide);
@@ -679,8 +687,6 @@ class DiceConfig extends FormApplication {
                 sounds: $('input[name="sounds"]').val() == "on",
                 system: $('select[name="system"]').val()
             };
-
-            $('input[type="color"]').each(index => console.log( $( this ) ))
 
             this.box.update(config);
             this.box.showcase(config);
