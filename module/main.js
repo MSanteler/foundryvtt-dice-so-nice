@@ -202,6 +202,7 @@ export class Dice3D {
             scale: 75,
             speed: 1,
             shadowQuality: 'high',
+            bumpMapping: true,
             sounds: true
         };
     }
@@ -688,9 +689,10 @@ class DiceConfig extends FormApplication {
                 autoscale: false,
                 scale: 60,
                 shadowQuality:$('select[name="shadowQuality"]').val(),
+                bumpMapping: $('input[name="bumpMapping"]').is(':checked'),
                 colorset: $('select[name="colorset"]').val(),
                 texture: $('select[name="texture"]').val(),
-                sounds: $('input[name="sounds"]').val() == "on",
+                sounds: $('input[name="sounds"]').is(':checked'),
                 system: $('select[name="system"]').val()
             };
 

@@ -13,6 +13,7 @@ export class DicePreset {
 		this.labels = [];
 		this.valueMap = [];
 		this.values = [];
+		this.normals = [];
 		this.mass = 300;
 		this.inertia = 13;
 		this.geometry = null;
@@ -32,16 +33,22 @@ export class DicePreset {
 		}
 	}
 
-	registerLabels(labels){
-		this.labels.push('');
-		if(this.shape != 'd10') this.labels.push('');
+	registerFaces(faces, type = "labels"){
+		let tab;
+		if(type=="labels")
+			tab = this.labels;
+		else
+			tab = this.normals;
+		
+		tab.push('');
+		if(this.shape != 'd10') tab.push('');
 
 		if (this.shape == 'd4') {
 
-			let a = labels[0];
-			let b = labels[1];
-			let c = labels[2];
-			let d = labels[3];
+			let a = faces[0];
+			let b = faces[1];
+			let c = faces[2];
+			let d = faces[3];
 
 			this.labels = [
 				[[], [0, 0, 0], [b, d, c], [a, c, d], [b, a, d], [a, b, c]],
@@ -50,35 +57,42 @@ export class DicePreset {
 				[[], [0, 0, 0], [d, b, c], [a, d, c], [d, a, b], [a, c, b]]
 			];
 		} else {
-			Array.prototype.push.apply(this.labels, labels)
+			Array.prototype.push.apply(tab, faces)
 		}
 	}
 
 	setLabels(labels) {
+		this.loadTextures(labels,this.registerFaces.bind(this),"labels");
+	}
+
+	setBumpMaps(normals){
+		this.loadTextures(normals,this.registerFaces.bind(this),"bump");
+	}
+
+	loadTextures(textures,callback,type){
 		let loadedImages = 0;
-		let numImages = labels.length;
+		let numImages = textures.length;
 		let regexTexture = /\.(PNG|JPG|GIF|WEBP)/i;
-		let preparedLabels=[labels.length];
+		let imgElements=Array(textures.length);
 		let hasTextures = false;
 		for (let i = 0;i<numImages;i++) {
-			if(labels[i] == '' || !labels[i].match(regexTexture)) {
-				preparedLabels[i] = labels[i];
+			if(textures[i] == '' || !textures[i].match(regexTexture)) {
+				imgElements[i] = textures[i];
 				++loadedImages
 				continue;
 			}
 			hasTextures = true;
-			preparedLabels[i] = new Image();
-			let that = this;
-			preparedLabels[i].onload = function() {
+			imgElements[i] = new Image();
+			imgElements[i].onload = function() {
 	
 				if (++loadedImages >= numImages) {
-					that.registerLabels(preparedLabels);
+					callback(imgElements,type);
 				}
 			};
-			preparedLabels[i].src = labels[i];
+			imgElements[i].src = textures[i];
 		}
 		if(!hasTextures)
-			this.registerLabels(preparedLabels);
+			callback(imgElements,type);
 	}
 
 	range(start, stop, step = 1) {
