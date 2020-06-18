@@ -150,31 +150,17 @@ A custom DicePreset will override a default dice type when its system is selecte
  * The texture file size should be 256*256
  * The system should be a system id already registered
  * (Optional) The font is the name of the font family. (ex: Arial, monospace, etc)
- * @param {Object} dice {type:"",labels:[],system:"",font:""}
+ * (Optional) BumpMaps il an array of bumpmap textures that should follow the exact same order than labels
+ * @param {Object} dice {type:"",labels:[],system:"",font:"",bumpMaps:[]}
  */
 dice3d.addDicePreset({
     type: "d20",
     labels: [
-      "1",
-      "2",
-      "3",
-      "4",
-      "5",
-      "6",
-      "7",
-      "8",
-      "9",
-      "10",
-      "11",
-      "12",
-      "13",
-      "14",
-      "15",
-      "16",
-      "17",
-      "18",
-      "19",
+      "1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19",
       "systems/archmage/images/nat20.png"
+    ],
+    bumpMaps: [,,,,,,,,,,,,,,,,,,,
+      "systems/archmage/images/nat20_BUMP.png"
     ],
     system: "13A"
   });
