@@ -130,6 +130,7 @@ export class DiceBox {
 
 		this.sounds = this.config.sounds == '1';
 		this.shadows = this.config.shadowQuality != "none";
+		this.dicefactory.setBumpMapping(this.config.bumpMapping);
 		this.speed = this.config.speed;
 
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -189,14 +190,6 @@ export class DiceBox {
 		barrier.position.set(-this.display.containerWidth * 0.93, 0, 0);
 		this.world.add(barrier);
 		this.world_sim.add(barrier);
-
-
-		if (this.showdebugtracer) {
-			//raycaster.setFromCamera( this.mouse.pos, this.camera );
-			this.rayvisual = new THREE.ArrowHelper(this.raycaster.ray.direction, this.camera.position, 1000, 0xff0000);
-			this.rayvisual.headWidth = this.rayvisual.headLength * 0.005;
-			this.scene.add(this.rayvisual);
-		}
 
 		this.renderer.render(this.scene, this.camera);
 	}
@@ -273,6 +266,7 @@ export class DiceBox {
             this.display.scale = config.scale
         }
 		this.dicefactory.setScale(this.display.scale);
+		this.dicefactory.setBumpMapping(config.bumpMapping);
 
 		this.speed = parseInt(config.speed,10);
 		this.shadows = config.shadowQuality != "none";

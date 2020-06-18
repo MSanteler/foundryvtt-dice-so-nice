@@ -29,6 +29,7 @@
     "DICESONICE.Low" : "Low",
     "DICESONICE.High" : "High",
     "DICESONICE.shadowQuality" : "Shadows Quality",
+    "DICESONICE.bumpMapping" : "Advanced lighting",
     "DICESONICE.sounds" : "Sound Effects",
     "DICESONICE.system" : "Dice Presets (Faces)",
     "DICESONICE.maxDiceNumber" : "Max Number of Dice",

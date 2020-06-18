@@ -128,6 +128,11 @@
         </div>
 
         <div class="form-group">
+            <label>{{localize "DICESONICE.bumpMapping"}}</label>
+            <input type="checkbox" name="bumpMapping" data-dtype="Boolean" {{checked bumpMapping}}/>
+        </div>
+
+        <div class="form-group">
             <label>{{localize "DICESONICE.speed"}}</label>
             <select name="speed" style="flex: 1;">
                 {{#select speed}}
