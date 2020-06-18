@@ -313,7 +313,7 @@ export class DiceFactory {
 						mat.bumpMap = canvasTextures.bump;
 					if(diceobj.shape != 'd4' && diceobj.normals[i]){
 						mat.bumpMap = new THREE.Texture(diceobj.normals[i]);
-						mat.bumpScale = 1.5;
+						mat.bumpScale = 1;
 						mat.bumpMap.needsUpdate = true;
 					}
 				}
