@@ -19,8 +19,10 @@
     "DICESONICE.3xSpeed": "3x",
     "DICESONICE.fps": "FPS Massimi",
     "DICESONICE.Save": "Salva",
+    "DICESONICE.Reset": "Torna alle Impostazioni Predefinite",
     "DICESONICE.Apply": "Applica",
     "DICESONICE.outlineColor": "Colore Contorno",
+    "DICESONICE.edgeColor": "Colore Bordo",
     "DICESONICE.texture": "Texture",
     "DICESONICE.colorset" : "Tema",
     "DICESONICE.colorsetDesc" : "Se preferisci un colore personalizzato, seleziona \"Personalizzato\" in questo elenco",
@@ -28,6 +30,11 @@
     "DICESONICE.High" : "Alta",
     "DICESONICE.shadowQuality" : "Qualità Ombre",
     "DICESONICE.sounds" : "Effetti Sonori",
+    "DICESONICE.system" : "Dice Presets (Faces)",
+    "DICESONICE.maxDiceNumber" : "Max Number of Dice",
+    "DICESONICE.maxDiceNumberHint" : "Maximum number of displayed dice in an animation. Higher numbers will reduce performances",
+    "DICESONICE.saveMessage": "Updated 3D Dice Settings Configuration",
+    "DICESONICE.migrateMessage": "'Dice So Nice' setting was successfully migrated to 2.0 version!",
 
     "DICESONICE.TextureClouds" : "Nuvole",
     "DICESONICE.TextureFire" : "Fuoco",
@@ -48,6 +55,7 @@
     "DICESONICE.TextureWood" : "Legno",
     "DICESONICE.TextureMetal" : "Metallo",
     "DICESONICE.TextureNone" : "Nessuna/Auto (Tema)",
+    "DICESONICE.TextureRadial" : "Radial",
     "DICESONICE.ColorRadiant" : "Radiant",
     "DICESONICE.ColorFire" : "Fire",
     "DICESONICE.ColorIce" : "Ice",
@@ -74,5 +82,14 @@
     "DICESONICE.ColorRaNdOm" : "Random",
     "DICESONICE.ColorBlack" : "Black",
     "DICESONICE.ColorWhite" : "White",
-    "DICESONICE.ColorCustom" : "Personalizzato"
+    "DICESONICE.ColorCustom" : "Personalizzato",
+    "DICESONICE.ColorFoundry" : "Foundry VTT",
+
+    "DICESONICE.DamageTypes" : "Tipo Danno",
+    "DICESONICE.ThemesSoNice" : "Temi Molto Belli",
+    "DICESONICE.AcquiredTaste" : "Un Tocco di Gusto",
+    "DICESONICE.Colors" : "Colori",
+
+    "DICESONICE.System.Standard" : "Standard",
+    "DICESONICE.System.Dot" : "Dot"
 }

@@ -364,6 +364,7 @@ export class Dice3D {
             const config = Dice3D.CONFIG;
             if(!config.hideAfterRoll && this.canvas.is(":visible")) {
                 this.canvas.hide();
+                this.box.clearAll();
             }
         });
         game.socket.on('module.dice-so-nice', (request) => {
@@ -464,7 +465,7 @@ export class Dice3D {
      */
     _showAnimation(formula, results, dsnConfig) {
         return new Promise((resolve, reject) => {
-            if(this.isEnabled()) {
+            if(this.isEnabled() && this.queue.length < 10) {
                 this.queue.push(() => {
                     this._beforeShow();
                     this.box.start_throw(formula, results, dsnConfig, () => {
@@ -546,34 +547,39 @@ export class Dice3D {
  */
 class RollData {
 
-    constructor(roll) {
+    constructor(rolls) {
 
-        if (!roll) throw new Error("Roll instance should be not null");
-
-        if ( !roll._rolled ) roll.roll();
+        if (!rolls) throw new Error("roll parameter should be not null");
 
         this.formula = '';
         this.results = [];
 
-        roll.dice.forEach(dice => {
-            if([4, 6, 8, 10, 12, 20, 100].includes(dice.faces)) {
-                let separator = this.formula.length > 1 ? ' + ' : '';
-                let rolls = Math.min(dice.rolls.length, game.settings.get("dice-so-nice", "maxDiceNumber"));
-                this.formula += separator + (dice.rolls.length > 1 ? `${rolls}d${dice.faces}` : `d${dice.faces}`);
-                if(dice.faces === 100) {
-                    this.formula += ' + ' + (dice.rolls.length > 1 ? `${rolls}d10` : `d10`);
-                }
+        rolls = Array.isArray(rolls) ? rolls : [rolls];
 
-                for(let i = 0; i < rolls; i++) {
-                    let r = dice.rolls[i];
+        rolls.forEach(roll => {
+
+            if ( !roll._rolled ) roll.roll();
+
+            roll.dice.forEach(dice => {
+                if([4, 6, 8, 10, 12, 20, 100].includes(dice.faces)) {
+                    let separator = this.formula.length > 1 ? ' + ' : '';
+                    let rolls = Math.min(dice.rolls.length, game.settings.get("dice-so-nice", "maxDiceNumber"));
+                    this.formula += separator + (dice.rolls.length > 1 ? `${rolls}d${dice.faces}` : `d${dice.faces}`);
                     if(dice.faces === 100) {
-                        this.results.push(parseInt(r.roll/10));
-                        this.results.push(r.roll%10);
-                    } else {
-                        this.results.push(r.roll);
+                        this.formula += ' + ' + (dice.rolls.length > 1 ? `${rolls}d10` : `d10`);
+                    }
+
+                    for(let i = 0; i < rolls; i++) {
+                        let r = dice.rolls[i];
+                        if(dice.faces === 100) {
+                            this.results.push(parseInt(r.roll/10));
+                            this.results.push(r.roll%10);
+                        } else {
+                            this.results.push(r.roll);
+                        }
                     }
                 }
-            }
+            });
         });
     }
 

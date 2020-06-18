@@ -682,6 +682,11 @@ export class DiceBox {
 	start_throw(notation, result, dsnConfig, callback) {
 		if (this.rolling) return;
 
+		let maxDiceNumber = game.settings.get("dice-so-nice", "maxDiceNumber");
+		if(this.deadDiceList.length + result.length > maxDiceNumber) {
+			this.clearAll();
+		}
+
 		let vector = { x: (Math.random() * 2 - 0.5) * this.display.currentWidth, y: -(Math.random() * 2 - 0.5) * this.display.currentHeight};
 		let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 		let boost = (Math.random() + 3) * dist;
