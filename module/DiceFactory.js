@@ -333,11 +333,25 @@ export class DiceFactory {
 				mat.map = canvasTextures.composite;
 				if(this.bumpMapping)
 				{
+					if(false)
+						mat.bumpScale = 0.5;
+					else{
+						let scale = 0.75;;
+						if(size > 35)
+							scale = 1;
+						if(size > 40)
+							scale = 2.5;
+						if(size > 45)
+							scale = 4;
+						mat.bumpScale = scale;
+						console.log("bs: "+mat.bumpScale);
+					}
 					if(canvasTextures.bump)
 						mat.bumpMap = canvasTextures.bump;
 					if(diceobj.shape != 'd4' && diceobj.normals[i]){
+						if(mat.bumpScale<3)
+							mat.bumpScale = 3;
 						mat.bumpMap = new THREE.Texture(diceobj.normals[i]);
-						mat.bumpScale = 4;
 						mat.bumpMap.needsUpdate = true;
 					}
 				}
