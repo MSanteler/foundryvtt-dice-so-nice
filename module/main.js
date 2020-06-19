@@ -67,6 +67,7 @@ Hooks.on('createChatMessage', (chatMessage) => {
     }
 
     chatMessage._dice3danimating = true;
+    Hooks.callAll("diceSoNiceRollStart", chatMessage.id);
     game.dice3d.showForRoll(chatMessage.roll, chatMessage.user).then(displayed => {
         delete chatMessage._dice3danimating;
         $(`#chat-log .message[data-message-id="${chatMessage.id}"]`).show();

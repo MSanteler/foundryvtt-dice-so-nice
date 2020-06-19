@@ -62,6 +62,14 @@ Hooks.once('diceSoNiceInit', (dice3d) => {
     //...
 });
 ```
+### diceSoNiceRollStart
+Called only when a roll starts from the hook of the Chat message. This hook is not called by using the Roll API.
+* `messageId`: ID of the message that triggered the roll.
+```javascript
+Hooks.on('diceSoNiceRollStart', (messageId) => {
+    //...
+});
+```
 ### diceSoNiceRollComplete
 Called only when a roll complete after being caught in a Chat message. This hook is therefor not called by using the Roll API. If you need to detect when a Roll is complete while using the Roll class, you can wait for the Promise to resolve.
 * `messageId`: ID of the message that triggered the roll.
