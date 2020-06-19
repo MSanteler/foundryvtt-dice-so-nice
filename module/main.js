@@ -365,7 +365,7 @@ export class Dice3D {
         });
         $('body,html').click(() => {
             const config = Dice3D.CONFIG;
-            if(!config.hideAfterRoll && this.canvas.is(":visible")) {
+            if(!config.hideAfterRoll && this.canvas.is(":visible") && !this.box.rolling) {
                 this.canvas.hide();
                 this.box.clearAll();
             }
