@@ -599,7 +599,7 @@ class DiceConfig extends FormApplication {
             id: "dice-config",
             template: "modules/dice-so-nice/templates/dice-config.html",
             width: 500,
-            height: 820,
+            height: 845,
             closeOnSubmit: true
         })
     }
