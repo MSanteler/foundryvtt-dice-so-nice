@@ -40,7 +40,8 @@ export class DiceFactory {
 
 		this.systems = {
 			'standard': {id: 'standard', name: game.i18n.localize("DICESONICE.System.Standard"), dice:[]},
-			'dot': {id: 'dot', name: game.i18n.localize("DICESONICE.System.Dot"), dice:[]}
+			'dot': {id: 'dot', name: game.i18n.localize("DICESONICE.System.Dot"), dice:[]},
+			'dot_b': {id: 'dot_b', name: game.i18n.localize("DICESONICE.System.DotBlack"), dice:[]}
 		};
 		let diceobj;
 		diceobj = new DicePreset('d4');
@@ -120,6 +121,29 @@ export class DiceFactory {
 		diceobj.setValues(1,6);
 		diceobj.scale = 0.9;
 		diceobj.system = "dot";
+		this.register(diceobj);
+
+		diceobj = new DicePreset('d6');
+		diceobj.name = 'd6';
+		diceobj.setLabels([
+			'modules/dice-so-nice/textures/dot/d6-1-black.png',
+			'modules/dice-so-nice/textures/dot/d6-2-black.png',
+			'modules/dice-so-nice/textures/dot/d6-3-black.png',
+			'modules/dice-so-nice/textures/dot/d6-4-black.png',
+			'modules/dice-so-nice/textures/dot/d6-5-black.png',
+			'modules/dice-so-nice/textures/dot/d6-6-black.png',
+		]);
+		diceobj.setBumpMaps([
+			'modules/dice-so-nice/textures/dot/d6-1-b.png',
+			'modules/dice-so-nice/textures/dot/d6-2-b.png',
+			'modules/dice-so-nice/textures/dot/d6-3-b.png',
+			'modules/dice-so-nice/textures/dot/d6-4-b.png',
+			'modules/dice-so-nice/textures/dot/d6-5-b.png',
+			'modules/dice-so-nice/textures/dot/d6-6-b.png',
+		]);
+		diceobj.setValues(1,6);
+		diceobj.scale = 0.9;
+		diceobj.system = "dot_b";
 		this.register(diceobj);
 	}
 
@@ -313,7 +337,7 @@ export class DiceFactory {
 						mat.bumpMap = canvasTextures.bump;
 					if(diceobj.shape != 'd4' && diceobj.normals[i]){
 						mat.bumpMap = new THREE.Texture(diceobj.normals[i]);
-						mat.bumpScale = 1;
+						mat.bumpScale = 4;
 						mat.bumpMap.needsUpdate = true;
 					}
 				}
@@ -430,29 +454,32 @@ export class DiceFactory {
 				let fontsize = ts / (1 + 2 * margin);
 				let textstarty = (canvas.height / 2);
 				let textstartx = (canvas.width / 2);
-				if(diceobj.shape == 'd10')
-				{
-					fontsize = fontsize*0.75;
-					textstarty = textstarty*1.15;
+				switch(diceobj.shape){
+					case 'd10':
+						fontsize = fontsize*0.75;
+						textstarty = textstarty*1.15;
+						break;
+					case 'd6':
+						textstarty = textstarty*1.05;
+						break;
+					case 'd20':
+						textstartx = textstartx*0.98;
+						break;
+					case 'd12':
+						textstarty = textstarty*1.08;
+						break;
 				}
-				else if(diceobj.shape == 'd6')
-				{
-					textstarty = textstarty*1.1;
-				}
-				else if(diceobj.shape == 'd20')
-				{
-					textstartx = textstartx*0.98;
-				}
+				
 				context.font =  fontsize+ 'pt '+diceobj.font;
 				contextBump.font =  fontsize+ 'pt '+diceobj.font;
-				var lineHeight = context.measureText("M").width * 1.4;
+				var lineHeight = fontsize;
+				
 				let textlines = text.split("\n");
 
 				if (textlines.length > 1) {
 					fontsize = fontsize / textlines.length;
 					context.font =  fontsize+ 'pt '+diceobj.font;
 					contextBump.font =  fontsize+ 'pt '+diceobj.font;
-					lineHeight = context.measureText("M").width * 1.2;
 					textstarty -= (lineHeight * textlines.length) / 2;
 				}
 
@@ -460,7 +487,7 @@ export class DiceFactory {
 					let textline = textlines[i].trim();
 
 					// attempt to outline the text with a meaningful color
-					if (outlinecolor != 'none') {
+					if (outlinecolor != 'none' && outlinecolor != backcolor) {
 						context.strokeStyle = outlinecolor;
 						context.lineWidth = 5;
 						context.strokeText(textlines[i], textstartx, textstarty);
@@ -505,7 +532,7 @@ export class DiceFactory {
 				}
 				else{
 					// attempt to outline the text with a meaningful color
-					if (outlinecolor != 'none') {
+					if (outlinecolor != 'none' && outlinecolor != backcolor) {
 						context.strokeStyle = outlinecolor;
 						
 						context.lineWidth = 5;
