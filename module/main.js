@@ -70,6 +70,7 @@ Hooks.on('createChatMessage', (chatMessage) => {
     game.dice3d.showForRoll(chatMessage.roll, chatMessage.user).then(displayed => {
         delete chatMessage._dice3danimating;
         $(`#chat-log .message[data-message-id="${chatMessage.id}"]`).show();
+        Hooks.callAll("diceSoNiceRollComplete", chatMessage.id);
         ui.chat.scrollBottom();
     });
 });

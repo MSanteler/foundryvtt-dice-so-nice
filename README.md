@@ -4,7 +4,7 @@ This module for Foundry VTT adds the ability to show a 3D dice simulation when a
 
 [[_TOC_]]
 
-## Installation
+# Installation
 
 To install, follow these instructions:
 
@@ -14,13 +14,13 @@ To install, follow these instructions:
 
 Alternatively, use the integrated module manager in Foundry.
 
-## Usage Instructions
+# Usage Instructions
 
 There are no particular instructions for use. Once the module is enabled, 3D animation will be displayed each time dice is rolled on foundry.
 
 ![Preview](/dice-so-nice.gif?raw=true)
 
-## Configuration
+# Configuration
 
 It is possible to configure some aspects of the dice in the foundry game settings:
 
@@ -41,15 +41,43 @@ It is possible to configure some aspects of the dice in the foundry game setting
 - **Auto Scale**: When enabled, auto scale the dices dimension based on the display size.
 - **Manual Scale**: Allows to manually change the scale of the dice.
 - **Shadows Quality**: Allows to select the shadows quality. Can help with performances on some PCs.
+- **Advanced lighting**: When enabled, adds depths to labels and custom textures (Bump Map). Disable for improved performances.
 - **Animation Speed**: Change the speed at which the dices roll.
+# API
+## Hooks
+There are various hooks called by 'Dice So Nice' to help you integrate it in your own system/module.
+### diceSoNiceReady
+Called once the module is ready to listen to new rolls and display 3D animations.  
+* `dice3d`: Main class, instantiated and ready to use.
+```javascript
+Hooks.once('diceSoNiceReady', (dice3d) => {
+    //...
+});
+```
+### diceSoNiceInit
+Called at the start of the module initialization process.
+* `dice3d`: Main class, instantiated but not ready yet.
+```javascript
+Hooks.once('diceSoNiceInit', (dice3d) => {
+    //...
+});
+```
+### diceSoNiceRollComplete
+Called only when a roll complete after being caught in a Chat message. This hook is therefor not called by using the Roll API. If you need to detect when a Roll is complete while using the Roll class, you can wait for the Promise to resolve.
+* `messageId`: ID of the message that triggered the roll.
+```javascript
+Hooks.on('diceSoNiceRollComplete', (messageId) => {
+    //...
+});
+```
 
 ## Roll API
-Once enabled, 'Dice So Nice' changes the behaviour of the API `Roll.toMessage` method so that a 3D dice animation is 
-automatically displayed and resolved
-before the result is shown on the chat log.    
-This solves the majority of the cases related to the roll visualization when vanilla foundry is used.   
+Once enabled, 'Dice So Nice' listen to any new ROLL messages rendered in a player Chat log. When it detects one, 'Dice So Nice'  hide the Chat message and display a 3D animation with the roll information available in the Chat message.
+This solves the majority of the cases related to the roll visualization when vanilla foundry is used. 
+
 Customized Systems and Modules, however, may implement differently the way the roll is resolved and therefore they may
-not use the `toMessage` method or they may not even use the `Roll` class entirely, in favor of custom random strategies for calculating the result.   
+not want to rely on a single Chat message being rendered or they may not even use the `Roll` class entirely, in favor of custom random strategies for calculating the result.  
+
 In this case, 'Dice so Nice' exposes APIs to trigger the animation and have a notification when finished.
 If the Roll class is still used, activating the animation could be done using the `game.dice3d.showForRoll` method:
 ```javascript
@@ -78,7 +106,7 @@ The configuration must contain two parameters:
 * **formula**: a string containing the dice to show formatted as `[n of dices if > 0]d[n of faces] [+...n]`, where the 'n of faces' can take only these values: 4,6,8,10,12,20,100. 
 * **results** an array containing the ordered list of the roll results. In the example above 20 is the result of the d20, 6 and 6 of the 2d6.  
 
-## 2.0 API break! 
+### 2.0 API break! 
 Since version 2.0, the signature of the method ``showForRoll`` and ``show`` have undergone a slightly change to support the new features, below the new signatures: 
 
 ```javascript
@@ -108,7 +136,6 @@ game.dice3d.showForRoll(roll, user, synchronize, whisper, blind)
  */
 game.dice3d.show(data, user, synchronize, whisper, blind)
 ```
-
 ## Customization API
 'Dice So Nice' expose an API for systems and modules to add their own customizations.
 
@@ -121,12 +148,8 @@ game.dice3d.show(data, user, synchronize, whisper, blind)
 - **Per dice color/texture**: For now, you can't link a single dice type to a specific color or texture.
 
 ### Listening to DiceSoNiceReady hook
-Before using the customization API, you must make sure that "Dice So Nice" is ready.
-```javascript
-Hooks.once('diceSoNiceReady', (dice3d) => {
-    //...
-});
-```
+Before using the customization API, you must make sure that "Dice So Nice" is ready. Please refer to the "Hooks" section.
+
 ### Adding a custom system (dice presets list)
 A system (or "Dice Presets" for players) allows you to store a list of custom dices
 ```javascript
@@ -304,15 +327,15 @@ Hooks.once('diceSoNiceReady', (dice3d) => {
   },"force");
 });
 ```
-## Known limitations
+# Known limitations
 
 - Works with vanilla foundry and with modules that do not substantially modify the Roll API.
 
-## Compatibility
+# Compatibility
 
 Tested on 0.6.2 version.
 
-## Acknowledgment
+# Acknowledgment
 
 Based on the "Online 3D dice roller" from [http://a.teall.info/dice](http://www.teall.info/2014/01/online-3d-dice-roller.html). 
 Credits go to Anton Natarov, who published it under public domain.
@@ -323,11 +346,11 @@ V2 of "Dice So Nice" based on Teal's fork from the awesome MajorVictory, with hi
 
 D10 Geometry created by Greewi who did all the maths for this custom "Pentagonal Trapezohedron". You can find his homebrewed (french) TTRPG Feerie/Solaires here: https://feerie.net/
 
-## Feedback
+# Feedback
 
 Every suggestions/feedback are appreciated, if so, please contact (Simone#6710) or JDW (JDW#6422) me on discord 
 
-## License
+# License
 
 FoundryVTT Dice So Nice is a module for Foundry VTT by Simone and JDW and is licensed under a [Creative Commons Attribution 4.0 International License](http://creativecommons.org/licenses/by/4.0/).
 
