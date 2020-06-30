@@ -33,9 +33,9 @@ export class DiceFactory {
 
 		// fixes texture rotations on specific dice models
 		this.rotate = {
-			d8: {even: -7.5, odd: -127.5},
-			d12: {all: 5},
-			d20: {all: -8.5},
+			d8: {even: 7.5, odd: 127.5},
+			d12: {all: -5},
+			d20: {all: 8.5},
 		};
 
 		this.systems = {
@@ -333,27 +333,29 @@ export class DiceFactory {
 				mat.map = canvasTextures.composite;
 				if(this.bumpMapping)
 				{
-					if(false)
-						mat.bumpScale = 0.5;
-					else{
-						let scale = 0.75;;
-						if(size > 35)
-							scale = 1;
-						if(size > 40)
-							scale = 2.5;
-						if(size > 45)
-							scale = 4;
-						mat.bumpScale = scale;
-						console.log("bs: "+mat.bumpScale);
-					}
-					if(canvasTextures.bump)
+					if(canvasTextures.bump){
 						mat.bumpMap = canvasTextures.bump;
+						mat.bumpScale = 1;
+					}
 					if(diceobj.shape != 'd4' && diceobj.normals[i]){
-						if(mat.bumpScale<3)
-							mat.bumpScale = 3;
+						mat.bumpScale = 3;
 						mat.bumpMap = new THREE.Texture(diceobj.normals[i]);
+						
 						mat.bumpMap.needsUpdate = true;
 					}
+				}
+			}
+
+			// fix for some faces being weirdly rotated
+			let rotateface = this.rotate[diceobj.shape];
+	
+			mat.map.center = new THREE.Vector2(0.5,0.5);
+	
+			if(rotateface) {
+				let degrees = rotateface.hasOwnProperty("all") ? rotateface.all:false || (i > 0 && (i % 2) != 0) ? rotateface.odd : rotateface.even;
+
+				if (degrees && degrees != 0) {
+					mat.map.rotation = degrees * (Math.PI / 180);
 				}
 			}
 			mat.opacity = 1;
@@ -438,26 +440,6 @@ export class DiceFactory {
 		contextBump.textBaseline = "middle";
 		
 		if (diceobj.shape != 'd4') {
-			
-			// fix for some faces being weirdly rotated
-			let rotateface = this.rotate[diceobj.shape];
-			if(rotateface) {
-				let degrees = rotateface.hasOwnProperty("all") ? rotateface.all:false || (index > 0 && (index % 2) != 0) ? rotateface.odd : rotateface.even;
-
-				if (degrees && degrees != 0) {
-
-					var hw = (canvas.width / 2);
-					var hh = (canvas.height / 2);
-
-					context.translate(hw, hh);
-					context.rotate(degrees * (Math.PI / 180));
-					context.translate(-hw, -hh);
-
-					contextBump.translate(hw, hh);
-					contextBump.rotate(degrees * (Math.PI / 180));
-					contextBump.translate(-hw, -hh);
-				}
-			}
 
 			//custom texture face
 			if(text instanceof HTMLImageElement){
