@@ -565,20 +565,26 @@ class RollData {
 
             roll.dice.forEach(dice => {
                 if([4, 6, 8, 10, 12, 20, 100].includes(dice.faces)) {
+                    //Compatibility with < 0.7.x 
+                    if(!dice.results)
+                        dice.results = dice.rolls;
                     let separator = this.formula.length > 1 ? ' + ' : '';
-                    let rolls = Math.min(dice.rolls.length, game.settings.get("dice-so-nice", "maxDiceNumber"));
-                    this.formula += separator + (dice.rolls.length > 1 ? `${rolls}d${dice.faces}` : `d${dice.faces}`);
+                    let rolls = Math.min(dice.results.length, game.settings.get("dice-so-nice", "maxDiceNumber"));
+                    this.formula += separator + (dice.results.length > 1 ? `${rolls}d${dice.faces}` : `d${dice.faces}`);
                     if(dice.faces === 100) {
-                        this.formula += ' + ' + (dice.rolls.length > 1 ? `${rolls}d10` : `d10`);
+                        this.formula += ' + ' + (dice.results.length > 1 ? `${rolls}d10` : `d10`);
                     }
 
                     for(let i = 0; i < rolls; i++) {
-                        let r = dice.rolls[i];
+                        let r = dice.results[i];
+                        //Compatibility with >= 0.7.x
+                        if(!r.result)
+                            r.result = r.roll;
                         if(dice.faces === 100) {
-                            this.results.push(parseInt(r.roll/10));
-                            this.results.push(r.roll%10);
+                            this.results.push(parseInt(r.result/10));
+                            this.results.push(r.result%10);
                         } else {
-                            this.results.push(r.roll);
+                            this.results.push(r.result);
                         }
                     }
                 }
