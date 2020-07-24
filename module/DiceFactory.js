@@ -12,6 +12,7 @@ export class DiceFactory {
 		this.systemActivated = "standard";
 
 		this.materials_cache = {};
+		this.loadedFonts = [];
 		this.cache_hits = 0;
 		this.cache_misses = 0;
 
@@ -57,6 +58,14 @@ export class DiceFactory {
 		diceobj.setLabels(['1', '2', '3', '4', '5', '6']);
 		diceobj.setValues(1,6);
 		diceobj.scale = 0.9;
+		this.register(diceobj);
+
+		diceobj = new DicePreset('df', 'd6');
+		diceobj.name = 'Fate Dice';
+		diceobj.setLabels(['−', ' ', '+']);
+		diceobj.setValues(-1,1);
+		diceobj.scale = 0.9;
+		diceobj.fontScale = 2;
 		this.register(diceobj);
 
 		diceobj = new DicePreset('d8');
@@ -145,6 +154,17 @@ export class DiceFactory {
 		diceobj.scale = 0.9;
 		diceobj.system = "dot_b";
 		this.register(diceobj);
+
+		for(let i in CONFIG.Dice.terms){
+			let term = CONFIG.Dice.terms[i];
+			//If this is not a core dice type
+			if(![Coin, FateDie, Die].includes(term)){
+				let objTerm = new term();
+				if([3, 4, 6, 8, 10, 12, 20].includes(objTerm.faces)){
+					this.internalAddDicePreset(objTerm);
+				}
+			}
+		}
 	}
 
 	setScale(scale){
@@ -169,8 +189,11 @@ export class DiceFactory {
 		this.systems[system.id] = system;
 	}
 	//{type:"",labels:[],system:""}
-	addDicePreset(dice){
-		let model = this.systems["standard"].dice.find(el => el.type == dice.type);
+	//Should have been called "addDicePresetFromModel" but ¯\_(ツ)_/¯
+	addDicePreset(dice, shape = null){
+		if(!shape)
+			shape = dice.type;
+		let model = this.systems["standard"].dice.find(el => el.type == shape);
 		let preset = new DicePreset(dice.type, model.shape);
 		preset.name = dice.type;
 		preset.setLabels(dice.labels);
@@ -181,11 +204,40 @@ export class DiceFactory {
 		preset.inertia = model.inertia;
 		preset.system = dice.system;
 		preset.font = dice.font || 'Arial';
+		preset.fontScale = dice.fontScale || 1;
+		preset.colorset = dice.colorset || null;
 		if(dice.bumpMaps && dice.bumpMaps.length)
 			preset.setBumpMaps(dice.bumpMaps);
 		this.register(preset);
 		if(this.systemActivated == dice.system)
 			this.setSystem(dice.system);
+
+		if(dice.font && !this.loadedFonts.includes(dice.font)){
+			this._loadFont(dice.font);
+		}
+	}
+
+	//Is called when trying to create a DicePreset by guessing its faces from the CONFIG entries
+	internalAddDicePreset(diceobj){
+		let shape = "d";
+		if(diceobj.faces == 3)
+			shape += "6";
+		else
+			shape += diceobj.faces;
+		let type = "d" + diceobj.constructor.DENOMINATION;
+		let model = this.systems["standard"].dice.find(el => el.type == shape);
+		let preset = new DicePreset(type, model.shape);
+		preset.name = diceobj.name;
+		let labels = [];
+		for(let i = 1;i<= diceobj.faces;i++){
+			labels.push(diceobj.constructor.getResultLabel(i));
+		}
+		preset.setLabels(labels);
+		preset.setValues(1,diceobj.faces);
+		preset.mass = model.mass;
+		preset.inertia = model.inertia;
+		preset.scale = model.scale;
+		this.register(preset);
 	}
 
 	setSystem(systemId, force=false){
@@ -205,6 +257,22 @@ export class DiceFactory {
 		if(force)
 			this.systemForced = true;
 		this.systemActivated = systemId;
+	}
+
+	//Since FVTT will remove their fontloading method in 0.8, we're using our own.
+	_loadFont(fontname){
+		var canvas = document.createElement("canvas");
+		//Setting the height and width is not really required
+		canvas.width = 16;
+		canvas.height = 16;
+		var ctx = canvas.getContext("2d");
+	
+		//There is no need to attach the canvas anywhere,
+		//calling fillText is enough to make the browser load the active font
+	
+		ctx.font = "4px "+fontname;
+		ctx.fillText("text", 0, 8);
+		this.loadedFonts.push(fontname);
 	}
 
 	// returns a dicemesh (THREE.Mesh) object
@@ -285,12 +353,12 @@ export class DiceFactory {
 			dicemesh.material[0].needsUpdate = true;
 		}
 
-		switch (type) {
-			case 'd1':
+		switch (diceobj.values.length) {
+			case 1:
 				return this.fixmaterials(dicemesh, 1);
-			case 'd2':
+			case 2:
 				return this.fixmaterials(dicemesh, 2);
-			case 'd3': case 'df': case 'dset': 
+			case 3: 
 				return this.fixmaterials(dicemesh, 3);
 			default:
 				return dicemesh;
@@ -440,7 +508,7 @@ export class DiceFactory {
 		contextBump.textBaseline = "middle";
 		
 		if (diceobj.shape != 'd4') {
-
+			
 			//custom texture face
 			if(text instanceof HTMLImageElement){
 				isTexture = true;
@@ -450,22 +518,31 @@ export class DiceFactory {
 				let fontsize = ts / (1 + 2 * margin);
 				let textstarty = (canvas.height / 2);
 				let textstartx = (canvas.width / 2);
-				switch(diceobj.shape){
-					case 'd10':
-						fontsize = fontsize*0.75;
-						textstarty = textstarty*1.15;
-						break;
-					case 'd6':
-						textstarty = textstarty*1.05;
-						break;
-					case 'd20':
-						textstartx = textstartx*0.98;
-						break;
-					case 'd12':
-						textstarty = textstarty*1.08;
-						break;
+
+				if(diceobj.fontScale)
+					fontsize *= diceobj.fontScale;
+				else
+					diceobj.fontScale = 1;
+
+				//fix Arial strange alignment
+				if(diceobj.font == "Arial"){
+					switch(diceobj.shape){
+						case 'd10':
+							fontsize = fontsize*0.75;
+							textstarty = textstarty*1.15;
+							break;
+						case 'd6':
+							textstarty = textstarty*(1+(0.07*diceobj.fontScale));
+							break;
+						case 'd20':
+							textstartx = textstartx*0.98;
+							break;
+						case 'd12':
+							textstarty = textstarty*1.08;
+							break;
+					}
 				}
-				
+
 				context.font =  fontsize+ 'pt '+diceobj.font;
 				contextBump.font =  fontsize+ 'pt '+diceobj.font;
 				var lineHeight = fontsize;
@@ -476,7 +553,27 @@ export class DiceFactory {
 					fontsize = fontsize / textlines.length;
 					context.font =  fontsize+ 'pt '+diceobj.font;
 					contextBump.font =  fontsize+ 'pt '+diceobj.font;
-					textstarty -= (lineHeight * textlines.length) / 2;
+
+					//to find the correct text height for every possible fonts, we have no choice but to use the great (and complex) pixi method
+					//First we create a PIXI.TextStyle object, to pass later to the measure method
+					let pixiStyle = new PIXI.TextStyle({
+						fontFamily: diceobj.font,
+						fontSize: fontsize,
+						stroke: "#0000FF",
+						strokeThickness: (outlinecolor != 'none' && outlinecolor != backcolor) ? 1:0
+					});
+					//Then we call the PIXI measureText method
+					let textMetrics = PIXI.TextMetrics.measureText(textlines.join(""),pixiStyle);
+
+					lineHeight = textMetrics.lineHeight;
+					if(textlines[0]!=""){
+						textstarty -= (lineHeight * textlines.length) / 2;
+						//On a D12, we add a little padding because it looks better to human eyes even tho it's not really the center anymore
+						if(diceobj.shape == "d12")
+							textstarty = textstarty *1.08;
+					}
+					else
+						textlines.shift();
 				}
 
 				for(let i = 0, l = textlines.length; i < l; i++){

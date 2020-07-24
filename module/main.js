@@ -259,8 +259,8 @@ export class Dice3D {
      * The system should be a system id already registered
      * @param {Object} dice {type:"",labels:[],system:""}
      */
-    addDicePreset(dice){
-        this.box.dicefactory.addDicePreset(dice);
+    addDicePreset(dice, shape = null){
+        this.box.dicefactory.addDicePreset(dice, shape);
     }
 
     /**
@@ -420,7 +420,7 @@ export class Dice3D {
      * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
      */
     showForRoll(roll, user = game.user, synchronize, users = null, blind) {
-        return this.show(new RollData(roll), user, synchronize, users, blind);
+        return this.show(roll, user, synchronize, users, blind);
     }
 
     /**
@@ -448,7 +448,7 @@ export class Dice3D {
                 }
 
                 if(!blind) {
-                    this._showAnimation(data.formula, data.results, Dice3D.APPEARANCE(user)).then(displayed => {
+                    this._showAnimation(data, Dice3D.APPEARANCE(user)).then(displayed => {
                         resolve(displayed);
                     });
                 } else {
@@ -466,12 +466,12 @@ export class Dice3D {
      * @returns {Promise<boolean>}
      * @private
      */
-    _showAnimation(formula, results, dsnConfig) {
+    _showAnimation(rolls, dsnConfig) {
         return new Promise((resolve, reject) => {
             if(this.isEnabled() && this.queue.length < 10) {
                 this.queue.push(() => {
                     this._beforeShow();
-                    this.box.start_throw(formula, results, dsnConfig, () => {
+                    this.box.start_throw(rolls, dsnConfig, () => {
                             resolve(true);
                             this._afterShow();
                         }
@@ -548,7 +548,7 @@ export class Dice3D {
 /**
  *
  */
-class RollData {
+/*class RollData {
 
     constructor(rolls) {
 
@@ -592,7 +592,7 @@ class RollData {
         });
     }
 
-}
+}*/
 
 /**
  * Form application to configure settings of the 3D Dice.
