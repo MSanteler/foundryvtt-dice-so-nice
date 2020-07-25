@@ -39,9 +39,8 @@ export class DicePreset {
 			tab = this.labels;
 		else
 			tab = this.normals;
-		
 		tab.push('');
-		if(this.shape != 'd10') tab.push('');
+		if(!["d2","d10"].includes(this.shape)) tab.push('');
 
 		if (this.shape == 'd4') {
 

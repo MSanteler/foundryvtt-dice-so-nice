@@ -10,7 +10,7 @@ export class DiceNotation {
 		this.dice = [];
 		rolls.dice.forEach(die => {
 			//We only are able to handle this list of number of face in 3D for now
-			if([3, 4, 6, 8, 10, 12, 20, 100].includes(die.faces)) {
+			if([2, 3, 4, 6, 8, 10, 12, 20, 100].includes(die.faces)) {
 				for(let i =0; i< die.number; i++){
 					this.addDie(die, i);
 					if(die.faces == 100){
