@@ -29,6 +29,7 @@
     "DICESONICE.Low" : "낮음",
     "DICESONICE.High" : "높음",
     "DICESONICE.shadowQuality" : "그림자 퀄리티",
+    "DICESONICE.bumpMapping" : "고급 광원",
     "DICESONICE.sounds" : "소리 효과",
     "DICESONICE.system" : "주사위 프리셋 (면)",
     "DICESONICE.maxDiceNumber" : "주사위 최대 수",
@@ -91,5 +92,6 @@
     "DICESONICE.Colors" : "색상",
 
     "DICESONICE.System.Standard" : "일반적",
-    "DICESONICE.System.Dot" : "점"
+    "DICESONICE.System.Dot" : "점 (흰색)",
+    "DICESONICE.System.DotBlack" : "점 (검은색)"
 }
