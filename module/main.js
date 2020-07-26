@@ -428,7 +428,7 @@ export class Dice3D {
     /**
      * Show the 3D Dice animation based on data configuration made by the User.
      *
-     * @param data data containing a DiceNotation object.
+     * @param data data containing the dice info.
      * @param user the user who made the roll (game.user by default).
      * @param synchronize
      * @param users list of users or userId who can see the roll, leave it empty if everyone can see.
@@ -438,9 +438,9 @@ export class Dice3D {
     show(data, user = game.user, synchronize = false, users = null, blind) {
         return new Promise((resolve, reject) => {
 
-            if (!data) throw new Error("Roll data should be not null");
+            if (!data.dice) throw new Error("Roll data should be not null");
 
-            if(!(data instanceof DiceNotation)) {
+            if(!data.dice.length) {
                 resolve(false);
             } else {
 

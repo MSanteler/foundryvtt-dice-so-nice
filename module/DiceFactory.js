@@ -72,7 +72,7 @@ export class DiceFactory {
 			'modules/dice-so-nice/textures/coin/tail_bump.png',
 			'modules/dice-so-nice/textures/coin/heads_bump.png'
 		]);
-		diceobj.setValues(1,2);
+		diceobj.setValues(0,1);
 		diceobj.inertia = 8;
 		diceobj.mass = 400;
 		diceobj.scale = 0.9;
@@ -356,7 +356,7 @@ export class DiceFactory {
 			if (this.shape == 'd4') {
 				return {value: matindex, label: diceobj.labels[matindex-1], reason: reason};
 			}
-			if (this.shape == 'd10') matindex += 1;
+			if (['d10','d2'].includes(this.shape)) matindex += 1;
 
 			let value = diceobj.values[((matindex-1) % diceobj.values.length)];
 			let label = diceobj.labels[(((matindex-1) % (diceobj.labels.length-2))+2)];

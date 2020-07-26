@@ -51,6 +51,7 @@ export class DiceBox {
 		this.barrier_body_material = new CANNON.Material();
 		this.sounds_table = {};
 		this.sounds_dice = [];
+		this.sounds_coins = [];
 		this.lastSoundType = '';
 		this.lastSoundStep = 0;
 		this.lastSound = 0;
@@ -120,6 +121,15 @@ export class DiceBox {
 				autoplay:false
 			},false);
 			this.sounds_dice.push(path);
+		}
+
+		for (let i=1; i <= 6; ++i) {
+			let path = `modules/dice-so-nice/sounds/coinhit${i}.wav`;
+			AudioHelper.play({
+				src:path,
+				autoplay:false
+			},false);
+			this.sounds_coins.push(path);
 		}
 	}
 
@@ -417,10 +427,19 @@ export class DiceBox {
 		// the mesh's materials start at index 2
 		let magic = 2;
 		// except on d10 meshes
-		if (diceobj.shape == 'd10') magic = 1;
+		if(diceobj.shape == "d10") magic = 1;
 
-		let material_value = (valueindex+magic);
-		let material_result = (resultindex+magic);
+		let material_value, material_result;
+
+		//and D2 meshes have a lot more faces
+		if(diceobj.shape != "d2"){
+			material_value = (valueindex+magic);
+			material_result = (resultindex+magic);
+		} else {
+			material_value = valueindex+1;
+			material_result = resultindex+1;
+		}
+		
 
 		for (var i = 0, l = geom.faces.length; i < l; ++i) {
 			const matindex = geom.faces[i].materialIndex;
@@ -503,6 +522,7 @@ export class DiceBox {
 		dicemesh.body.velocity.set(vectordata.velocity.x, vectordata.velocity.y, vectordata.velocity.z);
 		dicemesh.body.linearDamping = 0.1;
 		dicemesh.body.angularDamping = 0.1;
+		dicemesh.body.diceShape = diceobj.shape;
 		dicemesh.body.addEventListener('collide', this.eventCollide.bind(this));
 
 		dicemesh.body_sim = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 80, sleepTimeLimit:0.75,mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
@@ -548,8 +568,11 @@ export class DiceBox {
 			let high = 12000;
 			let low = 250;
 			strength = Math.max(Math.min(speed / (high-low), 1), strength);
-
-			let sound = this.sounds_dice[Math.floor(Math.random() * this.sounds_dice.length)];
+			let sound;
+			if(body.diceShape != "d2")
+				sound = this.sounds_dice[Math.floor(Math.random() * this.sounds_dice.length)];
+			else
+				sound = this.sounds_coins[Math.floor(Math.random() * this.sounds_coins.length)];
 			AudioHelper.play({
 				src:sound
 			},false);
