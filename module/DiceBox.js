@@ -298,9 +298,7 @@ export class DiceBox {
 	}
 
 	//returns an array of vectordata objects
-	getNotationVectors(rolls, vector, boost, dist){
-
-		let notationVectors = new DiceNotation(rolls);
+	getVectors(notationVectors, vector, boost, dist){
 
 		for (let i = 0;i< notationVectors.dice.length;i++) {
 
@@ -686,14 +684,14 @@ export class DiceBox {
 		}
 	}
 
-	start_throw(rolls, dsnConfig, callback) {
+	start_throw(notation, dsnConfig, callback) {
 		if (this.rolling) return;
 
 		let vector = { x: (Math.random() * 2 - 0.5) * this.display.currentWidth, y: -(Math.random() * 2 - 0.5) * this.display.currentHeight};
 		let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 		let boost = (Math.random() + 3) * dist;
 
-		let notationVectors = this.getNotationVectors(rolls, vector, boost, dist);
+		let notationVectors = this.getVectors(notation, vector, boost, dist);
 
 		let maxDiceNumber = game.settings.get("dice-so-nice", "maxDiceNumber");
 		if(this.deadDiceList.length + notationVectors.dice.length > maxDiceNumber) {
@@ -704,10 +702,6 @@ export class DiceBox {
 		
 		this.applyColorsForRoll(dsnConfig);
 		this.dicefactory.setSystem(dsnConfig.system);
-
-		/*let notationVectors = new DiceNotation(res.notation);
-		notationVectors.result = result;
-		notationVectors.vectors = res.vectors;*/
 
 		this.rollDice(notationVectors,callback);
 	}

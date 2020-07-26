@@ -64,7 +64,14 @@ export class DiceFactory {
 		let diceobj;
 		diceobj = new DicePreset('dc','d2');
 		diceobj.name = 'Coin';
-		diceobj.setLabels(['H','T']);
+		diceobj.setLabels([
+			'modules/dice-so-nice/textures/coin/tail.png',
+			'modules/dice-so-nice/textures/coin/heads.png'
+		]);
+		diceobj.setBumpMaps([
+			'modules/dice-so-nice/textures/coin/tail_bump.png',
+			'modules/dice-so-nice/textures/coin/heads_bump.png'
+		]);
 		diceobj.setValues(1,2);
 		diceobj.inertia = 8;
 		diceobj.mass = 400;
