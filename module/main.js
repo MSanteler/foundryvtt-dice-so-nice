@@ -1,6 +1,7 @@
 import {DiceFactory} from './DiceFactory.js';
 import {DiceBox} from './DiceBox.js';
 import {DiceColors, TEXTURELIST, COLORSETS} from './DiceColors.js';
+import { DiceNotation } from './DiceNotation.js';
 
 /**
  * Registers the exposed settings for the various 3D dice options.
@@ -420,13 +421,14 @@ export class Dice3D {
      * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
      */
     showForRoll(roll, user = game.user, synchronize, users = null, blind) {
-        return this.show(roll, user, synchronize, users, blind);
+        let notation = new DiceNotation(roll);
+        return this.show(notation, user, synchronize, users, blind);
     }
 
     /**
      * Show the 3D Dice animation based on data configuration made by the User.
      *
-     * @param data data containing the formula and the result to show in the 3D animation.
+     * @param data data containing the dice info.
      * @param user the user who made the roll (game.user by default).
      * @param synchronize
      * @param users list of users or userId who can see the roll, leave it empty if everyone can see.
@@ -436,9 +438,9 @@ export class Dice3D {
     show(data, user = game.user, synchronize = false, users = null, blind) {
         return new Promise((resolve, reject) => {
 
-            if (!data) throw new Error("Roll data should be not null");
+            if (!data.dice) throw new Error("Roll data should be not null");
 
-            if(data.formula.length === 0 || data.results.length === 0) {
+            if(!data.dice.length) {
                 resolve(false);
             } else {
 
@@ -466,12 +468,12 @@ export class Dice3D {
      * @returns {Promise<boolean>}
      * @private
      */
-    _showAnimation(rolls, dsnConfig) {
+    _showAnimation(notation, dsnConfig) {
         return new Promise((resolve, reject) => {
             if(this.isEnabled() && this.queue.length < 10) {
                 this.queue.push(() => {
                     this._beforeShow();
-                    this.box.start_throw(rolls, dsnConfig, () => {
+                    this.box.start_throw(notation, dsnConfig, () => {
                             resolve(true);
                             this._afterShow();
                         }

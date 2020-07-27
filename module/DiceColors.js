@@ -87,7 +87,8 @@ export const TEXTURELIST = {
 	'metal': {
 		name: 'DICESONICE.TextureMetal',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/metal.png'
+		source: 'modules/dice-so-nice/textures/metal.png',
+		material: 'metal'
 	},
 	'radial': {
 		name: 'DICESONICE.TextureRadial',
@@ -102,13 +103,22 @@ export const TEXTURELIST = {
 };
 
 export const COLORSETS = {
+	'coin_default': {
+		name: 'coin (default)',
+		description: 'DICESONICE.ColorCoinDefault',
+		category: 'DICESONICE.AcquiredTaste',
+		foreground: '#f6c928',
+		background: '#f6c928',
+		outline: 'none',
+		texture: 'metal'
+	},
 	'radiant': {
 		name: 'radiant',
 		description: 'DICESONICE.ColorRadiant',
 		category: 'DICESONICE.DamageTypes',
 		foreground: '#F9B333',
 		background: '#FFFFFF',
-		outline: '',
+		outline: 'none',
 		texture: 'paper'
 	},
 	'fire': {
@@ -418,7 +428,9 @@ export class DiceColors {
 		if(!DiceColors.diceTextures)
 			return texturename;
 		if (DiceColors.diceTextures[texturename] != null) {
-			return { name: texturename, texture: DiceColors.diceTextures[texturename], composite: TEXTURELIST[texturename].composite };
+			if(!TEXTURELIST[texturename].material)
+				TEXTURELIST[texturename].material = "plastic";
+			return { name: texturename, material: TEXTURELIST[texturename].material, texture: DiceColors.diceTextures[texturename], composite: TEXTURELIST[texturename].composite };
 		}
 		return {name:'',texture:''};
 	}

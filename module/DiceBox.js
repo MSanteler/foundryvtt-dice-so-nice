@@ -51,6 +51,7 @@ export class DiceBox {
 		this.barrier_body_material = new CANNON.Material();
 		this.sounds_table = {};
 		this.sounds_dice = [];
+		this.sounds_coins = [];
 		this.lastSoundType = '';
 		this.lastSoundStep = 0;
 		this.lastSound = 0;
@@ -59,6 +60,7 @@ export class DiceBox {
 		this.barrier;
 		this.camera;
 		this.light;
+		this.light_amb;
 		this.desk;
 		this.pane;
 
@@ -119,6 +121,15 @@ export class DiceBox {
 				autoplay:false
 			},false);
 			this.sounds_dice.push(path);
+		}
+
+		for (let i=1; i <= 6; ++i) {
+			let path = `modules/dice-so-nice/sounds/coinhit${i}.wav`;
+			AudioHelper.play({
+				src:path,
+				autoplay:false
+			},false);
+			this.sounds_coins.push(path);
 		}
 	}
 
@@ -235,6 +246,7 @@ export class DiceBox {
 		const maxwidth = Math.max(this.display.containerWidth, this.display.containerHeight);
 
 		if (this.light) this.scene.remove(this.light);
+		if (this.light_amb) this.scene.remove(this.light_amb);
 		this.light = new THREE.SpotLight(this.colors.spotlight, 1.0);
 		this.light.position.set(-maxwidth / 2, maxwidth / 2, maxwidth * 3);
 		this.light.target.position.set(0, 0, 0);
@@ -248,6 +260,9 @@ export class DiceBox {
 		this.light.shadow.mapSize.width = 1024;
 		this.light.shadow.mapSize.height = 1024;
 		this.scene.add(this.light);
+
+		this.light_amb = new THREE.AmbientLight( 0x404040 );
+		this.scene.add(this.light_amb);
 
 		if (this.desk) this.scene.remove(this.desk);
 		let shadowplane = new THREE.ShadowMaterial();
@@ -293,9 +308,7 @@ export class DiceBox {
 	}
 
 	//returns an array of vectordata objects
-	getNotationVectors(rolls, vector, boost, dist){
-
-		let notationVectors = new DiceNotation(rolls);
+	getVectors(notationVectors, vector, boost, dist){
 
 		for (let i = 0;i< notationVectors.dice.length;i++) {
 
@@ -320,25 +333,49 @@ export class DiceBox {
 
 			velvec.x /= dist;
 			velvec.y /= dist;
+			let velocity, angle, axis;
 
-			let velocity = { 
-				x: velvec.x * boost, 
-				y: velvec.y * boost, 
-				z: -10
-			};
+			if(diceobj.shape != "d2"){
 
-			let angle = {
-				x: -(Math.random() * vec.y * 5 + diceobj.inertia * vec.y),
-				y: Math.random() * vec.x * 5 + diceobj.inertia * vec.x,
-				z: 0
-			};
+				velocity = { 
+					x: velvec.x * boost, 
+					y: velvec.y * boost, 
+					z: -10
+				};
 
-			let axis = { 
-				x: Math.random(), 
-				y: Math.random(), 
-				z: Math.random(), 
-				a: Math.random()
-			};
+				angle = {
+					x: -(Math.random() * vec.y * 5 + diceobj.inertia * vec.y),
+					y: Math.random() * vec.x * 5 + diceobj.inertia * vec.x,
+					z: 0
+				};
+
+				axis = { 
+					x: Math.random(), 
+					y: Math.random(), 
+					z: Math.random(), 
+					a: Math.random()
+				};
+			}else {
+				//coin flip
+				velocity = { 
+					x: velvec.x * boost / 10, 
+					y: velvec.y * boost / 10, 
+					z: 3000
+				};
+
+				angle = {
+					x: 12 * diceobj.inertia,//-(Math.random() * velvec.y * 50 + diceobj.inertia * velvec.y ) ,
+					y: 1 * diceobj.inertia,//Math.random() * velvec.x * 50 + diceobj.inertia * velvec.x ,
+					z: 0
+				};
+
+				axis = { 
+					x: 1,//Math.random(), 
+					y: 1,//Math.random(), 
+					z: Math.random(), 
+					a: Math.random()
+				};
+			}
 
 			notationVectors.dice[i].vectors = { 
 				type: diceobj.type,  
@@ -390,10 +427,19 @@ export class DiceBox {
 		// the mesh's materials start at index 2
 		let magic = 2;
 		// except on d10 meshes
-		if (diceobj.shape == 'd10') magic = 1;
+		if(diceobj.shape == "d10") magic = 1;
 
-		let material_value = (valueindex+magic);
-		let material_result = (resultindex+magic);
+		let material_value, material_result;
+
+		//and D2 meshes have a lot more faces
+		if(diceobj.shape != "d2"){
+			material_value = (valueindex+magic);
+			material_result = (resultindex+magic);
+		} else {
+			material_value = valueindex+1;
+			material_result = resultindex+1;
+		}
+		
 
 		for (var i = 0, l = geom.faces.length; i < l; ++i) {
 			const matindex = geom.faces[i].materialIndex;
@@ -476,6 +522,7 @@ export class DiceBox {
 		dicemesh.body.velocity.set(vectordata.velocity.x, vectordata.velocity.y, vectordata.velocity.z);
 		dicemesh.body.linearDamping = 0.1;
 		dicemesh.body.angularDamping = 0.1;
+		dicemesh.body.diceShape = diceobj.shape;
 		dicemesh.body.addEventListener('collide', this.eventCollide.bind(this));
 
 		dicemesh.body_sim = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 80, sleepTimeLimit:0.75,mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
@@ -521,8 +568,11 @@ export class DiceBox {
 			let high = 12000;
 			let low = 250;
 			strength = Math.max(Math.min(speed / (high-low), 1), strength);
-
-			let sound = this.sounds_dice[Math.floor(Math.random() * this.sounds_dice.length)];
+			let sound;
+			if(body.diceShape != "d2")
+				sound = this.sounds_dice[Math.floor(Math.random() * this.sounds_dice.length)];
+			else
+				sound = this.sounds_coins[Math.floor(Math.random() * this.sounds_coins.length)];
 			AudioHelper.play({
 				src:sound
 			},false);
@@ -657,14 +707,14 @@ export class DiceBox {
 		}
 	}
 
-	start_throw(rolls, dsnConfig, callback) {
+	start_throw(notation, dsnConfig, callback) {
 		if (this.rolling) return;
 
 		let vector = { x: (Math.random() * 2 - 0.5) * this.display.currentWidth, y: -(Math.random() * 2 - 0.5) * this.display.currentHeight};
 		let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 		let boost = (Math.random() + 3) * dist;
 
-		let notationVectors = this.getNotationVectors(rolls, vector, boost, dist);
+		let notationVectors = this.getVectors(notation, vector, boost, dist);
 
 		let maxDiceNumber = game.settings.get("dice-so-nice", "maxDiceNumber");
 		if(this.deadDiceList.length + notationVectors.dice.length > maxDiceNumber) {
@@ -675,10 +725,6 @@ export class DiceBox {
 		
 		this.applyColorsForRoll(dsnConfig);
 		this.dicefactory.setSystem(dsnConfig.system);
-
-		/*let notationVectors = new DiceNotation(res.notation);
-		notationVectors.result = result;
-		notationVectors.vectors = res.vectors;*/
 
 		this.rollDice(notationVectors,callback);
 	}

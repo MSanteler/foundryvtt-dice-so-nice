@@ -29,6 +29,23 @@ export class DiceFactory {
 			shininess: 5,
 			flatShading: true
 		};
+		let loader = new THREE.CubeTextureLoader();
+		loader.setPath('modules/dice-so-nice/textures/envmap/');
+
+		let textureCube = loader.load( [
+			'px.png', 'nx.png',
+			'py.png', 'ny.png',
+			'pz.png', 'nz.png'
+		]);
+		this.material_options_metal = {
+			color: 0xdddddd,
+			roughness: 0.5,
+			metalness: 0.98,
+			envMap: textureCube,
+			envMapIntensity:1.5
+		};
+
+		
 
 		this.canvas;
 
@@ -45,6 +62,23 @@ export class DiceFactory {
 			'dot_b': {id: 'dot_b', name: game.i18n.localize("DICESONICE.System.DotBlack"), dice:[]}
 		};
 		let diceobj;
+		diceobj = new DicePreset('dc','d2');
+		diceobj.name = 'Coin';
+		diceobj.setLabels([
+			'modules/dice-so-nice/textures/coin/tail.png',
+			'modules/dice-so-nice/textures/coin/heads.png'
+		]);
+		diceobj.setBumpMaps([
+			'modules/dice-so-nice/textures/coin/tail_bump.png',
+			'modules/dice-so-nice/textures/coin/heads_bump.png'
+		]);
+		diceobj.setValues(0,1);
+		diceobj.inertia = 8;
+		diceobj.mass = 400;
+		diceobj.scale = 0.9;
+		diceobj.colorset = "coin_default"
+		this.register(diceobj);
+
 		diceobj = new DicePreset('d4');
 		diceobj.name = 'd4';
 		diceobj.setLabels(['1','2','3','4']);
@@ -294,6 +328,7 @@ export class DiceFactory {
 		}
 
 		let dicemesh = new THREE.Mesh(geom, this.createMaterials(diceobj, this.baseScale / 2, 1.0));
+		
 		dicemesh.result = [];
 		dicemesh.shape = diceobj.shape;
 		dicemesh.rerolls = 0;
@@ -321,7 +356,7 @@ export class DiceFactory {
 			if (this.shape == 'd4') {
 				return {value: matindex, label: diceobj.labels[matindex-1], reason: reason};
 			}
-			if (this.shape == 'd10') matindex += 1;
+			if (['d10','d2'].includes(this.shape)) matindex += 1;
 
 			let value = diceobj.values[((matindex-1) % diceobj.values.length)];
 			let label = diceobj.labels[(((matindex-1) % (diceobj.labels.length-2))+2)];
@@ -384,7 +419,11 @@ export class DiceFactory {
 		}
 		
 		for (var i = 0; i < labels.length; ++i) {
-			var mat = new THREE.MeshPhongMaterial(this.material_options);
+			var mat;
+			if(this.dice_texture_rand.material && this.dice_texture_rand.material == "metal")
+				mat = new THREE.MeshStandardMaterial(this.material_options_metal);
+			else
+				mat = new THREE.MeshPhongMaterial(this.material_options);
 			let canvasTextures;
 			if(i==0)//edge
 			{
@@ -527,6 +566,9 @@ export class DiceFactory {
 				//fix Arial strange alignment
 				if(diceobj.font == "Arial"){
 					switch(diceobj.shape){
+						case 'd2':
+							textstarty = textstarty*1.1;
+							break;
 						case 'd10':
 							fontsize = fontsize*0.75;
 							textstarty = textstarty*1.15;
@@ -786,6 +828,8 @@ export class DiceFactory {
 
 	createGeometry(type, radius) {
 		switch (type) {
+			case 'd2':
+				return this.create_d2_geometry(radius);
 			case 'd4':
 				return this.create_d4_geometry(radius);
 			case 'd6':
@@ -801,6 +845,13 @@ export class DiceFactory {
 			default:
 				return null;
 		}
+	}
+
+	create_d2_geometry(radius){
+		var geom = new THREE.CylinderGeometry(1*radius, 1*radius, 0.1*radius, 20);
+		geom.rotateX(Math.PI/2);
+		geom.cannon_shape = new CANNON.Cylinder(1*radius,1*radius,0.1*radius,8);
+		return geom;
 	}
 
 	create_d4_geometry(radius) {
