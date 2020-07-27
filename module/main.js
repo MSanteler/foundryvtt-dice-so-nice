@@ -259,8 +259,8 @@ export class Dice3D {
      * The system should be a system id already registered
      * @param {Object} dice {type:"",labels:[],system:""}
      */
-    addDicePreset(dice){
-        this.box.dicefactory.addDicePreset(dice);
+    addDicePreset(dice, shape = null){
+        this.box.dicefactory.addDicePreset(dice, shape);
     }
 
     /**
@@ -420,7 +420,7 @@ export class Dice3D {
      * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
      */
     showForRoll(roll, user = game.user, synchronize, users = null, blind) {
-        return this.show(new RollData(roll), user, synchronize, users, blind);
+        return this.show(roll, user, synchronize, users, blind);
     }
 
     /**
@@ -448,7 +448,7 @@ export class Dice3D {
                 }
 
                 if(!blind) {
-                    this._showAnimation(data.formula, data.results, Dice3D.APPEARANCE(user)).then(displayed => {
+                    this._showAnimation(data, Dice3D.APPEARANCE(user)).then(displayed => {
                         resolve(displayed);
                     });
                 } else {
@@ -466,12 +466,12 @@ export class Dice3D {
      * @returns {Promise<boolean>}
      * @private
      */
-    _showAnimation(formula, results, dsnConfig) {
+    _showAnimation(rolls, dsnConfig) {
         return new Promise((resolve, reject) => {
             if(this.isEnabled() && this.queue.length < 10) {
                 this.queue.push(() => {
                     this._beforeShow();
-                    this.box.start_throw(formula, results, dsnConfig, () => {
+                    this.box.start_throw(rolls, dsnConfig, () => {
                             resolve(true);
                             this._afterShow();
                         }
@@ -542,51 +542,6 @@ export class Dice3D {
         if (!obj) return obj;
         return Dice3D.copyto(obj, new obj.constructor());
     }
-}
-
-
-/**
- *
- */
-class RollData {
-
-    constructor(rolls) {
-
-        if (!rolls) throw new Error("roll parameter should be not null");
-
-        this.formula = '';
-        this.results = [];
-
-        rolls = Array.isArray(rolls) ? rolls : [rolls];
-
-        rolls.forEach(roll => {
-
-            if ( !roll._rolled ) roll.roll();
-
-            roll.dice.forEach(dice => {
-                if([4, 6, 8, 10, 12, 20, 100].includes(dice.faces)) {
-                    let separator = this.formula.length > 1 ? ' + ' : '';
-                    let rolls = Math.min(dice.rolls.length, game.settings.get("dice-so-nice", "maxDiceNumber"));
-                    this.formula += separator + (dice.rolls.length > 1 ? `${rolls}d${dice.faces}` : `d${dice.faces}`);
-                    if(dice.faces === 100) {
-                        this.formula += ' + ' + (dice.rolls.length > 1 ? `${rolls}d10` : `d10`);
-                    }
-
-                    for(let i = 0; i < rolls; i++) {
-                        let r = dice.rolls[i];
-                        let result = r.hasOwnProperty("roll") ? r.roll : r.result; // compatibility with 0.7.0
-                        if(dice.faces === 100) {
-                            this.results.push(parseInt(result/10));
-                            this.results.push(result%10);
-                        } else {
-                            this.results.push(result);
-                        }
-                    }
-                }
-            });
-        });
-    }
-
 }
 
 /**

@@ -293,76 +293,60 @@ export class DiceBox {
 	}
 
 	//returns an array of vectordata objects
-	getNotationVectors(notation, vector, boost, dist){
+	getNotationVectors(rolls, vector, boost, dist){
 
-		let notationVectors = new DiceNotation(notation, this.dicefactory);
+		let notationVectors = new DiceNotation(rolls);
 
-		for (let i in notationVectors.set) {
+		for (let i = 0;i< notationVectors.dice.length;i++) {
 
-			const diceobj = this.dicefactory.get(notationVectors.set[i].type);
-			let numdice = notationVectors.set[i].num;
-			let operator = notationVectors.set[i].op;
-			let sid = notationVectors.set[i].sid;
-			let gid = notationVectors.set[i].gid;
-			let glvl = notationVectors.set[i].glvl;
-			let func = notationVectors.set[i].func;
-			let args = notationVectors.set[i].args;
+			const diceobj = this.dicefactory.get(notationVectors.dice[i].type);
 
-			for(let k = 0; k < numdice; k++){
+			let vec = this.vectorRand(vector);
 
-				let vec = this.vectorRand(vector);
+			vec.x /= dist;
+			vec.y /= dist;
 
-				vec.x /= dist;
-				vec.y /= dist;
+			let pos = {
+				x: this.display.containerWidth * (vec.x > 0 ? -1 : 1) * 0.9,
+				y: this.display.containerHeight * (vec.y > 0 ? -1 : 1) * 0.9,
+				z: Math.random() * 200 + 200
+			};
 
-				let pos = {
-					x: this.display.containerWidth * (vec.x > 0 ? -1 : 1) * 0.9,
-					y: this.display.containerHeight * (vec.y > 0 ? -1 : 1) * 0.9,
-					z: Math.random() * 200 + 200
-				};
-
-				let projector = Math.abs(vec.x / vec.y);
-				if (projector > 1.0) pos.y /= projector; else pos.x *= projector;
+			let projector = Math.abs(vec.x / vec.y);
+			if (projector > 1.0) pos.y /= projector; else pos.x *= projector;
 
 
-				let velvec = this.vectorRand(vector);
+			let velvec = this.vectorRand(vector);
 
-				velvec.x /= dist;
-				velvec.y /= dist;
+			velvec.x /= dist;
+			velvec.y /= dist;
 
-				let velocity = { 
-					x: velvec.x * (boost * notationVectors.boost), 
-					y: velvec.y * (boost * notationVectors.boost), 
-					z: -10
-				};
+			let velocity = { 
+				x: velvec.x * boost, 
+				y: velvec.y * boost, 
+				z: -10
+			};
 
-				let angle = {
-					x: -(Math.random() * vec.y * 5 + diceobj.inertia * vec.y),
-					y: Math.random() * vec.x * 5 + diceobj.inertia * vec.x,
-					z: 0
-				};
+			let angle = {
+				x: -(Math.random() * vec.y * 5 + diceobj.inertia * vec.y),
+				y: Math.random() * vec.x * 5 + diceobj.inertia * vec.x,
+				z: 0
+			};
 
-				let axis = { 
-					x: Math.random(), 
-					y: Math.random(), 
-					z: Math.random(), 
-					a: Math.random()
-				};
+			let axis = { 
+				x: Math.random(), 
+				y: Math.random(), 
+				z: Math.random(), 
+				a: Math.random()
+			};
 
-				notationVectors.vectors.push({ 
-					type: diceobj.type, 
-					op: operator,
-					sid,  
-					gid, 
-					glvl,
-					func, 
-					args, 
-					pos, 
-					velocity, 
-					angle, 
-					axis
-				});
-			}            
+			notationVectors.dice[i].vectors = { 
+				type: diceobj.type,  
+				pos, 
+				velocity, 
+				angle, 
+				axis
+			};           
 		}
 		return notationVectors;
 	}
@@ -673,26 +657,28 @@ export class DiceBox {
 		}
 	}
 
-	start_throw(notation, result, dsnConfig, callback) {
+	start_throw(rolls, dsnConfig, callback) {
 		if (this.rolling) return;
-
-		let maxDiceNumber = game.settings.get("dice-so-nice", "maxDiceNumber");
-		if(this.deadDiceList.length + result.length > maxDiceNumber) {
-			this.clearAll();
-		}
 
 		let vector = { x: (Math.random() * 2 - 0.5) * this.display.currentWidth, y: -(Math.random() * 2 - 0.5) * this.display.currentHeight};
 		let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
 		let boost = (Math.random() + 3) * dist;
 
-		let res = this.getNotationVectors(notation, vector, boost, dist);
+		let notationVectors = this.getNotationVectors(rolls, vector, boost, dist);
+
+		let maxDiceNumber = game.settings.get("dice-so-nice", "maxDiceNumber");
+		if(this.deadDiceList.length + notationVectors.dice.length > maxDiceNumber) {
+			this.clearAll();
+		}
+
+		
 		
 		this.applyColorsForRoll(dsnConfig);
 		this.dicefactory.setSystem(dsnConfig.system);
 
-		let notationVectors = new DiceNotation(res.notation, this.dicefactory);
+		/*let notationVectors = new DiceNotation(res.notation);
 		notationVectors.result = result;
-		notationVectors.vectors = res.vectors;
+		notationVectors.vectors = res.vectors;*/
 
 		this.rollDice(notationVectors,callback);
 	}
@@ -743,21 +729,20 @@ export class DiceBox {
 		this.camera.position.z = this.cameraHeight.far;
 		this.clearDice();
 
-		for (let i=0, len=notationVectors.vectors.length; i < len; ++i) {
-			this.spawnDice(notationVectors.vectors[i]);
+		for (let i=0, len=notationVectors.dice.length; i < len; ++i) {
+			this.spawnDice(notationVectors.dice[i].vectors);
 		}
 		this.simulateThrow();
 		this.iteration = 0;
 		this.settle_time = 0;
 
+
 		//check forced results, fix dice faces if necessary
-		if (notationVectors.result && notationVectors.result.length > 0) {
-			for (let i=0;i<notationVectors.result.length;i++) {
-				let dicemesh = this.diceList[i];
-				if (!dicemesh) continue;
-				if (dicemesh.getLastValue().value == notationVectors.result[i]) continue;
-				this.swapDiceFace(dicemesh, notationVectors.result[i]);
-			}
+		for (let i=0;i<notationVectors.dice.length;i++) {
+			let dicemesh = this.diceList[i];
+			if (!dicemesh) continue;
+			if (dicemesh.getLastValue().value == notationVectors.dice[i].result) continue;
+			this.swapDiceFace(dicemesh, notationVectors.dice[i].result);
 		}
 
 		//reset the result
@@ -794,9 +779,9 @@ export class DiceBox {
 
 		let selectordice = Object.keys(this.dicefactory.dice);
 		this.camera.position.z = selectordice.length > 9 ? this.cameraHeight.far : this.cameraHeight.medium;
-		let posxstart = selectordice.length > 9 ? -4 : -1.5;
-		let posystart = selectordice.length > 9 ? 2 : 0.5;
-		let poswrap = selectordice.length > 9 ? 4 : 2;
+		let posxstart = selectordice.length > 9 ? -2.5 : -1.5;
+		let posystart = selectordice.length > 9 ? 1 : 0.5;
+		let poswrap = selectordice.length > 9 ? 3 : 2;
 		this.applyColorsForRoll(config);
 		for (let i = 0, posx = posxstart, posy = posystart; i < selectordice.length; ++i, ++posx) {
 
