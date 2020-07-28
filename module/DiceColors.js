@@ -95,6 +95,42 @@ export const TEXTURELIST = {
 		composite: 'source-over',
 		source: 'modules/dice-so-nice/textures/radial.png'
 	},
+	'bronze01': {
+		name: 'bronze01',
+		composite: 'difference',
+		source: 'modules/dice-so-nice/textures/bronze01.png',
+		material: 'metal'
+	},
+	'bronze02': {
+		name: 'bronze02',
+		composite: 'difference',
+		source: 'modules/dice-so-nice/textures/bronze02.png',
+		material: 'metal'
+	},
+	'bronze03': {
+		name: 'bronze03',
+		composite: 'difference',
+		source: 'modules/dice-so-nice/textures/bronze03.png',
+		material: 'metal'
+	},
+	'bronze03a': {
+		name: 'bronze03a',
+		composite: 'difference',
+		source: 'modules/dice-so-nice/textures/bronze03a.png',
+		material: 'metal'
+	},
+	'bronze03b': {
+		name: 'bronze03b',
+		composite: 'difference',
+		source: 'modules/dice-so-nice/textures/bronze03b.png',
+		material: 'metal'
+	},
+	'bronze04': {
+		name: 'bronze04',
+		composite: 'difference',
+		source: 'modules/dice-so-nice/textures/bronze04.png',
+		material: 'metal'
+	},
 	'none': {
 		name: 'DICESONICE.TextureNone',
 		composite: 'source-over',
@@ -355,6 +391,16 @@ export const COLORSETS = {
 		background: '#FFFFFF',
 		outline: '#FFFFFF',
 		texture: 'none'
+	},
+	'bronze': {
+		name: 'bronze',
+		description: 'Thylean Bronze',
+		category: 'DICESONICE.ThemesSoNice',
+		foreground: ['#FF9159','#FFB066','#FFBF59','#FFD059'],
+		background: ['#705206','#7A4E06','#643100','#7A2D06'],
+		outline: ['#3D2D03','#472D04','#301700','#471A04'],
+		edge: ['#FF5D0D','#FF7B00','#FFA20D','#FFBA0D'],
+		texture: ['bronze01','bronze02','bronze03','bronze03b','bronze03b','bronze04']
 	},
 	'custom': {
 		name: 'custom',

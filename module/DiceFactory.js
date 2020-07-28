@@ -37,12 +37,13 @@ export class DiceFactory {
 			'py.png', 'ny.png',
 			'pz.png', 'nz.png'
 		]);
+		textureCube.mapping = THREE.CubeRefractionMapping;
 		this.material_options_metal = {
 			color: 0xdddddd,
 			roughness: 0.5,
-			metalness: 0.98,
+			metalness: 0.6,
 			envMap: textureCube,
-			envMapIntensity:1.5
+			envMapIntensity:1
 		};
 
 		
