@@ -38,6 +38,7 @@
     "DICESONICE.migrateMessage": "'Dice So Nice' setting was successfully migrated to 2.0 version!",
 
     "DICESONICE.TextureClouds" : "Clouds",
+    "DICESONICE.TextureCloudsTransparent" : "Clouds (Transparent)",
     "DICESONICE.TextureFire" : "Fire",
     "DICESONICE.TextureMarble" : "Marble",
     "DICESONICE.TextureWater" : "Water",
@@ -85,6 +86,10 @@
     "DICESONICE.ColorWhite" : "White",
     "DICESONICE.ColorCustom" : "Custom",
     "DICESONICE.ColorFoundry" : "Foundry VTT",
+    "DICESONICE.ColorBronze" : "Thylean Bronze",
+    "DICESONICE.ColorDragons" : "Here be Dragons",
+    "DICESONICE.ColorBirdUp" : "Bird Up",
+    "DICESONICE.ColorCoinDefault" : "Coin (internal)",
 
     "DICESONICE.DamageTypes" : "Damage Types",
     "DICESONICE.ThemesSoNice" : "Themes So Nice",
