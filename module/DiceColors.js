@@ -148,42 +148,42 @@ export const TEXTURELIST = {
 		bump: '',
 	},
 	'bronze01': {
-		name: 'bronze01',
+		name: 'DICESONICE.TextureBronze1',
 		composite: 'difference',
 		source: 'modules/dice-so-nice/textures/bronze01.png',
 		material: 'metal',
 		bump: ''
 	},
 	'bronze02': {
-		name: 'bronze02',
+		name: 'DICESONICE.TextureBronze2',
 		composite: 'difference',
 		source: 'modules/dice-so-nice/textures/bronze02.png',
 		material: 'metal',
 		bump: ''
 	},
 	'bronze03': {
-		name: 'bronze03',
+		name: 'DICESONICE.TextureBronze3',
 		composite: 'difference',
 		source: 'modules/dice-so-nice/textures/bronze03.png',
 		material: 'metal',
 		bump: ''
 	},
 	'bronze03a': {
-		name: 'bronze03a',
+		name: 'DICESONICE.TextureBronze3a',
 		composite: 'difference',
 		source: 'modules/dice-so-nice/textures/bronze03a.png',
 		material: 'metal',
 		bump: ''
 	},
 	'bronze03b': {
-		name: 'bronze03b',
+		name: 'DICESONICE.TextureBronze3b',
 		composite: 'difference',
 		source: 'modules/dice-so-nice/textures/bronze03b.png',
 		material: 'metal',
 		bump: ''
 	},
 	'bronze04': {
-		name: 'bronze04',
+		name: 'DICESONICE.TextureBronze4',
 		composite: 'difference',
 		source: 'modules/dice-so-nice/textures/bronze04.png',
 		material: 'metal',
