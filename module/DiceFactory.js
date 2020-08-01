@@ -37,15 +37,30 @@ export class DiceFactory {
 			'py.png', 'ny.png',
 			'pz.png', 'nz.png'
 		]);
+		textureCube.mapping = THREE.CubeRefractionMapping;
 		this.material_options_metal = {
 			color: 0xdddddd,
 			roughness: 0.5,
-			metalness: 0.98,
+			metalness: 0.6,
 			envMap: textureCube,
-			envMapIntensity:1.5
+			envMapIntensity:1
 		};
 
-		
+		this.material_options_wood = {
+			color: 0xdddddd,
+			roughness: 0.9,
+			metalness: 0.0,
+			envMap: textureCube,
+			envMapIntensity:1
+		};
+
+		this.material_options_glasslike = {
+			color: 0xdddddd,
+			roughness: 0.1,
+			metalness: 0.0,
+			envMap: textureCube,
+			envMapIntensity:1
+		};
 
 		this.canvas;
 
@@ -420,10 +435,23 @@ export class DiceFactory {
 		
 		for (var i = 0; i < labels.length; ++i) {
 			var mat;
-			if(this.dice_texture_rand.material && this.dice_texture_rand.material == "metal")
-				mat = new THREE.MeshStandardMaterial(this.material_options_metal);
-			else
+			if(this.dice_texture_rand.material){
+				switch(this.dice_texture_rand.material){
+					case "metal":
+						mat = new THREE.MeshStandardMaterial(this.material_options_metal);
+						break;
+					case "wood":
+						mat = new THREE.MeshStandardMaterial(this.material_options_wood);
+						break;
+					case "glasslike":
+						mat = new THREE.MeshStandardMaterial(this.material_options_glasslike);
+						break;
+					default: //plastic
+						mat = new THREE.MeshPhongMaterial(this.material_options);
+				}
+			} else
 				mat = new THREE.MeshPhongMaterial(this.material_options);
+
 			let canvasTextures;
 			if(i==0)//edge
 			{
@@ -533,6 +561,11 @@ export class DiceFactory {
 			context.globalCompositeOperation = texture.composite || 'source-over';
 			context.drawImage(texture.texture, 0, 0, canvas.width, canvas.height);
 			context.globalCompositeOperation = 'source-over';
+
+			if (texture.bump != '') {
+				contextBump.globalCompositeOperation = 'source-over';
+				contextBump.drawImage(texture.bump, 0, 0, canvas.width, canvas.height);
+			}
 		} else {
 			context.globalCompositeOperation = 'source-over';
 		}
@@ -728,6 +761,7 @@ export class DiceFactory {
 	setMaterialInfo(colorset = '') {
 
 		let prevcolordata = this.colordata;
+		let prevtexture = this.dice_texture;
 
 		if (colorset) {
 			let colordata = DiceColors.getColorSet(colorset);
@@ -819,6 +853,7 @@ export class DiceFactory {
 
 		if (this.colordata.id != prevcolordata.id) {
 			this.applyColorSet(prevcolordata);
+			this.applyTexture(prevtexture);
 		}
 	}
 
