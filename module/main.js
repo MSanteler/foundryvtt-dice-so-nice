@@ -271,6 +271,8 @@ export class Dice3D {
      * @returns {Promise}
      */
     addTexture(textureID, textureData){
+        if(!textureData.bump)
+            textureData.bump = '';
         return new Promise((resolve) => {
             let textureEntry = {};
             textureEntry[textureID] = textureData;
@@ -359,11 +361,16 @@ export class Dice3D {
      * @private
      */
     _initListeners() {
+        this._rtime;
+        this._timeout = false;
         $(window).resize(() => {
-            this._resizeCanvas();
-            //this.box.reinit();
-            //this.box.resetCache();
+            this._rtime = new Date();
+            if (this._timeout === false) {
+                this._timeout = true;
+                setTimeout(this._resizeEnd.bind(this), 1000);
+            }
         });
+
         $('body,html').click(() => {
             const config = Dice3D.CONFIG;
             if(!config.hideAfterRoll && this.canvas.is(":visible") && !this.box.rolling) {
@@ -376,6 +383,20 @@ export class Dice3D {
                 this.show(request.data, game.users.get(request.user));
             }
         });
+    }
+
+    _resizeEnd() {
+        if (new Date() - this._rtime < 1000) {
+            setTimeout(this._resizeend.bind(this), 1000);
+        } else {
+            this._timeout = false;
+            //resize ended probably, lets remake the canvas
+            this.canvas[0].remove();
+            this._buildCanvas();
+            this._resizeCanvas();
+            this.box = new DiceBox(this.canvas[0], this.DiceFactory, Dice3D.ALL_CONFIG());
+		    this.box.initialize();
+        }               
     }
 
     /**
