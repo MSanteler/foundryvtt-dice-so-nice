@@ -77,6 +77,15 @@ export class DiceFactory {
 			'dot_b': {id: 'dot_b', name: game.i18n.localize("DICESONICE.System.DotBlack"), dice:[]}
 		};
 		let diceobj;
+		diceobj = new DicePreset('d2');
+		diceobj.name = 'd2';
+		diceobj.setLabels(['1','2']);
+		diceobj.setValues(1,2);
+		diceobj.inertia = 8;
+		diceobj.mass = 400;
+		diceobj.scale = 0.9;
+		this.register(diceobj);
+		
 		diceobj = new DicePreset('dc','d2');
 		diceobj.name = 'Coin';
 		diceobj.setLabels([
@@ -515,11 +524,19 @@ export class DiceFactory {
 		
 		let text = labels[index];
 		let isTexture = false;
-
+		let textCache = "";
+		if(text instanceof HTMLImageElement)
+			textCache = text.src;
+		else if(text instanceof Array){
+			text.forEach(el => {
+				textCache += el.src;
+			});
+		}
+			
 		// an attempt at materials caching
-		let cachestring = diceobj.type + text + index + texture.name + forecolor + outlinecolor + backcolor;
+		let cachestring = diceobj.type + textCache + index + texture.name + forecolor + outlinecolor + backcolor;
 		if (diceobj.shape == 'd4') {
-			cachestring = diceobj.type + text.join() + texture.name + forecolor + outlinecolor + backcolor;
+			cachestring = diceobj.type + textCache + texture.name + forecolor + outlinecolor + backcolor;
 		}
 		if (allowcache && this.materials_cache[cachestring] != null) {
 			this.cache_hits++;
@@ -714,7 +731,6 @@ export class DiceFactory {
 					//draw label in top middle section
 					context.fillStyle = forecolor;
 					context.fillText(text[i], hw, hh - ts * 0.3);
-
 					contextBump.fillStyle = "#000000";
 					contextBump.fillText(text[i], hw, hh - ts * 0.3);
 				}

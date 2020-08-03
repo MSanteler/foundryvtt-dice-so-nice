@@ -495,7 +495,7 @@ export class DiceBox {
 		}
         if (num != 0) {
             if (num < 0) num += 4;
-            dicemesh.material = this.dicefactory.createMaterials(diceobj, 0, 0, false, num);
+			dicemesh.material = this.dicefactory.createMaterials(diceobj, 0, 0, false, num);
         }
 
 		dicemesh.resultReason = 'forced';
@@ -809,7 +809,7 @@ export class DiceBox {
 
 	showcase(config) {
 		this.clearAll();
-		let step = this.display.containerWidth / 4 *1.15;
+		let step = this.display.containerWidth / 5 *1.15;
 
 		if (this.pane) this.scene.remove(this.pane);
 		if (this.desk) this.scene.remove(this.desk);
@@ -824,10 +824,10 @@ export class DiceBox {
 		}
 
 		let selectordice = Object.keys(this.dicefactory.dice);
-		this.camera.position.z = selectordice.length > 9 ? this.cameraHeight.far : this.cameraHeight.medium;
-		let posxstart = selectordice.length > 9 ? -2.5 : -1.5;
-		let posystart = selectordice.length > 9 ? 1 : 0.5;
-		let poswrap = selectordice.length > 9 ? 3 : 2;
+		this.camera.position.z = selectordice.length > 10 ? this.cameraHeight.far : this.cameraHeight.medium;
+		let posxstart = selectordice.length > 10 ? -2.5 : -2.0;
+		let posystart = selectordice.length > 10 ? 1 : 0.5;
+		let poswrap = selectordice.length > 10 ? 3 : 2;
 		this.applyColorsForRoll(config);
 		for (let i = 0, posx = posxstart, posy = posystart; i < selectordice.length; ++i, ++posx) {
 
