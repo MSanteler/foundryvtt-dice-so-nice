@@ -43,6 +43,31 @@ Hooks.once('init', () => {
         },
         config: true
     });
+
+    game.settings.register("dice-so-nice", "globalAnimationSpeed", {
+        name: "DICESONICE.globalAnimationSpeed",
+        hint: "DICESONICE.globalAnimationSpeedHint",
+        scope: "world",
+        type: String,
+        choices: Utils.localize({
+            "0": "DICESONICE.PlayerSpeed",
+            "1": "DICESONICE.NormalSpeed",
+            "2": "DICESONICE.2xSpeed",
+            "3": "DICESONICE.3xSpeed"
+        }),
+        default: "0",
+        config: true
+    });
+
+    game.settings.register("dice-so-nice", "diceCanBeFlipped", {
+        name: "DICESONICE.diceCanBeFlipped",
+        hint: "DICESONICE.diceCanBeFlippedHint",
+        scope: "world",
+        type: Boolean,
+        default: true,
+        config: true
+    });
+    
 });
 
 /**
@@ -217,6 +242,7 @@ export class Dice3D {
             outlineColor: user.color,
             edgeColor: user.color,
             texture: "none",
+            material: "auto",
             colorset: "custom",
             system: "standard"
         };
@@ -595,6 +621,13 @@ class DiceConfig extends FormApplication {
                     "3": "DICESONICE.3xSpeed"
                 }),
                 textureList: Utils.prepareTextureList(),
+                materialList: Utils.localize({
+                    "auto": "DICESONICE.MaterialAuto",
+                    "plastic": "DICESONICE.MaterialPlastic",
+                    "metal": "DICESONICE.MaterialMetal",
+                    "glass": "DICESONICE.MaterialGlass",
+                    "wood": "DICESONICE.MaterialWood"
+                }),
                 colorsetList: Utils.prepareColorsetList(),
                 shadowQualityList: Utils.localize({
                     "none": "DICESONICE.None",
@@ -673,6 +706,7 @@ class DiceConfig extends FormApplication {
                 bumpMapping: $('input[name="bumpMapping"]').is(':checked'),
                 colorset: $('select[name="colorset"]').val(),
                 texture: $('select[name="texture"]').val(),
+                material: $('select[name="material"]').val(),
                 sounds: $('input[name="sounds"]').is(':checked'),
                 system: $('select[name="system"]').val()
             };

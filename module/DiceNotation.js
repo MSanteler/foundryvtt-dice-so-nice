@@ -33,6 +33,9 @@ export class DiceNotation {
 			else {
 				dieValue = parseInt(dieValue/10);
 				dsnDie.resultLabel = fvttDie.constructor.getResultLabel(dieValue*10);
+				//On a d100, 0 is 10, because.
+				if(dieValue==10)
+					dieValue=0;
 			}
 		} else
 			dsnDie.resultLabel = fvttDie.constructor.getResultLabel(dieValue);
