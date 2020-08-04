@@ -387,7 +387,7 @@ export class Dice3D {
 
     _resizeEnd() {
         if (new Date() - this._rtime < 1000) {
-            setTimeout(this._resizeend.bind(this), 1000);
+            setTimeout(this._resizeEnd.bind(this), 1000);
         } else {
             this._timeout = false;
             //resize ended probably, lets remake the canvas
