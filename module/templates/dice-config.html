@@ -78,6 +78,17 @@
         </div>
 
         <div class="form-group">
+            <label>{{localize "DICESONICE.material"}}</label>
+            <select name="material" style="flex: 1;">
+                {{#select material}}
+                {{#each materialList as |name key|}}
+                <option value="{{key}}">{{name}}</option>
+                {{/each}}
+                {{/select}}
+            </select>
+        </div>
+
+        <div class="form-group">
             <label>{{localize "DICESONICE.hideAfterRoll"}}</label>
             <input type="checkbox" name="hideAfterRoll" data-dtype="Boolean" {{checked hideAfterRoll}}/>
         </div>

@@ -1,5 +1,4 @@
-import {DiceNotation} from './DiceNotation.js';
-import {DiceColors} from './DiceColors.js';
+import {DiceColors, COLORSETS} from './DiceColors.js';
 export class DiceBox {
 
 	constructor(element_container, dice_factory, config) {
@@ -142,7 +141,12 @@ export class DiceBox {
 		this.sounds = this.config.sounds == '1';
 		this.shadows = this.config.shadowQuality != "none";
 		this.dicefactory.setBumpMapping(this.config.bumpMapping);
-		this.speed = this.config.speed;
+		let globalAnimationSpeed = game.settings.get("dice-so-nice", "globalAnimationSpeed");
+		if(globalAnimationSpeed === "0")
+			this.speed = this.config.speed;
+		else
+			this.speed = parseInt(globalAnimationSpeed,10);
+			
 
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 
@@ -162,9 +166,7 @@ export class DiceBox {
 		this.world_sim.broadphase = new CANNON.NaiveBroadphase();
 		this.world_sim.solver.iterations = 14;
 		this.world_sim.allowSleep = true;
-
-		this.scene.add(new THREE.AmbientLight(this.colors.ambient, 1));
-
+	
 		let contactMaterial = new CANNON.ContactMaterial( this.desk_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.5});
 		this.world.addContactMaterial(contactMaterial);
 		this.world_sim.addContactMaterial(contactMaterial);
@@ -261,7 +263,7 @@ export class DiceBox {
 		this.light.shadow.mapSize.height = 1024;
 		this.scene.add(this.light);
 
-		this.light_amb = new THREE.AmbientLight( 0x404040 );
+		this.light_amb = new THREE.HemisphereLight( 0xffffbb, 0x676771, 1 );
 		this.scene.add(this.light_amb);
 
 		if (this.desk) this.scene.remove(this.desk);
@@ -283,7 +285,11 @@ export class DiceBox {
 		this.dicefactory.setScale(this.display.scale);
 		this.dicefactory.setBumpMapping(config.bumpMapping);
 
-		this.speed = parseInt(config.speed,10);
+		let globalAnimationSpeed = game.settings.get("dice-so-nice", "globalAnimationSpeed");
+		if(globalAnimationSpeed === "0")
+			this.speed = parseInt(config.speed,10);
+		else
+			this.speed = parseInt(globalAnimationSpeed,10);
 		this.shadows = config.shadowQuality != "none";
 		this.light.castShadow = this.shadows;
 		this.desk.receiveShadow = this.shadows;
@@ -503,18 +509,25 @@ export class DiceBox {
 	}
 
 	//spawns one dicemesh object from a single vectordata object
-	spawnDice(vectordata) {
+	spawnDice(dicedata) {
+		let vectordata = dicedata.vectors;
 		const diceobj = this.dicefactory.get(vectordata.type);
 		if(!diceobj) return;
+		let colorset = null;
+		if(dicedata.options.colorset)
+			colorset = dicedata.options.colorset;
+		else if(dicedata.options.flavor && COLORSETS[dicedata.options.flavor]){
+			colorset = dicedata.options.flavor;
+		}
 
-		let dicemesh = this.dicefactory.create(diceobj.type);
+		let dicemesh = this.dicefactory.create(diceobj.type, colorset);
 		if(!dicemesh) return;
 
 		dicemesh.notation = vectordata;
 		dicemesh.result = [];
 		dicemesh.stopped = 0;
 		dicemesh.castShadow = this.shadows;
-		dicemesh.body = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 80, sleepTimeLimit:0.75, mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
+		dicemesh.body = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9, mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
 		dicemesh.body.type = CANNON.Body.DYNAMIC;
 		dicemesh.body.position.set(vectordata.pos.x, vectordata.pos.y, vectordata.pos.z);
 		dicemesh.body.quaternion.setFromAxisAngle(new CANNON.Vec3(vectordata.axis.x, vectordata.axis.y, vectordata.axis.z), vectordata.axis.a * Math.PI * 2);
@@ -525,7 +538,7 @@ export class DiceBox {
 		dicemesh.body.diceShape = diceobj.shape;
 		dicemesh.body.addEventListener('collide', this.eventCollide.bind(this));
 
-		dicemesh.body_sim = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 80, sleepTimeLimit:0.75,mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
+		dicemesh.body_sim = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9,mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
 		dicemesh.body_sim.type = CANNON.Body.DYNAMIC;
 		dicemesh.body_sim.position.set(vectordata.pos.x, vectordata.pos.y, vectordata.pos.z);
 		dicemesh.body_sim.quaternion.setFromAxisAngle(new CANNON.Vec3(vectordata.axis.x, vectordata.axis.y, vectordata.axis.z), vectordata.axis.a * Math.PI * 2);
@@ -617,6 +630,21 @@ export class DiceBox {
 			else if(dicemesh.result.length==0)
 				dicemesh.storeRolledValue();
 		}
+		//Throw is actually finished
+		if(stopped){
+			let canBeFlipped = game.settings.get("dice-so-nice", "diceCanBeFlipped");
+			if(!canBeFlipped){
+				//make the current dice on the board STATIC object so they can't be knocked
+				for (let i=0, len=this.diceList.length; i < len; ++i){
+					let dicemesh = this.diceList[i];
+					let body = dicemesh.body;
+					if(worldType == "sim")
+						body = dicemesh.body_sim;
+					body.mass = 0;
+					body.updateMassProperties();
+				}
+			}
+		}
 		return stopped;
 	}
 
@@ -659,11 +687,10 @@ export class DiceBox {
 		if (me.running == threadid && me.throwFinished("render")) {
 			me.running = false;
 			me.rolling = false;
+
 			if(callback) callback(notationVectors);
 
-			
 			me.running = (new Date()).getTime();
-			me.animateAfterThrow(me,me.running);
 			return;
 		}
 
@@ -676,34 +703,6 @@ export class DiceBox {
 					requestAnimationFrame(() => { call(me,tid, aftercall, vecs); });
 				}
 			})(me.animateThrow, threadid, me.adaptive_timestep, callback, notationVectors);
-		}
-	}
-
-	animateAfterThrow(me,threadid) {
-		me.animstate = 'afterthrow';
-		let time = (new Date()).getTime();
-		let time_diff = (time - me.last_time) / 1000;
-		if (time_diff > 3) time_diff = me.framerate;
-
-		me.raycaster.setFromCamera( me.mouse.pos, me.camera );
-		if (me.rayvisual) me.rayvisual.setDirection(me.raycaster.ray.direction);
-		let intersects = me.raycaster.intersectObjects(me.diceList);
-		if ( intersects.length > 0 ) {
-			//setSelected(intersects[0].object);
-		} else {
-			//setSelected();
-		}
-
-		me.last_time = time;
-		me.renderer.render(me.scene, me.camera);
-		if (me.running == threadid) {
-			((call, tid, at) => {
-				if (!at && time_diff < me.framerate) {
-					setTimeout(() => { requestAnimationFrame(() => { call(me,tid); }); }, (me.framerate - time_diff) * 1000);
-				} else {
-					requestAnimationFrame(() => { call(me,tid); });
-				}
-			})(me.animateAfterThrow, threadid, me.adaptive_timestep);
 		}
 	}
 
@@ -720,8 +719,6 @@ export class DiceBox {
 		if(this.deadDiceList.length + notationVectors.dice.length > maxDiceNumber) {
 			this.clearAll();
 		}
-
-		
 		
 		this.applyColorsForRoll(dsnConfig);
 		this.dicefactory.setSystem(dsnConfig.system);
@@ -731,6 +728,7 @@ export class DiceBox {
 
 	applyColorsForRoll(dsnConfig){
 		let texture = null;
+		let material = null;
 		if(dsnConfig.colorset == "custom")
 			DiceColors.setColorCustom(dsnConfig.labelColor, dsnConfig.diceColor, dsnConfig.outlineColor, dsnConfig.edgeColor);
 
@@ -742,7 +740,15 @@ export class DiceBox {
 			texture = set.texture.id;
 		}
 
-		DiceColors.applyColorSet(this.dicefactory, dsnConfig.colorset, texture);
+		if(dsnConfig.material != "auto")
+			material = dsnConfig.material;
+		else if(dsnConfig.colorset != "custom")
+		{
+			let set = DiceColors.getColorSet(dsnConfig.colorset);
+			material = set.material;
+		}
+
+		DiceColors.applyColorSet(this.dicefactory, dsnConfig.colorset, texture, material);
 	}
 
 	clearDice() {
@@ -776,7 +782,7 @@ export class DiceBox {
 		this.clearDice();
 
 		for (let i=0, len=notationVectors.dice.length; i < len; ++i) {
-			this.spawnDice(notationVectors.dice[i].vectors);
+			this.spawnDice(notationVectors.dice[i]);
 		}
 		this.simulateThrow();
 		this.iteration = 0;

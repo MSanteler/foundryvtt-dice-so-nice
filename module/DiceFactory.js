@@ -23,12 +23,6 @@ export class DiceFactory {
 		this.edge_color = '';
 		this.bumpMapping = true;
 
-		this.material_options = {
-			specular: 0xffffff,
-			color: 0xb5b5b5,
-			shininess: 5,
-			flatShading: true
-		};
 		let loader = new THREE.CubeTextureLoader();
 		loader.setPath('modules/dice-so-nice/textures/envmap/');
 
@@ -37,30 +31,49 @@ export class DiceFactory {
 			'py.png', 'ny.png',
 			'pz.png', 'nz.png'
 		]);
-		textureCube.mapping = THREE.CubeRefractionMapping;
-		this.material_options_metal = {
-			color: 0xdddddd,
-			roughness: 0.5,
-			metalness: 0.6,
-			envMap: textureCube,
-			envMapIntensity:1
-		};
+		//textureCube.mapping = THREE.CubeRefractionMapping;
 
-		this.material_options_wood = {
-			color: 0xdddddd,
-			roughness: 0.9,
-			metalness: 0.0,
-			envMap: textureCube,
-			envMapIntensity:1
-		};
-
-		this.material_options_glasslike = {
-			color: 0xdddddd,
-			roughness: 0.1,
-			metalness: 0.0,
-			envMap: textureCube,
-			envMapIntensity:1
-		};
+		this.material_options = {
+			'plastic': {
+				'type':"phong",
+				'options':{
+					specular: 0xffffff,
+					color: 0xb5b5b5,
+					shininess: 5,
+					flatShading: true
+				}
+			},
+			'metal': {
+				'type':'standard',
+				'options': {
+					color: 0xdddddd,
+					roughness: 0.55,
+					metalness: 0.7,
+					envMap: textureCube,
+					envMapIntensity:1.1
+				}
+			},
+			'wood': {
+				'type':'standard',
+				'options': {
+					color: 0xdddddd,
+					roughness: 0.9,
+					metalness: 0.1,
+					envMap: textureCube,
+					envMapIntensity:1
+				}
+			},
+			'glass': {
+				'type':'standard',
+				'options': {
+					color: 0xdddddd,
+					roughness: 0.1,
+					metalness: 0.0,
+					envMap: textureCube,
+					envMapIntensity:1
+				}
+			},
+		}
 
 		this.canvas;
 
@@ -334,7 +347,7 @@ export class DiceFactory {
 	}
 
 	// returns a dicemesh (THREE.Mesh) object
-	create(type) {
+	create(type, colorset = null) {
 		let diceobj = this.dice[type];
 		if (!diceobj) return null;
 
@@ -345,7 +358,11 @@ export class DiceFactory {
 		}
 		if (!geom) return null;
 
-		if (diceobj.colorset) {
+		//We use either (by order of priority): a flavor/targeted colorset, the colorset of the diceobj, the colorset configured by the player
+		if(colorset){
+			this.setMaterialInfo(colorset);
+		}
+		else if (diceobj.colorset) {
 			this.setMaterialInfo(diceobj.colorset);
 		} else {
 			this.setMaterialInfo();
@@ -441,33 +458,30 @@ export class DiceFactory {
 			size = this.baseScale / 2;
 			margin = this.baseScale * 2;
 		}
-		
+		//If the texture is an array of texture (for random face texture), we look at the first element to determine the faces material and the edge texture
+		let dice_texture = Array.isArray(this.dice_texture_rand) ? this.dice_texture_rand[0] : this.dice_texture_rand;
 		for (var i = 0; i < labels.length; ++i) {
 			var mat;
-			if(this.dice_texture_rand.material){
-				switch(this.dice_texture_rand.material){
-					case "metal":
-						mat = new THREE.MeshStandardMaterial(this.material_options_metal);
-						break;
-					case "wood":
-						mat = new THREE.MeshStandardMaterial(this.material_options_wood);
-						break;
-					case "glasslike":
-						mat = new THREE.MeshStandardMaterial(this.material_options_glasslike);
-						break;
-					default: //plastic
-						mat = new THREE.MeshPhongMaterial(this.material_options);
-				}
-			} else
-				mat = new THREE.MeshPhongMaterial(this.material_options);
+			let materialSelected = this.material_options[this.material_rand];
+
+			switch(materialSelected.type){
+				case "phong":
+					mat = new THREE.MeshPhongMaterial(materialSelected.options);
+					break;
+				case "standard":
+					mat = new THREE.MeshStandardMaterial(materialSelected.options);
+					break;
+				default: //plastic
+					mat = new THREE.MeshPhongMaterial(this.material_options.plastic.options);
+			}
 
 			let canvasTextures;
 			if(i==0)//edge
 			{
 				//if the texture is fully opaque, we do not use it for edge
 				let texture = {name:"none"};
-				if(this.dice_texture_rand.composite != "source-over")
-					texture = this.dice_texture_rand;
+				if(dice_texture.composite != "source-over")
+					texture = dice_texture;
 				canvasTextures = this.createTextMaterial(diceobj, labels, i, size, margin, texture, this.label_color_rand, this.label_outline_rand, this.edge_color_rand, allowcache);
 				mat.map = canvasTextures.composite;
 			}
@@ -516,7 +530,9 @@ export class DiceFactory {
 	createTextMaterial(diceobj, labels, index, size, margin, texture, forecolor, outlinecolor, backcolor, allowcache) {
 		if (labels[index] === undefined) return null;
 
-        texture = texture || this.dice_texture_rand;
+		texture = texture || this.dice_texture_rand;
+		if(Array.isArray(texture))
+			texture = texture[Math.floor(Math.random() * texture.length)];
         forecolor = forecolor || this.label_color_rand;
         outlinecolor = outlinecolor || this.label_outline_rand;
         backcolor = backcolor || this.dice_color_rand;
@@ -767,6 +783,7 @@ export class DiceFactory {
 		this.dice_color = colordata.background;
 		this.label_outline = colordata.outline;
 		this.dice_texture = colordata.texture;
+		this.material = colordata.material;
 		this.edge_color = colordata.hasOwnProperty("edge") ? colordata.edge:colordata.background;
 	}
 
@@ -774,10 +791,15 @@ export class DiceFactory {
 		this.dice_texture = texture;
 	}
 
+	applyMaterial(material) {
+		this.material = material;
+	}
+
 	setMaterialInfo(colorset = '') {
 
 		let prevcolordata = this.colordata;
 		let prevtexture = this.dice_texture;
+		let prevmaterial = this.material;
 
 		if (colorset) {
 			let colordata = DiceColors.getColorSet(colorset);
@@ -793,6 +815,7 @@ export class DiceFactory {
 		this.label_outline_rand = '';
 		this.dice_texture_rand = '';
 		this.edge_color_rand = '';
+		this.material_rand = '';
 
 		// set base color first
 		if (Array.isArray(this.dice_color)) {
@@ -867,9 +890,21 @@ export class DiceFactory {
 			this.dice_texture_rand = this.dice_texture;
 		}
 
+		//Same for material
+		let baseTexture = Array.isArray(this.dice_texture_rand) ? this.dice_texture_rand[0]:this.dice_texture_rand;
+		if(this.material){
+			this.material_rand = this.material;
+		}
+		else if(this.colordata.material)
+			this.material_rand = this.colordata.material;
+		else if(baseTexture && baseTexture.material)
+			this.material_rand = baseTexture.material;
+		
+		
 		if (this.colordata.id != prevcolordata.id) {
 			this.applyColorSet(prevcolordata);
 			this.applyTexture(prevtexture);
+			this.applyMaterial(prevmaterial);
 		}
 	}
 
