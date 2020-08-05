@@ -67,6 +67,22 @@ Hooks.once('init', () => {
         default: true,
         config: true
     });
+
+    game.settings.register("dice-so-nice", "enabled", {
+        scope: "world",
+        type: Boolean,
+        default: true,
+        config: false
+    });
+
+    game.settings.register("dice-so-nice", "disabledDuringCombat", {
+        name: "DICESONICE.disabledDuringCombat",
+        hint: "DICESONICE.disabledDuringCombatHint",
+        scope: "world",
+        type: Boolean,
+        default: false,
+        config: true
+    });
     
 });
 
@@ -445,7 +461,8 @@ export class Dice3D {
      * Check if 3D simulation is enabled from the settings.
      */
     isEnabled() {
-        return Dice3D.CONFIG.enabled;
+        let combatEnabled = (!game.combat || !game.combat.started) || (game.combat && game.combat.started && !game.settings.get("dice-so-nice","disabledDuringCombat"));
+        return Dice3D.CONFIG.enabled && game.settings.get("dice-so-nice","enabled") && combatEnabled;
     }
 
     /**
