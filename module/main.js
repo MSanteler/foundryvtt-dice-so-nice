@@ -485,9 +485,9 @@ export class Dice3D {
     show(data, user = game.user, synchronize = false, users = null, blind) {
         return new Promise((resolve, reject) => {
 
-            if (!data.dice) throw new Error("Roll data should be not null");
+            if (!data.throws) throw new Error("Roll data should be not null");
 
-            if(!data.dice.length) {
+            if(!data.throws.length) {
                 resolve(false);
             } else {
 
@@ -518,13 +518,18 @@ export class Dice3D {
     _showAnimation(notation, dsnConfig) {
         return new Promise((resolve, reject) => {
             if(this.isEnabled() && this.queue.length < 10) {
-                this.queue.push(() => {
-                    this._beforeShow();
-                    this.box.start_throw(notation, dsnConfig, () => {
-                            resolve(true);
-                            this._afterShow();
-                        }
-                    );
+                let count = notation.throws.length;
+                notation.throws.forEach(aThrow => {
+                    this.queue.push(() => {
+                        this._beforeShow();
+                        this.box.start_throw(aThrow, dsnConfig, () => {
+                                if(!--count){
+                                    resolve(true);
+                                    this._afterShow();
+                                }
+                            }
+                        );
+                    });
                 });
             } else {
                 resolve(false);
