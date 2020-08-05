@@ -33,6 +33,28 @@
             </select>
             <p class="notes">{{localize "DICESONICE.colorsetDesc"}}</p>
         </div>
+
+        <div class="form-group">
+            <label>{{localize "DICESONICE.texture"}}</label>
+            <select name="texture" style="flex: 1;">
+                {{#select texture}}
+                {{#each textureList as |name key|}}
+                <option value="{{key}}">{{name}}</option>
+                {{/each}}
+                {{/select}}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>{{localize "DICESONICE.material"}}</label>
+            <select name="material" style="flex: 1;">
+                {{#select material}}
+                {{#each materialList as |name key|}}
+                <option value="{{key}}">{{name}}</option>
+                {{/each}}
+                {{/select}}
+            </select>
+        </div>
         
         <div class="form-group">
             <label>{{localize "DICESONICE.labelColor"}}</label>
@@ -64,28 +86,6 @@
                 <input type="text" name="edgeColor" value="{{edgeColor}}" data-dtype="String"/>
                 <input type="color" name="edgeColorSelector" value="{{edgeColor}}" data-edit="edgeColor"/>
             </div>
-        </div>
-
-        <div class="form-group">
-            <label>{{localize "DICESONICE.texture"}}</label>
-            <select name="texture" style="flex: 1;">
-                {{#select texture}}
-                {{#each textureList as |name key|}}
-                <option value="{{key}}">{{name}}</option>
-                {{/each}}
-                {{/select}}
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>{{localize "DICESONICE.material"}}</label>
-            <select name="material" style="flex: 1;">
-                {{#select material}}
-                {{#each materialList as |name key|}}
-                <option value="{{key}}">{{name}}</option>
-                {{/each}}
-                {{/select}}
-            </select>
         </div>
 
         <div class="form-group">

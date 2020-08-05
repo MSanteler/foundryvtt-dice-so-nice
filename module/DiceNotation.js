@@ -7,11 +7,38 @@ export class DiceNotation {
 	 * @param {Roll} rolls 
 	 */
 	constructor(rolls) {
-		this.dice = [];
+		this.throws = [{dice:[]}];
+		
+		//First we need to prepare the data
 		rolls.dice.forEach(die => {
 			//We only are able to handle this list of number of face in 3D for now
 			if([2, 3, 4, 6, 8, 10, 12, 20, 100].includes(die.faces)) {
-				for(let i =0; i< die.number; i++){
+				//We flag every single die with a throw number, to queue exploded dice
+				let cnt=die.number;
+				let countExploded = 0;
+				let localNbThrow = 0;
+				for(let i =0; i< die.results.length; i++){
+					if(localNbThrow >= this.throws.length)
+						this.throws.push({dice:[]});
+
+					if(die.results[i].exploded)
+						countExploded++;
+					die.results[i].indexThrow = localNbThrow;
+					//If we have a new throw
+					if(--cnt <= 0){
+						localNbThrow++;
+						cnt = countExploded;
+						countExploded = 0;
+					}
+				}
+			}
+		});
+
+		//Then we can create the throws
+		rolls.dice.forEach(die => {
+			//We only are able to handle this list of number of face in 3D for now
+			if([2, 3, 4, 6, 8, 10, 12, 20, 100].includes(die.faces)) {
+				for(let i =0; i< die.results.length; i++){
 					this.addDie(die, i);
 					if(die.faces == 100){
 						this.addDie(die, i, true);
@@ -20,7 +47,6 @@ export class DiceNotation {
 			}
 		});
 	}
-
 	addDie(fvttDie, index, isd10of100 = false){
 		let dsnDie = {};
 		let dieValue = fvttDie.values[index];
@@ -51,6 +77,6 @@ export class DiceNotation {
 		dsnDie.vectors = [];
 		//Contains optionals flavor (core) and colorset (dsn) infos.
 		dsnDie.options = duplicate(fvttDie.options);
-		this.dice.push(dsnDie);
+		this.throws[fvttDie.results[index].indexThrow].dice.push(dsnDie);
 	}
 }
