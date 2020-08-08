@@ -111,7 +111,6 @@ export class DiceFactory {
 		]);
 		diceobj.setValues(0,1);
 		diceobj.inertia = 8;
-		diceobj.mass = 400;
 		diceobj.scale = 0.9;
 		diceobj.colorset = "coin_default"
 		this.register(diceobj);
@@ -149,7 +148,7 @@ export class DiceFactory {
 		diceobj.name = 'd10';
 		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','0']);
 		diceobj.setValues(1,10);
-		diceobj.mass = 350;
+		diceobj.mass = 450;
 		diceobj.inertia = 9;
 		diceobj.scale = 0.9;
 		this.register(diceobj);
@@ -158,7 +157,7 @@ export class DiceFactory {
 		diceobj.name = 'd100';
 		diceobj.setLabels(['10', '20', '30', '40', '50', '60', '70', '80', '90', '00']);
 		diceobj.setValues(10, 100, 10);
-		diceobj.mass = 350;
+		diceobj.mass = 450;
 		diceobj.inertia = 9;
 		diceobj.scale = 0.9;
 		this.register(diceobj);
@@ -167,7 +166,7 @@ export class DiceFactory {
 		diceobj.name = 'd12';
 		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','10','11','12']);
 		diceobj.setValues(1,12);
-		diceobj.mass = 350;
+		diceobj.mass = 450;
 		diceobj.inertia = 8;
 		diceobj.scale = 0.9;
 		this.register(diceobj);
@@ -176,7 +175,7 @@ export class DiceFactory {
 		diceobj.name = 'd20';
 		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20']);
 		diceobj.setValues(1,20);
-		diceobj.mass = 400;
+		diceobj.mass = 500;
 		diceobj.inertia = 6;
 		this.register(diceobj);
 
@@ -545,9 +544,14 @@ export class DiceFactory {
 			textCache = text.src;
 		else if(text instanceof Array){
 			text.forEach(el => {
-				textCache += el.src;
+				if(el instanceof HTMLImageElement)
+					textCache += el.src;
+				else
+					textCache += el;
 			});
 		}
+		else
+			textCache = text;
 			
 		// an attempt at materials caching
 		let cachestring = diceobj.type + textCache + index + texture.name + forecolor + outlinecolor + backcolor;
