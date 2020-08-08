@@ -44,6 +44,8 @@
     "DICESONICE.globalAnimationSpeedHint": "Set the animation speed for all players instead of using their own settings (Players client refresh needed to take effect)",
     "DICESONICE.disabledDuringCombat": "Disabled during combat",
     "DICESONICE.disabledDuringCombatHint": "Disable 3D dice roll animations while a combat is active.",
+    "DICESONICE.enabledSimultaneousRolls": "Simultaneous rolls are merged",
+    "DICESONICE.enabledSimultaneousRollsHint": "Combine simultaneous rolls in a single animation instead of waiting for each roll to end (Refresh needed to take effect).",
 
     "DICESONICE.TextureClouds" : "Clouds",
     "DICESONICE.TextureCloudsTransparent" : "Clouds (Transparent)",

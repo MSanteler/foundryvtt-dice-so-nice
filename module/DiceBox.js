@@ -17,6 +17,8 @@ export class DiceBox {
 		this.rolling = false;
 		this.threadid;
 
+		this.nbIterationsBetweenRolls = 15;
+
 		this.display = {
 			currentWidth: null,
 			currentHeight: null,
@@ -395,17 +397,17 @@ export class DiceBox {
 	}
 
 	// swaps dice faces to match desired result
-	swapDiceFace(dicemesh, result){
+	swapDiceFace(dicemesh){
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 
 		if (diceobj.shape == 'd4') {
-			this.swapDiceFace_D4(dicemesh, result);
+			this.swapDiceFace_D4(dicemesh);
 			return;
 		}
 
 		let values = diceobj.values;
 		let value = parseInt(dicemesh.getLastValue().value);
-		result = parseInt(result);
+		let result = parseInt(dicemesh.forcedResult);
 		
 		if (dicemesh.notation.type == 'd10' && value == 0) value = 10;
 		if (dicemesh.notation.type == 'd100' && value == 0) value = 100;
@@ -475,10 +477,10 @@ export class DiceBox {
 		dicemesh.geometry = geom;
 	}
 
-	swapDiceFace_D4(dicemesh, result) {
+	swapDiceFace_D4(dicemesh) {
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 		let value = parseInt(dicemesh.getLastValue().value);
-		result = parseInt(result);
+		let result = parseInt(dicemesh.forcedResult);
 		if (!(value >= 1 && value <= 4))
 		{
 			return;
@@ -525,6 +527,8 @@ export class DiceBox {
 
 		dicemesh.notation = vectordata;
 		dicemesh.result = [];
+		dicemesh.forcedResult = dicedata.result;
+		dicemesh.startAtIteration = dicedata.startAtIteration;
 		dicemesh.stopped = 0;
 		dicemesh.castShadow = this.shadows;
 		dicemesh.body = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9, mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
@@ -547,10 +551,13 @@ export class DiceBox {
 		dicemesh.body_sim.linearDamping = 0.1;
 		dicemesh.body_sim.angularDamping = 0.1;
 
-		this.scene.add(dicemesh);
+		
 		this.diceList.push(dicemesh);
-		this.world.add(dicemesh.body);
-		this.world_sim.add(dicemesh.body_sim);
+		if(dicemesh.startAtIteration == 0){
+			this.scene.add(dicemesh);
+			this.world.add(dicemesh.body);
+			this.world_sim.add(dicemesh.body_sim);
+		}
 	}
 
 	eventCollide({body, target}) {
@@ -620,6 +627,7 @@ export class DiceBox {
 		
 		let stopped = true;
 		if (this.iteration > 1000) return true;
+		if (this.iteration <= this.minIterations) return false;
 		for (let i=0, len=this.diceList.length; i < len; ++i) {
 			let dicemesh = this.diceList[i];
 			let body = dicemesh.body;
@@ -650,24 +658,38 @@ export class DiceBox {
 
 	simulateThrow() {
 		this.animstate = 'simulate';
-		this.iteration = 0;
 		this.settle_time = 0;
 		this.rolling = true;
 		while (!this.throwFinished("sim")) {
 			++this.iteration;
+			if(!(this.iteration % this.nbIterationsBetweenRolls)){
+				for(let i = 0; i < this.diceList.length; i++){
+					if(this.diceList[i].startAtIteration == this.iteration)
+						this.world_sim.add(this.diceList[i].body_sim);
+				}
+			}
 			this.world_sim.step(this.framerate);
 		}
 	}
 
-	animateThrow(me, threadid, callback, notationVectors){
+	animateThrow(me, threadid, callback, throws){
 		me.animstate = 'throw';
 		let time = (new Date()).getTime();
 		me.last_time = me.last_time || time - (me.framerate*1000);
 		let time_diff = (time - me.last_time) / 1000;
-		++me.iteration;
+		
 		let neededSteps = Math.floor(time_diff / me.framerate);
 
 		for(let i =0; i < neededSteps*me.speed; i++) {
+			++me.iteration;
+			if(!(me.iteration % me.nbIterationsBetweenRolls)){
+				for(let i = 0; i < me.diceList.length; i++){
+					if(me.diceList[i].startAtIteration == me.iteration){
+						me.scene.add(me.diceList[i]);
+						me.world.add(me.diceList[i].body);
+					}		
+				}
+			}
 			me.world.step(me.framerate);
 		}
 
@@ -688,7 +710,7 @@ export class DiceBox {
 			me.running = false;
 			me.rolling = false;
 
-			if(callback) callback(notationVectors);
+			if(callback) callback(throws);
 
 			me.running = (new Date()).getTime();
 			return;
@@ -702,28 +724,28 @@ export class DiceBox {
 				} else {
 					requestAnimationFrame(() => { call(me,tid, aftercall, vecs); });
 				}
-			})(me.animateThrow, threadid, me.adaptive_timestep, callback, notationVectors);
+			})(me.animateThrow, threadid, me.adaptive_timestep, callback, throws);
 		}
 	}
 
-	start_throw(notation, dsnConfig, callback) {
+	start_throw(throws, callback) {
 		if (this.rolling) return;
+		let countNewDice = 0;
+		throws.forEach(notation => {
+			let vector = { x: (Math.random() * 2 - 0.5) * this.display.currentWidth, y: -(Math.random() * 2 - 0.5) * this.display.currentHeight};
+			let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+			let boost = (Math.random() + 3) * dist;
 
-		let vector = { x: (Math.random() * 2 - 0.5) * this.display.currentWidth, y: -(Math.random() * 2 - 0.5) * this.display.currentHeight};
-		let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
-		let boost = (Math.random() + 3) * dist;
-
-		let notationVectors = this.getVectors(notation, vector, boost, dist);
+			notation = this.getVectors(notation, vector, boost, dist);
+			countNewDice += notation.dice.length;
+		});
 
 		let maxDiceNumber = game.settings.get("dice-so-nice", "maxDiceNumber");
-		if(this.deadDiceList.length + notationVectors.dice.length > maxDiceNumber) {
+		if(this.deadDiceList.length + countNewDice > maxDiceNumber) {
 			this.clearAll();
 		}
-		
-		this.applyColorsForRoll(dsnConfig);
-		this.dicefactory.setSystem(dsnConfig.system);
 
-		this.rollDice(notationVectors,callback);
+		this.rollDice(throws,callback);
 	}
 
 	applyColorsForRoll(dsnConfig){
@@ -771,30 +793,34 @@ export class DiceBox {
 		setTimeout(() => { this.renderer.render(this.scene, this.camera); }, 100);
 	}
 
-	rollDice(notationVectors, callback){
-
-		if (notationVectors.error) {
-			callback();
-			return;
-		}
+	rollDice(throws, callback){
 
 		this.camera.position.z = this.cameraHeight.far;
 		this.clearDice();
+		this.minIterations = (throws.length-1) * this.nbIterationsBetweenRolls;
 
-		for (let i=0, len=notationVectors.dice.length; i < len; ++i) {
-			this.spawnDice(notationVectors.dice[i]);
+		for(let j = 0; j < throws.length; j++){
+			let notationVectors = throws[j];
+			this.applyColorsForRoll(notationVectors.dsnConfig);
+			this.dicefactory.setSystem(notationVectors.dsnConfig.system);
+			for (let i=0, len=notationVectors.dice.length; i < len; ++i) {
+				notationVectors.dice[i].startAtIteration = j*this.nbIterationsBetweenRolls;
+				this.spawnDice(notationVectors.dice[i]);
+			}
 		}
+		this.iteration = 0;
+		
 		this.simulateThrow();
 		this.iteration = 0;
 		this.settle_time = 0;
 
 
 		//check forced results, fix dice faces if necessary
-		for (let i=0;i<notationVectors.dice.length;i++) {
+		for (let i=0, len=this.diceList.length; i < len; ++i) {
 			let dicemesh = this.diceList[i];
 			if (!dicemesh) continue;
-			if (dicemesh.getLastValue().value == notationVectors.dice[i].result) continue;
-			this.swapDiceFace(dicemesh, notationVectors.dice[i].result);
+			if (dicemesh.getLastValue().value == dicemesh.forcedResult) continue;
+			this.swapDiceFace(dicemesh);
 		}
 
 		//reset the result
@@ -810,7 +836,7 @@ export class DiceBox {
 		this.rolling = true;
 		this.running = (new Date()).getTime();
 		this.last_time = 0;
-		this.animateThrow(this,this.running, callback, notationVectors);
+		this.animateThrow(this,this.running, callback, throws);
 	}
 
 	showcase(config) {
