@@ -54,13 +54,12 @@ export class DiceFactory {
 				}
 			},
 			'wood': {
-				'type':'standard',
+				'type':'phong',
 				'options': {
-					color: 0xdddddd,
-					roughness: 0.9,
-					metalness: 0.1,
-					envMap: textureCube,
-					envMapIntensity:1
+					specular: 0xffffff,
+					color: 0xb5b5b5,
+					shininess: 1,
+					flatShading: true
 				}
 			},
 			'glass': {
