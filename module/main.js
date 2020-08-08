@@ -257,7 +257,8 @@ export class Dice3D {
             speed: 1,
             shadowQuality: 'high',
             bumpMapping: true,
-            sounds: true
+            sounds: true,
+            soundsSurface: 'felt'
         };
     }
 
@@ -705,7 +706,13 @@ class DiceConfig extends FormApplication {
                 "low": "DICESONICE.Low",
                 "high": "DICESONICE.High"
             }),
-            systemList: Utils.prepareSystemList()
+            systemList: Utils.prepareSystemList(),
+            soundsSurfaceList: Utils.localize({
+                "felt": "DICESONICE.SurfaceFelt",
+                "wood_table": "DICESONICE.SurfaceWoodTable",
+                "wood_tray": "DICESONICE.SurfaceWoodTray",
+                "metal": "DICESONICE.SurfaceMetal",
+            })
         },
             this.reset ? Dice3D.ALL_DEFAULT_OPTIONS() : Dice3D.ALL_CONFIG()
         );
