@@ -45,11 +45,11 @@
     "DICESONICE.diceCanBeFlipped": "Dice can be flipped",
     "DICESONICE.diceCanBeFlippedHint": "When a die has finished rolling, can it be flipped by newly added rolling dice (This does not change the result).",
     "DICESONICE.globalAnimationSpeed": "Global animation speed",
-    "DICESONICE.globalAnimationSpeedHint": "Set the animation speed for all players instead of using their own settings (Players client refresh needed to take effect)",
+    "DICESONICE.globalAnimationSpeedHint": "Set the animation speed for all players instead of using their own settings",
     "DICESONICE.disabledDuringCombat": "Disabled during combat",
     "DICESONICE.disabledDuringCombatHint": "Disable 3D dice roll animations while a combat is active.",
     "DICESONICE.enabledSimultaneousRolls": "Simultaneous rolls are merged",
-    "DICESONICE.enabledSimultaneousRollsHint": "Combine simultaneous rolls in a single animation instead of waiting for each roll to end (Refresh needed to take effect).",
+    "DICESONICE.enabledSimultaneousRollsHint": "Combine simultaneous rolls in a single animation instead of waiting for each roll to end.",
     "DICESONICE.canvasZIndex": "3D layer position",
 
     "DICESONICE.TextureClouds" : "Clouds",

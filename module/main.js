@@ -83,10 +83,7 @@ Hooks.once('init', () => {
         scope: "world",
         type: Boolean,
         default: true,
-        config: true,
-        onChange: () => {
-            location.reload();
-        }
+        config: true
     });
 
     game.settings.register("dice-so-nice", "enabled", {
