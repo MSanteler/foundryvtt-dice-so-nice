@@ -165,6 +165,17 @@
             </select>
         </div>
 
+        <div class="form-group">
+            <label>{{localize "DICESONICE.canvasZIndex"}}</label>
+            <select name="canvasZIndex" style="flex: 1;">
+                {{#select canvasZIndex}}
+                {{#each canvasZIndexList as |name key|}}
+                <option value="{{key}}">{{name}}</option>
+                {{/each}}
+                {{/select}}
+            </select>
+        </div>
+
         <div class="form-group" style="margin-top: 20px;">
             <button type="button" name="reset">
                 <i class="fas fa-refresh"></i> {{localize "DICESONICE.Reset"}}

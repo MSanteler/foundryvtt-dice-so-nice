@@ -47,6 +47,7 @@
     "DICESONICE.disabledDuringCombatHint": "Disable 3D dice roll animations while a combat is active.",
     "DICESONICE.enabledSimultaneousRolls": "Simultaneous rolls are merged",
     "DICESONICE.enabledSimultaneousRollsHint": "Combine simultaneous rolls in a single animation instead of waiting for each roll to end (Refresh needed to take effect).",
+    "DICESONICE.canvasZIndex": "3D layer position",
 
     "DICESONICE.TextureClouds" : "Clouds",
     "DICESONICE.TextureCloudsTransparent" : "Clouds (Transparent)",
@@ -126,5 +127,8 @@
     "DICESONICE.SurfaceFelt" : "Felt",
     "DICESONICE.SurfaceWoodTable" : "Wood table",
     "DICESONICE.SurfaceWoodTray" : "Wood tray",
-    "DICESONICE.SurfaceMetal" : "Metal"
+    "DICESONICE.SurfaceMetal" : "Metal",
+
+    "DICESONICE.CanvasZIndexOver": "Over sheets",
+    "DICESONICE.CanvasZIndexUnder": "Under sheets"
 }
