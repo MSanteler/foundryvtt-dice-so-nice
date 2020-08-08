@@ -784,10 +784,10 @@ export class DiceFactory {
 		this.colordata = colordata;
 		this.label_color = colordata.foreground;
 		this.dice_color = colordata.background;
-		this.label_outline = colordata.outline;
+		this.label_outline = colordata.outline != '' ? colordata.outline:"none";
 		this.dice_texture = colordata.texture;
 		this.material = colordata.material;
-		this.edge_color = colordata.hasOwnProperty("edge") ? colordata.edge:colordata.background;
+		this.edge_color = colordata.hasOwnProperty("edge") && colordata.edge != '' ? colordata.edge:colordata.background;
 	}
 
 	applyTexture(texture) {
