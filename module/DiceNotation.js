@@ -79,4 +79,17 @@ export class DiceNotation {
 		dsnDie.options = duplicate(fvttDie.options);
 		this.throws[fvttDie.results[index].indexThrow].dice.push(dsnDie);
 	}
+
+	static mergeQueuedRollCommands(queue){
+		let mergedRollCommands = [];
+		queue.forEach(command => {
+			for(let i = 0; i< command.params.throws.length; i++){
+				if(!mergedRollCommands[i])
+					mergedRollCommands.push([]);
+				command.params.throws[i].dsnConfig = command.params.dsnConfig;
+				mergedRollCommands[i].push(command.params.throws[i]);
+			}
+		});
+		return mergedRollCommands;
+	}
 }

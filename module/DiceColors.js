@@ -558,11 +558,11 @@ export class DiceColors {
 		}
 	
 		if (!texturename || texturename == '') {
-			return {name:'',texture:''};
+			return {name:'',texture:'',material:"plastic"};
 		}
 	
 		if (texturename == 'none') {
-			return {name:'none',texture:'',};
+			return {name:'none',texture:'',material:"plastic"};
 		}
 	
 		if(texturename == 'random') {
