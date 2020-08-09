@@ -73,6 +73,7 @@ export class DiceBox {
 		this.sounds = true;
 		this.volume = 100;
 		this.soundDelay = 10; // time between sound effects in ms
+		this.soundsSurface = "felt";
 		this.animstate = '';
 
 		this.selector = {
@@ -95,12 +96,11 @@ export class DiceBox {
 
 	preloadSounds(){
 
-		//only "felt" is activated for now
 		let surfaces = [
-			['felt', 7]
-			/*['wood_table', 7],
+			['felt', 7],
+			['wood_table', 7],
 			['wood_tray', 7],
-			['metal', 9]*/
+			['metal', 9]
 		];
 
 		for (const [surface, numsounds] of surfaces) {
@@ -141,6 +141,7 @@ export class DiceBox {
 			this.dicefactory.setSystem(this.config.system);
 
 		this.sounds = this.config.sounds == '1';
+		this.soundsSurface = this.config.soundsSurface;
 		this.shadows = this.config.shadowQuality != "none";
 		this.dicefactory.setBumpMapping(this.config.bumpMapping);
 		let globalAnimationSpeed = game.settings.get("dice-so-nice", "globalAnimationSpeed");
@@ -298,6 +299,7 @@ export class DiceBox {
 		this.renderer.shadowMap.enabled = this.shadows;
 		this.renderer.shadowMap.type = config.shadowQuality == "high" ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
 		this.sounds = config.sounds;
+		this.soundsSurface = config.soundsSurface;
 		if(config.system)
 			this.dicefactory.setSystem(config.system);
         this.applyColorsForRoll(config);
@@ -539,7 +541,8 @@ export class DiceBox {
 		dicemesh.body.velocity.set(vectordata.velocity.x, vectordata.velocity.y, vectordata.velocity.z);
 		dicemesh.body.linearDamping = 0.1;
 		dicemesh.body.angularDamping = 0.1;
-		dicemesh.body.diceShape = diceobj.shape;
+		dicemesh.body.diceMaterial = this.dicefactory.material_rand;
+		dicemesh.body.diceType = diceobj.type;
 		dicemesh.body.addEventListener('collide', this.eventCollide.bind(this));
 
 		dicemesh.body_sim = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9,mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
@@ -589,7 +592,10 @@ export class DiceBox {
 			let low = 250;
 			strength = Math.max(Math.min(speed / (high-low), 1), strength);
 			let sound;
-			if(body.diceShape != "d2")
+
+			//TODO: Use body.diceMaterial to have different sounds of colisions
+			//For now, we just have coins sounds
+			if(body.diceType != "dc")
 				sound = this.sounds_dice[Math.floor(Math.random() * this.sounds_dice.length)];
 			else
 				sound = this.sounds_coins[Math.floor(Math.random() * this.sounds_coins.length)];
@@ -602,12 +608,12 @@ export class DiceBox {
 		} else { // dice to table collision
 			let speed = target.velocity.length();
 			// also don't bother playing at low speeds
-			if (speed < 250) return;
+			if (speed < 100) return;
 
-			let surface = 'felt';
+			let surface = this.soundsSurface;
 			let strength = 0.1;
 			let high = 12000;
-			let low = 250;
+			let low = 100;
 			strength = Math.max(Math.min(speed / (high-low), 1), strength);
 
 			let soundlist = this.sounds_table[surface];

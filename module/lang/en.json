@@ -33,6 +33,7 @@
     "DICESONICE.shadowQuality" : "Shadows Quality",
     "DICESONICE.bumpMapping" : "Advanced lighting",
     "DICESONICE.sounds" : "Sound Effects",
+    "DICESONICE.soundsSurface" : "Table surface for sounds",
     "DICESONICE.system" : "Dice Presets (Faces)",
     "DICESONICE.maxDiceNumber" : "Max Number of Dice",
     "DICESONICE.maxDiceNumberHint" : "Maximum number of displayed dice in an animation. Higher numbers will reduce performances",
@@ -120,5 +121,10 @@
 
     "DICESONICE.System.Standard" : "Standard",
     "DICESONICE.System.Dot" : "Dot (White)",
-    "DICESONICE.System.DotBlack" : "Dot (Black)"
+    "DICESONICE.System.DotBlack" : "Dot (Black)",
+
+    "DICESONICE.SurfaceFelt" : "Felt",
+    "DICESONICE.SurfaceWoodTable" : "Wood table",
+    "DICESONICE.SurfaceWoodTray" : "Wood tray",
+    "DICESONICE.SurfaceMetal" : "Metal"
 }
