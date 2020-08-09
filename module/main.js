@@ -25,7 +25,10 @@ Hooks.once('init', () => {
         config: false,
         onChange: settings => {
             if (game.dice3d) {
-                game.dice3d.update(settings);
+                if(game.dice3d.currentCanvasPosition != settings.canvasZIndex)
+                    location.reload();
+                else
+                    game.dice3d.update(settings);
             }
         }
     });
@@ -56,7 +59,10 @@ Hooks.once('init', () => {
             "3": "DICESONICE.3xSpeed"
         }),
         default: "0",
-        config: true
+        config: true,
+        onChange: () => {
+            location.reload();
+        }
     });
 
     game.settings.register("dice-so-nice", "enabledSimultaneousRolls", {
@@ -65,7 +71,10 @@ Hooks.once('init', () => {
         scope: "world",
         type: Boolean,
         default: false,
-        config: true
+        config: true,
+        onChange: () => {
+            location.reload();
+        }
     });
 
     game.settings.register("dice-so-nice", "diceCanBeFlipped", {
@@ -258,7 +267,8 @@ export class Dice3D {
             shadowQuality: 'high',
             bumpMapping: true,
             sounds: true,
-            soundsSurface: 'felt'
+            soundsSurface: 'felt',
+            canvasZIndex:'over'
         };
     }
 
@@ -382,8 +392,15 @@ export class Dice3D {
      * @private
      */
     _buildCanvas() {
-        this.canvas = $('<div id="dice-box-canvas" style="position: absolute; left: 0; top: 0; z-index: 1000; pointer-events: none;"></div>');
-        this.canvas.appendTo($('body'));
+        this.canvas = $('<div id="dice-box-canvas" style="position: absolute; left: 0; top: 0;pointer-events: none;"></div>');
+        if(Dice3D.CONFIG.canvasZIndex == "over"){
+            this.canvas.css("z-index",1000);
+            this.canvas.appendTo($('body'));
+        } 
+        else{
+            $("#board").after(this.canvas);
+        }
+        this.currentCanvasPosition = Dice3D.CONFIG.canvasZIndex;
         this._resizeCanvas();
     }
 
@@ -712,6 +729,10 @@ class DiceConfig extends FormApplication {
                 "wood_table": "DICESONICE.SurfaceWoodTable",
                 "wood_tray": "DICESONICE.SurfaceWoodTray",
                 "metal": "DICESONICE.SurfaceMetal",
+            }),
+            canvasZIndexList: Utils.localize({
+                "over": "DICESONICE.CanvasZIndexOver",
+                "under": "DICESONICE.CanvasZIndexUnder",
             })
         },
             this.reset ? Dice3D.ALL_DEFAULT_OPTIONS() : Dice3D.ALL_CONFIG()
