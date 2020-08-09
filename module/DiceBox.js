@@ -51,7 +51,7 @@ export class DiceBox {
 		this.desk_body_material = new CANNON.Material();
 		this.barrier_body_material = new CANNON.Material();
 		this.sounds_table = {};
-		this.sounds_dice = [];
+		this.sounds_dice = {};
 		this.sounds_coins = [];
 		this.lastSoundType = '';
 		this.lastSoundStep = 0;
@@ -115,17 +115,26 @@ export class DiceBox {
 			}
 		}
 
-		for (let i=1; i <= 15; ++i) {
-			let path = `modules/dice-so-nice/sounds/dicehit${i}.wav`;
-			AudioHelper.play({
-				src:path,
-				autoplay:false
-			},false);
-			this.sounds_dice.push(path);
+		let materials = [
+			['plastic', 15],
+			['metal', 12],
+			['wood', 12]
+		];
+
+		for (const [material, numsounds] of materials) {
+			this.sounds_dice[material] = [];
+			for (let s=1; s <= numsounds; ++s) {
+				let path = `modules/dice-so-nice/sounds/dicehit/dicehit${s}_${material}.wav`;
+				AudioHelper.play({
+					src:path,
+					autoplay:false
+				},false);
+				this.sounds_dice[material].push(path);
+			}
 		}
 
 		for (let i=1; i <= 6; ++i) {
-			let path = `modules/dice-so-nice/sounds/coinhit${i}.wav`;
+			let path = `modules/dice-so-nice/sounds/dicehit/coinhit${i}.wav`;
 			AudioHelper.play({
 				src:path,
 				autoplay:false
@@ -173,7 +182,7 @@ export class DiceBox {
 		let contactMaterial = new CANNON.ContactMaterial( this.desk_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.5});
 		this.world.addContactMaterial(contactMaterial);
 		this.world_sim.addContactMaterial(contactMaterial);
-		contactMaterial = new CANNON.ContactMaterial( this.barrier_body_material, this.dice_body_material, {friction: 0, restitution: 1.0});
+		contactMaterial = new CANNON.ContactMaterial( this.barrier_body_material, this.dice_body_material, {friction: 0, restitution: 0.95});
 		this.world.addContactMaterial(contactMaterial);
 		this.world_sim.addContactMaterial(contactMaterial);
 		contactMaterial = new CANNON.ContactMaterial( this.dice_body_material, this.dice_body_material, {friction: 0, restitution: 0.5});
@@ -527,13 +536,26 @@ export class DiceBox {
 		let dicemesh = this.dicefactory.create(diceobj.type, colorset);
 		if(!dicemesh) return;
 
+		let mass = diceobj.mass;
+		switch(this.dicefactory.material_rand){
+			case "metal":
+				mass *= 7;
+				break;
+			case "wood":
+				mass *= 0.65;
+				break;
+			case "glass":
+				mass *= 2;
+				break;
+		}
+
 		dicemesh.notation = vectordata;
 		dicemesh.result = [];
 		dicemesh.forcedResult = dicedata.result;
 		dicemesh.startAtIteration = dicedata.startAtIteration;
 		dicemesh.stopped = 0;
 		dicemesh.castShadow = this.shadows;
-		dicemesh.body = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9, mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
+		dicemesh.body = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9, mass: mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
 		dicemesh.body.type = CANNON.Body.DYNAMIC;
 		dicemesh.body.position.set(vectordata.pos.x, vectordata.pos.y, vectordata.pos.z);
 		dicemesh.body.quaternion.setFromAxisAngle(new CANNON.Vec3(vectordata.axis.x, vectordata.axis.y, vectordata.axis.z), vectordata.axis.a * Math.PI * 2);
@@ -545,7 +567,7 @@ export class DiceBox {
 		dicemesh.body.diceType = diceobj.type;
 		dicemesh.body.addEventListener('collide', this.eventCollide.bind(this));
 
-		dicemesh.body_sim = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9,mass: diceobj.mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
+		dicemesh.body_sim = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9,mass: mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
 		dicemesh.body_sim.type = CANNON.Body.DYNAMIC;
 		dicemesh.body_sim.position.set(vectordata.pos.x, vectordata.pos.y, vectordata.pos.z);
 		dicemesh.body_sim.quaternion.setFromAxisAngle(new CANNON.Vec3(vectordata.axis.x, vectordata.axis.y, vectordata.axis.z), vectordata.axis.a * Math.PI * 2);
@@ -569,7 +591,7 @@ export class DiceBox {
 
 		// don't play sounds if we're simulating
 		if (this.animstate === 'simulate') return;
-		if (!this.sounds || !body || !this.sounds_dice.length) return;
+		if (!this.sounds || !body || !this.sounds_dice.plastic) return;
 
 		let now = Date.now();
 		let currentSoundType = (body.mass > 0) ? 'dice' : 'table';
@@ -595,8 +617,12 @@ export class DiceBox {
 
 			//TODO: Use body.diceMaterial to have different sounds of colisions
 			//For now, we just have coins sounds
-			if(body.diceType != "dc")
-				sound = this.sounds_dice[Math.floor(Math.random() * this.sounds_dice.length)];
+			if(body.diceType != "dc"){
+				let sounds_dice = this.sounds_dice['plastic'];
+				if(this.sounds_dice[body.diceMaterial])
+					sounds_dice = this.sounds_dice[body.diceMaterial];
+				sound = sounds_dice[Math.floor(Math.random() * sounds_dice.length)];
+			}
 			else
 				sound = this.sounds_coins[Math.floor(Math.random() * this.sounds_coins.length)];
 			AudioHelper.play({
@@ -740,7 +766,7 @@ export class DiceBox {
 		throws.forEach(notation => {
 			let vector = { x: (Math.random() * 2 - 0.5) * this.display.currentWidth, y: -(Math.random() * 2 - 0.5) * this.display.currentHeight};
 			let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
-			let boost = (Math.random() + 3) * dist;
+			let boost = ((Math.random() + 3)*0.8) * dist;
 
 			notation = this.getVectors(notation, vector, boost, dist);
 			countNewDice += notation.dice.length;
