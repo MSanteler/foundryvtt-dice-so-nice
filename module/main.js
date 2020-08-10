@@ -268,6 +268,7 @@ export class Dice3D {
             bumpMapping: true,
             sounds: true,
             soundsSurface: 'felt',
+            soundsVolume: 0.5,
             canvasZIndex:'over'
         };
     }
@@ -757,6 +758,7 @@ class DiceConfig extends FormApplication {
         this.toggleCustomColors();
 
         html.find('input[name="hideAfterRoll"]').change(this.toggleHideAfterRoll.bind(this));
+        html.find('input[name="sounds"]').change(this.toggleSounds.bind(this));
         html.find('input[name="autoscale"]').change(this.toggleAutoScale.bind(this));
         html.find('select[name="colorset"]').change(this.toggleCustomColors.bind(this));
         html.find('input,select').change(this.onApply.bind(this));
@@ -771,10 +773,17 @@ class DiceConfig extends FormApplication {
         $('select[name="hideFX"]').prop("disabled", !hideAfterRoll);
     }
 
+    toggleSounds() {
+        let sounds = $('input[name="sounds"]')[0].checked;
+        $('select[name="soundsSurface"]').prop("disabled", !sounds);
+        $('input[name="soundsVolume"]').prop("disabled", !sounds);
+        //$('.sounds-range-value').css({ 'opacity': !sounds ? 0.4 : 1 });
+    }
+
     toggleAutoScale() {
         let autoscale = $('input[name="autoscale"]')[0].checked;
         $('input[name="scale"]').prop("disabled", autoscale);
-        $('.range-value').css({ 'opacity': autoscale ? 0.4 : 1 });
+        //$('.scale-range-value').css({ 'opacity': autoscale ? 0.4 : 1 });
     }
 
     toggleCustomColors() {
