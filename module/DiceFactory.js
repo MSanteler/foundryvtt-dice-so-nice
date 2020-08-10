@@ -552,16 +552,11 @@ export class DiceFactory {
 
 		context.clearRect(0, 0, canvas.width, canvas.height);
 
-		let texturesPerLine = Math.floor(Math.sqrt(facesCanvas.length));
+		let texturesPerLine = Math.ceil(Math.sqrt(facesCanvas.length));
 		let sizeTexture = Math.max(facesCanvas[facesCanvas.length-1].width,256);
 		let ts = this.calc_texture_size(Math.sqrt(facesCanvas.length)*sizeTexture, true);
 
 		canvas.width = canvas.height = ts;
-
-		//temp
-		context.lineWidth = 1;
-		context.strokeStyle = "#FFFFFF";
-		//temp
 
 		let x = 0;
 		let y = 0;
@@ -582,12 +577,9 @@ export class DiceFactory {
 
 			if(facesCanvas[index])
 				context.drawImage(facesCanvas[index], x, y, sizeTexture, sizeTexture);
-			context.strokeRect(x, y, sizeTexture, sizeTexture);
 			texturesOnThisLine++;
 			x += sizeTexture;
 		}
-		var img    = canvas.toDataURL("image/png");
-		document.write('<img src="'+img+'"/>');
 		let texture = new THREE.CanvasTexture(canvas);
 		texture.flipY = false;
 		return texture;
