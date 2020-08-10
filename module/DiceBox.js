@@ -414,6 +414,7 @@ export class DiceBox {
 
 	// swaps dice faces to match desired result
 	swapDiceFace(dicemesh){
+		return;
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 
 		if (diceobj.shape == 'd4') {
@@ -441,6 +442,7 @@ export class DiceBox {
 	}
 
 	swapDiceFace_D4(dicemesh) {
+		return;
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 		let value = parseInt(dicemesh.getLastValue().value);
 		let result = parseInt(dicemesh.forcedResult);
