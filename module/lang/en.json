@@ -121,6 +121,7 @@
     "DICESONICE.MaterialMetal": "Metal",
     "DICESONICE.MaterialGlass": "Glass",
     "DICESONICE.MaterialWood": "Wood",
+    "DICESONICE.MaterialChrome" : "Chrome",
     "DICESONICE.MaterialAuto": "Auto (Theme/Texture)",
 
     "DICESONICE.System.Standard" : "Standard",

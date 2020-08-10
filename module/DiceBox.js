@@ -1,4 +1,5 @@
 import {DiceColors, COLORSETS} from './DiceColors.js';
+import { DICE_MODELS } from './DiceModels.js';
 export class DiceBox {
 
 	constructor(element_container, dice_factory, config) {
@@ -44,9 +45,6 @@ export class DiceBox {
 		this.scene = new THREE.Scene();
 		this.world = new CANNON.World();
 		this.world_sim = new CANNON.World();
-		this.raycaster = new THREE.Raycaster();
-		this.rayvisual = null;
-		this.showdebugtracer = false;
 		this.dice_body_material = new CANNON.Material();
 		this.desk_body_material = new CANNON.Material();
 		this.barrier_body_material = new CANNON.Material();
@@ -160,7 +158,14 @@ export class DiceBox {
 			this.speed = parseInt(globalAnimationSpeed,10);
 			
 
-		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference:"high-performance"});
+		this.rendererStats	= new THREEx.RendererStats()
+
+		this.rendererStats.domElement.style.position	= 'absolute';
+		this.rendererStats.domElement.style.left	= '44px';
+		this.rendererStats.domElement.style.bottom	= '178px';
+		this.rendererStats.domElement.style.transform	= 'scale(2)';
+		document.body.appendChild( this.rendererStats.domElement );
 
 		this.container.appendChild(this.renderer.domElement);
 		this.renderer.shadowMap.enabled = this.shadows;
@@ -415,8 +420,6 @@ export class DiceBox {
 			this.swapDiceFace_D4(dicemesh);
 			return;
 		}
-
-		let values = diceobj.values;
 		let value = parseInt(dicemesh.getLastValue().value);
 		let result = parseInt(dicemesh.forcedResult);
 		
@@ -428,64 +431,13 @@ export class DiceBox {
 		if (dicemesh.notation.type == 'd100' && result == 0) result = 100;
 		if (dicemesh.notation.type == 'd100' && (result > 0 && result < 10)) result *= 10;
 
-		let valueindex = diceobj.values.indexOf(value);
-		let resultindex = diceobj.values.indexOf(result);
+		//let valueindex = diceobj.values.indexOf(value);
+		//let resultindex = diceobj.values.indexOf(result);
+		if (value == result) return;
 
-		if (valueindex < 0 || resultindex < 0) return;
-		if (valueindex == resultindex) return;
-
-		// find material index for corresponding value -> face and swap them
-		// must clone the geom before modifying it
-		let geom = dicemesh.geometry.clone();
-
-		// find list of faces that use the matching material index for the given value/result
-		let geomindex_value = [];
-		let geomindex_result = [];
-
-		// it's magic but not really
-		// the mesh's materials start at index 2
-		let magic = 2;
-		// except on d10 meshes
-		if(diceobj.shape == "d10") magic = 1;
-
-		let material_value, material_result;
-
-		//and D2 meshes have a lot more faces
-		if(diceobj.shape != "d2"){
-			material_value = (valueindex+magic);
-			material_result = (resultindex+magic);
-		} else {
-			material_value = valueindex+1;
-			material_result = resultindex+1;
-		}
-		
-
-		for (var i = 0, l = geom.faces.length; i < l; ++i) {
-			const matindex = geom.faces[i].materialIndex;
-
-			if (matindex == material_value) {
-				geomindex_value.push(i);
-				continue;
-			}
-			if (matindex == material_result) {
-				geomindex_result.push(i);
-				continue;
-			}
-		}
-
-		if (geomindex_value.length <= 0 || geomindex_result.length <= 0) return;
-
-		//swap the materials
-		for(let i = 0, l = geomindex_result.length; i < l; i++) {
-			geom.faces[geomindex_result[i]].materialIndex = material_value;
-		}
-
-		for(let i = 0, l = geomindex_value.length; i < l; i++) {
-			geom.faces[geomindex_value[i]].materialIndex = material_result;
-		}
+		this.dicefactory.swapTexture(dicemesh, value, result);
 
 		dicemesh.resultReason = 'forced';
-		dicemesh.geometry = geom;
 	}
 
 	swapDiceFace_D4(dicemesh) {
@@ -735,6 +687,7 @@ export class DiceBox {
 		}
 
 		me.renderer.render(me.scene, me.camera);
+		me.rendererStats.update(me.renderer);
 		me.last_time = me.last_time + neededSteps*me.framerate*1000;
 
 		// roll finished

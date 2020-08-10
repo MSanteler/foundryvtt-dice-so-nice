@@ -1,10 +1,12 @@
 import {DicePreset} from './DicePreset.js';
 import {DiceColors} from './DiceColors.js';
+import {DICE_MODELS} from './DiceModels.js';
 export class DiceFactory {
 
 	constructor() {
 		this.dice = {};
 		this.geometries = {};
+		this.meshes = {};
 
 		this.baseScale = 50;
 
@@ -24,7 +26,7 @@ export class DiceFactory {
 		this.bumpMapping = true;
 
 		let loader = new THREE.CubeTextureLoader();
-		loader.setPath('modules/dice-so-nice/textures/envmap/');
+		loader.setPath('modules/dice-so-nice/textures/envmap_church/');
 
 		let textureCube = loader.load( [
 			'px.png', 'nx.png',
@@ -47,10 +49,11 @@ export class DiceFactory {
 				'type':'standard',
 				'options': {
 					color: 0xdddddd,
-					roughness: 0.55,
-					metalness: 0.7,
+					emissive:0x111111,
+					roughness: 0.45,
+					metalness: 0.98,
 					envMap: textureCube,
-					envMapIntensity:1.1
+					envMapIntensity:1
 				}
 			},
 			'wood': {
@@ -63,15 +66,29 @@ export class DiceFactory {
 				}
 			},
 			'glass': {
-				'type':'standard',
+				'type':'phong',
 				'options': {
-					color: 0xdddddd,
-					roughness: 0.1,
-					metalness: 0.0,
+					specular: 0xffffff,
+					color: 0xb5b5b5,
+					shininess: 0.3,
+					reflectivity:0.1,
 					envMap: textureCube,
-					envMapIntensity:1
+					envMapIntensity:1,
+					combine:THREE.MixOperation
 				}
 			},
+			'chrome': {
+				'type':'phong',
+				'options': {
+					specular: 0xffffff,
+					color: 0xb5b5b5,
+					shininess: 1,
+					reflectivity:0.7,
+					envMap: textureCube,
+					envMapIntensity:1,
+					combine:THREE.AddOperation
+				}
+			}
 		}
 
 		this.canvas;
@@ -239,6 +256,7 @@ export class DiceFactory {
 	setScale(scale){
 		this.baseScale = scale;
 		this.geometries = {};
+		this.meshes = {};
 		this.materials_cache = {};
 	}
 
@@ -349,24 +367,34 @@ export class DiceFactory {
 		let diceobj = this.dice[type];
 		if (!diceobj) return null;
 
+		let cacheString = ""; //not used for now, too many issues with instanciating
+		//We use either (by order of priority): a flavor/targeted colorset, the colorset of the diceobj, the colorset configured by the player
+		if(colorset){
+			cacheString = this.setMaterialInfo(colorset);
+		}
+		else if (diceobj.colorset) {
+			cacheString = this.setMaterialInfo(diceobj.colorset);
+		} else {
+			cacheString = this.setMaterialInfo();
+		}
+
 		let geom = this.geometries[type];
 		if(!geom) {
 			geom = this.createGeometry(diceobj.shape, diceobj.scale * this.baseScale);
 			this.geometries[type] = geom;
 		}
 		if (!geom) return null;
+		
+		let materials = this.createMaterials(diceobj, this.baseScale / 2, 1.0);
+		let dicemesh = new THREE.Mesh(geom, materials.material);
 
-		//We use either (by order of priority): a flavor/targeted colorset, the colorset of the diceobj, the colorset configured by the player
-		if(colorset){
-			this.setMaterialInfo(colorset);
+		let nbFaces = parseInt(type.substring(1),10);
+		for(let i = 0;i<dicemesh.geometry.faces.length;i++){
+			if(i < nbFaces)
+				dicemesh.geometry.faces[i].cacheString = materials.tabCacheStrings[i+2];
+			else
+				dicemesh.geometry.faces[i].cacheString = materials.tabCacheStrings[0];
 		}
-		else if (diceobj.colorset) {
-			this.setMaterialInfo(diceobj.colorset);
-		} else {
-			this.setMaterialInfo();
-		}
-
-		let dicemesh = new THREE.Mesh(geom, this.createMaterials(diceobj, this.baseScale / 2, 1.0));
 		
 		dicemesh.result = [];
 		dicemesh.shape = diceobj.shape;
@@ -381,14 +409,14 @@ export class DiceFactory {
 			let closest_face, closest_angle = Math.PI * 2;
 			for (let i = 0, l = this.geometry.faces.length; i < l; ++i) {
 				let face = this.geometry.faces[i];
-				if (face.materialIndex == 0) continue;
+				if (!face.dieValue) continue;
 				let angle = face.normal.clone().applyQuaternion(this.body_sim.quaternion).angleTo(vector);
 				if (angle < closest_angle) {
 					closest_angle = angle;
 					closest_face = face;
 				}
 			}
-			let matindex = closest_face.materialIndex - 1;
+			let matindex = closest_face.dieValue;
 
 			const diceobj = factory.dice[this.notation.type];
 
@@ -399,7 +427,7 @@ export class DiceFactory {
 
 			let value = diceobj.values[((matindex-1) % diceobj.values.length)];
 			let label = diceobj.labels[(((matindex-1) % (diceobj.labels.length-2))+2)];
-
+			console.log(value);
 			return {value: value, label: label, reason: reason};
 		};
 
@@ -448,8 +476,6 @@ export class DiceFactory {
 	}
 
 	createMaterials(diceobj, size, margin, allowcache = true, d4specialindex = 0) {
-
-		let materials = [];
 		let labels = diceobj.labels;
 		if (diceobj.shape == 'd4') {
 			labels = diceobj.labels[d4specialindex];
@@ -458,21 +484,25 @@ export class DiceFactory {
 		}
 		//If the texture is an array of texture (for random face texture), we look at the first element to determine the faces material and the edge texture
 		let dice_texture = Array.isArray(this.dice_texture_rand) ? this.dice_texture_rand[0] : this.dice_texture_rand;
+
+		var mat;
+		let materialSelected = this.material_options[this.material_rand] ? this.material_options[this.material_rand] : this.material_options["plastic"];
+
+		switch(materialSelected.type){
+			case "phong":
+				mat = new THREE.MeshPhongMaterial(materialSelected.options);
+				break;
+			case "standard":
+				mat = new THREE.MeshStandardMaterial(materialSelected.options);
+				break;
+			default: //plastic
+				mat = new THREE.MeshPhongMaterial(this.material_options.plastic.options);
+		}
+		let texturesToMerge = [];
+		let tabCacheStrings = [];
+		let bumpToMerge = [];
 		for (var i = 0; i < labels.length; ++i) {
-			var mat;
-			let materialSelected = this.material_options[this.material_rand];
-
-			switch(materialSelected.type){
-				case "phong":
-					mat = new THREE.MeshPhongMaterial(materialSelected.options);
-					break;
-				case "standard":
-					mat = new THREE.MeshStandardMaterial(materialSelected.options);
-					break;
-				default: //plastic
-					mat = new THREE.MeshPhongMaterial(this.material_options.plastic.options);
-			}
-
+		
 			let canvasTextures;
 			if(i==0)//edge
 			{
@@ -481,48 +511,109 @@ export class DiceFactory {
 				if(dice_texture.composite != "source-over")
 					texture = dice_texture;
 				canvasTextures = this.createTextMaterial(diceobj, labels, i, size, margin, texture, this.label_color_rand, this.label_outline_rand, this.edge_color_rand, allowcache);
-				mat.map = canvasTextures.composite;
+				texturesToMerge.push(canvasTextures.composite);
+				tabCacheStrings.push(canvasTextures.cachestring);
+				bumpToMerge.push(null);
 			}
 			else
 			{
 				canvasTextures = this.createTextMaterial(diceobj, labels, i, size, margin, this.dice_texture_rand, this.label_color_rand, this.label_outline_rand, this.dice_color_rand, allowcache);
-				mat.map = canvasTextures.composite;
+				texturesToMerge.push(canvasTextures.composite);
+				tabCacheStrings.push(canvasTextures.cachestring);
 				if(this.bumpMapping)
 				{
 					if(canvasTextures.bump){
-						mat.bumpMap = canvasTextures.bump;
+						bumpToMerge.push(canvasTextures.bump);
 						mat.bumpScale = 1;
 					}
 					if(diceobj.shape != 'd4' && diceobj.normals[i]){
 						mat.bumpScale = 3;
-						mat.bumpMap = new THREE.Texture(diceobj.normals[i]);
-						
-						mat.bumpMap.needsUpdate = true;
+						bumpToMerge.push(diceobj.normals[i]);
 					}
 				}
 			}
-
-			// fix for some faces being weirdly rotated
-			let rotateface = this.rotate[diceobj.shape];
-	
-			mat.map.center = new THREE.Vector2(0.5,0.5);
-	
-			if(rotateface) {
-				let degrees = rotateface.hasOwnProperty("all") ? rotateface.all:false || (i > 0 && (i % 2) != 0) ? rotateface.odd : rotateface.even;
-
-				if (degrees && degrees != 0) {
-					mat.map.rotation = degrees * (Math.PI / 180);
-				}
-			}
-			mat.opacity = 1;
-			mat.transparent = true;
-			mat.depthTest = false;
-			mat.needUpdate = true;
-			materials.push(mat);
 		}
-		//Edge mat
+		mat.map = this.createMergedTexture(texturesToMerge);
+		if(this.bumpMapping)
+			mat.bumpMap = this.createMergedTexture(bumpToMerge);
+		
+		mat.opacity = 1;
+		mat.transparent = true;
+		mat.depthTest = false;
+		mat.needUpdate = true;
 
-		return materials;
+		return {material:mat,tabCacheStrings:tabCacheStrings};
+	}
+
+	createMergedTexture(facesCanvas, swapA = null, swapB = null){
+		let canvas = document.createElement("canvas");
+		let context = canvas.getContext("2d", {alpha: true});
+		context.globalAlpha = 0;
+
+		context.clearRect(0, 0, canvas.width, canvas.height);
+
+		let texturesPerLine = Math.floor(Math.sqrt(facesCanvas.length));
+		let sizeTexture = Math.max(facesCanvas[facesCanvas.length-1].width,256);
+		let ts = this.calc_texture_size(Math.sqrt(facesCanvas.length)*sizeTexture, true);
+
+		canvas.width = canvas.height = ts;
+
+		//temp
+		context.lineWidth = 1;
+		context.strokeStyle = "#FFFFFF";
+		//temp
+
+		let x = 0;
+		let y = 0;
+		let texturesOnThisLine = 0;
+		for(let i=0;i<facesCanvas.length;i++){
+			if(texturesOnThisLine == texturesPerLine){
+				y += sizeTexture;
+				x = 0;
+				texturesOnThisLine = 0;
+			}
+			let index = i;
+			if(swapA !== null){
+				if(index == (swapA+1))
+					index = swapB+1;
+				else if(index == (swapB+1))
+					index = swapA+1;
+			}
+
+			if(facesCanvas[index])
+				context.drawImage(facesCanvas[index], x, y, sizeTexture, sizeTexture);
+			context.strokeRect(x, y, sizeTexture, sizeTexture);
+			texturesOnThisLine++;
+			x += sizeTexture;
+		}
+		var img    = canvas.toDataURL("image/png");
+		document.write('<img src="'+img+'"/>');
+		let texture = new THREE.CanvasTexture(canvas);
+		texture.flipY = false;
+		return texture;
+	}
+
+	swapTexture(dicemesh, swapA, swapB){
+
+		let texturesToMerge = [];
+		let bumpToMerge = [null, null];
+		texturesToMerge.push(this.materials_cache[dicemesh.geometry.faces[dicemesh.geometry.faces.length-1].cacheString].composite);//edge
+		texturesToMerge.push(this.materials_cache[dicemesh.geometry.faces[dicemesh.geometry.faces.length-1].cacheString].composite);//useless
+
+		let nbFaces = parseInt(dicemesh.shape.substring(1),10);
+		for(let i = 0; i<nbFaces;i++){
+			texturesToMerge.push(this.materials_cache[dicemesh.geometry.faces[i].cacheString].composite);
+			bumpToMerge.push(this.materials_cache[dicemesh.geometry.faces[i].cacheString].bump);
+		}
+		
+
+		dicemesh.material.map = this.createMergedTexture(texturesToMerge, swapA, swapB);
+		dicemesh.material.map.needsUpdate = true;
+		if(this.bumpMapping){
+			dicemesh.material.bumpMap = this.createMergedTexture(bumpToMerge, swapA, swapB);
+			dicemesh.material.bumpMap.needsUpdate = true;
+		}
+		dicemesh.material.needsUpdate = true;
 	}
 
 	createTextMaterial(diceobj, labels, index, size, margin, texture, forecolor, outlinecolor, backcolor, allowcache) {
@@ -631,6 +722,13 @@ export class DiceFactory {
 					fontsize *= diceobj.fontScale;
 				else
 					diceobj.fontScale = 1;
+
+				//Needed for every fonts
+				switch(diceobj.shape){
+					case 'd8':
+						textstarty = textstarty*1.1;
+						break;
+				}
 
 				//fix Arial strange alignment
 				if(diceobj.font == "Arial"){
@@ -765,19 +863,18 @@ export class DiceFactory {
 			}
 		}
 
-		var compositetexture = new THREE.CanvasTexture(canvas);
-		var bumpMap;
+		let bumpMap;
 		if(!isTexture)
-			bumpMap = new THREE.CanvasTexture(canvasBump);
+			bumpMap = canvasBump;
 		else
 			bumpMap = null;
 		if (allowcache) {
 			// cache new texture
 			this.cache_misses++;
-			this.materials_cache[cachestring] = {composite:compositetexture,bump:bumpMap};
+			this.materials_cache[cachestring] = {composite:canvas,bump:bumpMap,cachestring:cachestring};
 		}
 
-		return {composite:compositetexture,bump:bumpMap};
+		return {composite:canvas,bump:bumpMap, cachestring:cachestring};
 	}
 
 	applyColorSet(colordata) {
@@ -909,31 +1006,57 @@ export class DiceFactory {
 			this.applyTexture(prevtexture);
 			this.applyMaterial(prevmaterial);
 		}
+		return this.dice_color_rand+this.label_color_rand+this.label_outline_rand+this.dice_texture_rand.name+this.edge_color_rand+this.material_rand;
 	}
 
-	calc_texture_size(approx) {
-		return Math.pow(2, Math.floor(Math.log(approx) / Math.log(2)));
+	calc_texture_size(approx, ceil = false) {
+		let size = 0;
+		if(!ceil)
+			size = Math.pow(2, Math.floor(Math.log(approx) / Math.log(2)));
+		else
+			size = Math.pow(2, Math.ceil(Math.log(approx) / Math.log(2)));
+		return size;
 	}
 
 	createGeometry(type, radius) {
+		let geom = null;
 		switch (type) {
 			case 'd2':
-				return this.create_d2_geometry(radius);
+				geom = this.create_d2_geometry(radius);
+				break;
 			case 'd4':
-				return this.create_d4_geometry(radius);
+				geom = this.create_d4_geometry(radius);
+				break;
 			case 'd6':
-				return this.create_d6_geometry(radius);
+				geom = this.create_d6_geometry(radius);
+				break;
 			case 'd8':
-				return this.create_d8_geometry(radius);
+				geom = this.create_d8_geometry(radius);
+				break;
 			case 'd10':
-				return this.create_d10_geometry(radius);
+				geom = this.create_d10_geometry(radius);
+				break;
 			case 'd12':
-				return this.create_d12_geometry(radius);
+				geom = this.create_d12_geometry(radius);
+				break;
 			case 'd20':
-				return this.create_d20_geometry(radius);
-			default:
-				return null;
+				geom = this.create_d20_geometry(radius);
+				break;
 		}
+		return geom;
+	}
+
+	load_geometry(type){
+		var loader = new THREE.BufferGeometryLoader();
+		let bufferGeometry = loader.parse(DICE_MODELS[type]);
+		let geometry = new THREE.Geometry().fromBufferGeometry(bufferGeometry);
+		geometry.mergeVertices();
+		
+		let faceValues = DICE_MODELS[type].faceValues;
+		for(let i=0;i<8;i++){
+			geometry.faces[i].dieValue = faceValues[i];
+		}
+		return geometry;
 	}
 
 	create_d2_geometry(radius){
@@ -958,10 +1081,13 @@ export class DiceFactory {
 	}
 
 	create_d8_geometry(radius) {
+		let geometry = this.load_geometry("d8");
+		
 		var vertices = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
 		var faces = [[0, 2, 4, 1], [0, 4, 3, 2], [0, 3, 5, 3], [0, 5, 2, 4], [1, 3, 4, 5],
 				[1, 4, 2, 6], [1, 2, 5, 7], [1, 5, 3, 8]];
-		return this.create_geom(vertices, faces, radius, 0, -Math.PI / 4 / 2, 0.965);
+		geometry.cannon_shape = this.create_geom(vertices, faces, radius);
+		return geometry;
 	}
 
 	create_d10_geometry(radius) {
@@ -1174,13 +1300,7 @@ export class DiceFactory {
 		for (var i = 0; i < vertices.length; ++i) {
 			vectors[i] = (new THREE.Vector3).fromArray(vertices[i]).normalize();
 		}
-		var cg = this.chamfer_geom(vectors, faces, chamfer);
-		if(faces.length != 10)
-			var geom = this.make_geom(cg.vectors, cg.faces, radius, tab, af);
-		else
-			var geom = this.make_d10_geom(cg.vectors, cg.faces, radius, tab, af);
-		//var geom = make_geom(vectors, faces, radius, tab, af); // Without chamfer
-		geom.cannon_shape = this.create_shape(vectors, faces, radius);
-		return geom;
+		let cannon_shape = this.create_shape(vectors, faces, radius);
+		return cannon_shape;
 	}
 }
