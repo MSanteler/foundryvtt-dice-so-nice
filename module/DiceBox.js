@@ -70,7 +70,7 @@ export class DiceBox {
 		this.deadDiceList = [];
 		this.framerate = (1/60);
 		this.sounds = true;
-		this.volume = 100;
+		this.volume = 1;
 		this.soundDelay = 10; // time between sound effects in ms
 		this.soundsSurface = "felt";
 		this.animstate = '';
@@ -149,6 +149,7 @@ export class DiceBox {
 			this.dicefactory.setSystem(this.config.system);
 
 		this.sounds = this.config.sounds == '1';
+		this.volume = this.config.soundsVolume;
 		this.soundsSurface = this.config.soundsSurface;
 		this.shadows = this.config.shadowQuality != "none";
 		this.dicefactory.setBumpMapping(this.config.bumpMapping);
@@ -315,6 +316,7 @@ export class DiceBox {
 		this.renderer.shadowMap.enabled = this.shadows;
 		this.renderer.shadowMap.type = config.shadowQuality == "high" ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
 		this.sounds = config.sounds;
+		this.volume = config.soundsVolume;
 		this.soundsSurface = config.soundsSurface;
 		if(config.system)
 			this.dicefactory.setSystem(config.system);
@@ -629,8 +631,9 @@ export class DiceBox {
 			else
 				sound = this.sounds_coins[Math.floor(Math.random() * this.sounds_coins.length)];
 			AudioHelper.play({
-				src:sound
-			},false);
+				src: sound,
+				volume: this.volume
+			}, false);
 			this.lastSoundType = 'dice';
 
 
@@ -649,8 +652,9 @@ export class DiceBox {
 			let sound = soundlist[Math.floor(Math.random() * soundlist.length)];
 
 			AudioHelper.play({
-				src:sound
-			},false);
+				src: sound,
+				volume: this.volume
+			}, false);
 			this.lastSoundType = 'table';
 		}
 

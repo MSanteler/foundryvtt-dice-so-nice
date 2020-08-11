@@ -37,6 +37,7 @@
     "DICESONICE.bumpMapping" : "Advanced lighting",
     "DICESONICE.sounds" : "Sound Effects",
     "DICESONICE.soundsSurface" : "Table surface for sounds",
+    "DICESONICE.soundsVolume": "Sound Volume",
     "DICESONICE.system" : "Dice Presets (Faces)",
     "DICESONICE.maxDiceNumber" : "Max Number of Dice",
     "DICESONICE.maxDiceNumberHint" : "Maximum number of displayed dice in an animation. Higher numbers will reduce performances",
