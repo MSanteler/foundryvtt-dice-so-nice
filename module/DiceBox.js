@@ -1,5 +1,6 @@
 import {DiceColors, COLORSETS} from './DiceColors.js';
-import { DICE_MODELS } from './DiceModels.js';
+import { GLTFExporter,FaceNormalsHelper } from './GLTFExporter.js';
+
 export class DiceBox {
 
 	constructor(element_container, dice_factory, config) {
@@ -178,6 +179,7 @@ export class DiceBox {
 		this.world.broadphase = new CANNON.NaiveBroadphase();
 		this.world.solver.iterations = 14;
 		this.world.allowSleep = true;
+		this.world.doProfiling=true;
 
 		this.world_sim.gravity.set(0, 0, -9.8 * 800);
 		this.world_sim.broadphase = new CANNON.NaiveBroadphase();
@@ -190,7 +192,7 @@ export class DiceBox {
 		contactMaterial = new CANNON.ContactMaterial( this.barrier_body_material, this.dice_body_material, {friction: 0, restitution: 0.95});
 		this.world.addContactMaterial(contactMaterial);
 		this.world_sim.addContactMaterial(contactMaterial);
-		contactMaterial = new CANNON.ContactMaterial( this.dice_body_material, this.dice_body_material, {friction: 0, restitution: 0.5});
+		contactMaterial = new CANNON.ContactMaterial( this.dice_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.5});
 		this.world.addContactMaterial(contactMaterial);
 		this.world_sim.addContactMaterial(contactMaterial);
 		let desk = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.desk_body_material});
@@ -414,7 +416,6 @@ export class DiceBox {
 
 	// swaps dice faces to match desired result
 	swapDiceFace(dicemesh){
-		return;
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 
 		if (diceobj.shape == 'd4') {
@@ -424,25 +425,19 @@ export class DiceBox {
 		let value = parseInt(dicemesh.getLastValue().value);
 		let result = parseInt(dicemesh.forcedResult);
 		
-		if (dicemesh.notation.type == 'd10' && value == 0) value = 10;
-		if (dicemesh.notation.type == 'd100' && value == 0) value = 100;
-		if (dicemesh.notation.type == 'd100' && (value > 0 && value < 10)) value *= 10;
+		/*if (dicemesh.notation.type == 'd10' && value == 0) value = 10;
+		if (dicemesh.notation.type == 'd100' && value == 10) value = 100;
+		if (dicemesh.notation.type == 'd100' && (value > 0 && value < 10)) value *= 10;*/
 
-		if (dicemesh.notation.type == 'd10' && result == 0) result = 10;
-		if (dicemesh.notation.type == 'd100' && result == 0) result = 100;
-		if (dicemesh.notation.type == 'd100' && (result > 0 && result < 10)) result *= 10;
+		if (diceobj.shape == 'd10' && result == 0) result = 10;
 
-		//let valueindex = diceobj.values.indexOf(value);
-		//let resultindex = diceobj.values.indexOf(result);
-		if (value == result) return;
-
+		console.log("swap: "+value+" => "+result);
 		this.dicefactory.swapTexture(dicemesh, value, result);
 
 		dicemesh.resultReason = 'forced';
 	}
 
 	swapDiceFace_D4(dicemesh) {
-		return;
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 		let value = parseInt(dicemesh.getLastValue().value);
 		let result = parseInt(dicemesh.forcedResult);
@@ -451,28 +446,32 @@ export class DiceBox {
 			return;
 		}
 
-		let num = result - value;
-		let geom = dicemesh.geometry.clone();
-        
-		for (let i = 0, l = geom.faces.length; i < l; ++i) {
+		let labels = diceobj.labels[0];
+		let newLabels = [[],[0,0,0]];
 
-			let matindex = geom.faces[i].materialIndex;
-			if (matindex == 0) continue;
-
-			matindex += num - 1;
-
-			while (matindex > 4) matindex -= 4;
-			while (matindex < 1) matindex += 4;
-			geom.faces[i].materialIndex = matindex + 1;
-			
+		for(let i=2;i<labels.length;i++){
+			newLabels.push([]);
+			for(let j = 0;j<3;j++){
+				newLabels[i].push([]);
+				if(labels[i][j] == value)
+					newLabels[i][j] = result;
+				else if(labels[i][j] == result)
+					newLabels[i][j] = value;
+				else
+					newLabels[i][j] = labels[i][j];
+			}
 		}
-        if (num != 0) {
-            if (num < 0) num += 4;
-			dicemesh.material = this.dicefactory.createMaterials(diceobj, 0, 0, false, num);
-        }
+
+		let materials = this.dicefactory.createMaterials(diceobj, 0, 0, false, newLabels);
+		dicemesh.material.dispose();
+		dicemesh.material = materials.material;
+		dicemesh.texturesToMerge = materials.texturesToMerge;
+		dicemesh.bumpToMerge = materials.bumpToMerge;
+		
+	
+		this.dicefactory.swapTexture(dicemesh, 0, 0);
 
 		dicemesh.resultReason = 'forced';
-		dicemesh.geometry = geom;
 	}
 
 	//spawns one dicemesh object from a single vectordata object
@@ -530,10 +529,60 @@ export class DiceBox {
 		dicemesh.body_sim.linearDamping = 0.1;
 		dicemesh.body_sim.angularDamping = 0.1;
 
+		//dicemesh.meshCannon = this.body2mesh(dicemesh.body,true);
+
+		/*var gltfExporter = new GLTFExporter();
+
+		var options = {
 		
+		};
+		//let t = new THREE.Mesh(this.dicefactory.buffergeom, new THREE.MeshBasicMaterial());
+		gltfExporter.parse(dicemesh, function ( result ) {
+
+			if ( result instanceof ArrayBuffer ) {
+
+				saveArrayBuffer( result, 'scene.glb' );
+
+			} else {
+
+				var output = JSON.stringify( result, null, 2 );
+				console.log( output );
+				saveString( output, 'scene.gltf' );
+
+			}
+
+		}, options );
+
+		var link = document.createElement( 'a' );
+		link.style.display = 'none';
+		document.body.appendChild( link ); // Firefox workaround, see #6594
+
+		function save( blob, filename ) {
+
+			link.href = URL.createObjectURL( blob );
+			link.download = filename;
+			link.click();
+
+			// URL.revokeObjectURL( url ); breaks Firefox...
+
+		}
+
+		function saveString( text, filename ) {
+
+			save( new Blob( [ text ], { type: 'text/plain' } ), filename );
+
+		}
+
+
+		function saveArrayBuffer( buffer, filename ) {
+
+			save( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
+
+		}*/
 		this.diceList.push(dicemesh);
 		if(dicemesh.startAtIteration == 0){
 			this.scene.add(dicemesh);
+			//this.scene.add(dicemesh.meshCannon);
 			this.world.add(dicemesh.body);
 			this.world_sim.add(dicemesh.body_sim);
 		}
@@ -626,6 +675,8 @@ export class DiceBox {
 		}
 		//Throw is actually finished
 		if(stopped){
+			if(worldType=="sim")
+				console.log(this.world.profile);
 			let canBeFlipped = game.settings.get("dice-so-nice", "diceCanBeFlipped");
 			if(!canBeFlipped){
 				//make the current dice on the board STATIC object so they can't be knocked
@@ -685,6 +736,10 @@ export class DiceBox {
 			if (interact.body != undefined) {
 				interact.position.copy(interact.body.position);
 				interact.quaternion.copy(interact.body.quaternion);
+				if(interact.meshCannon){
+					interact.meshCannon.position.copy(interact.body.position);
+					interact.meshCannon.quaternion.copy(interact.body.quaternion);
+				}
 			}
 		}
 
@@ -773,7 +828,13 @@ export class DiceBox {
 			this.scene.remove(dice); 
 			if (dice.body) this.world.remove(dice.body);
 			if (dice.body_sim) this.world_sim.remove(dice.body_sim);
+
+			dice.material.map.dispose();
+			if(dice.material.bumpMap)
+				dice.material.bumpMap.dispose();
+			dice.material.dispose();
 		}
+		
 		if (this.pane) this.scene.remove(this.pane);
 		this.renderer.render(this.scene, this.camera);
 
@@ -806,7 +867,6 @@ export class DiceBox {
 		for (let i=0, len=this.diceList.length; i < len; ++i) {
 			let dicemesh = this.diceList[i];
 			if (!dicemesh) continue;
-			if (dicemesh.getLastValue().value == dicemesh.forcedResult) continue;
 			this.swapDiceFace(dicemesh);
 		}
 
@@ -902,4 +962,154 @@ export class DiceBox {
 			}).bind(this)(this.animateSelector, threadid, this.adaptive_timestep);
 		}
 	}
+
+	//used to debug cannon shape vs three shape
+	body2mesh(body) {
+		var obj = new THREE.Object3D();
+		let currentMaterial = new THREE.MeshBasicMaterial( {wireframe:true} );
+		for (var l = 0; l < body.shapes.length; l++) {
+		  var shape = body.shapes[l];
+	  
+		  var mesh;
+	  
+		  switch(shape.type){
+	  
+		  case CANNON.Shape.types.SPHERE:
+			var sphere_geometry = new THREE.SphereGeometry( shape.radius, 8, 8);
+			mesh = new THREE.Mesh( sphere_geometry, currentMaterial );
+			break;
+	  
+		  case CANNON.Shape.types.PARTICLE:
+			mesh = new THREE.Mesh( this.particleGeo, this.particleMaterial );
+			var s = this.settings;
+			mesh.scale.set(s.particleSize,s.particleSize,s.particleSize);
+			break;
+	  
+		  case CANNON.Shape.types.PLANE:
+			var geometry = new THREE.PlaneGeometry(10, 10, 4, 4);
+			mesh = new THREE.Object3D();
+			var submesh = new THREE.Object3D();
+			var ground = new THREE.Mesh( geometry, currentMaterial );
+			ground.scale.set(100, 100, 100);
+			submesh.add(ground);
+	  
+			ground.castShadow = true;
+			ground.receiveShadow = true;
+	  
+			mesh.add(submesh);
+			break;
+	  
+		  case CANNON.Shape.types.BOX:
+			var box_geometry = new THREE.BoxGeometry(  shape.halfExtents.x*2,
+								  shape.halfExtents.y*2,
+								  shape.halfExtents.z*2 );
+			mesh = new THREE.Mesh( box_geometry, currentMaterial );
+			break;
+	  
+		  case CANNON.Shape.types.CONVEXPOLYHEDRON:
+			var geo = new THREE.Geometry();
+	  
+			// Add vertices
+			for (var i = 0; i < shape.vertices.length; i++) {
+			  var v = shape.vertices[i];
+			  geo.vertices.push(new THREE.Vector3(v.x, v.y, v.z));
+			}
+	  
+			for(var i=0; i < shape.faces.length; i++){
+			  var face = shape.faces[i];
+	  
+			  // add triangles
+			  var a = face[0];
+			  for (var j = 1; j < face.length - 1; j++) {
+				var b = face[j];
+				var c = face[j + 1];
+				geo.faces.push(new THREE.Face3(a, b, c));
+			  }
+			}
+			geo.computeBoundingSphere();
+			geo.computeFaceNormals();
+			mesh = new THREE.Mesh( geo, currentMaterial );
+			break;
+	  
+		  case CANNON.Shape.types.HEIGHTFIELD:
+			var geometry = new THREE.Geometry();
+	  
+			var v0 = new CANNON.Vec3();
+			var v1 = new CANNON.Vec3();
+			var v2 = new CANNON.Vec3();
+			for (var xi = 0; xi < shape.data.length - 1; xi++) {
+			  for (var yi = 0; yi < shape.data[xi].length - 1; yi++) {
+				for (var k = 0; k < 2; k++) {
+				  shape.getConvexTrianglePillar(xi, yi, k===0);
+				  v0.copy(shape.pillarConvex.vertices[0]);
+				  v1.copy(shape.pillarConvex.vertices[1]);
+				  v2.copy(shape.pillarConvex.vertices[2]);
+				  v0.vadd(shape.pillarOffset, v0);
+				  v1.vadd(shape.pillarOffset, v1);
+				  v2.vadd(shape.pillarOffset, v2);
+				  geometry.vertices.push(
+					new THREE.Vector3(v0.x, v0.y, v0.z),
+					new THREE.Vector3(v1.x, v1.y, v1.z),
+					new THREE.Vector3(v2.x, v2.y, v2.z)
+				  );
+				  var i = geometry.vertices.length - 3;
+				  geometry.faces.push(new THREE.Face3(i, i+1, i+2));
+				}
+			  }
+			}
+			geometry.computeBoundingSphere();
+			geometry.computeFaceNormals();
+			mesh = new THREE.Mesh(geometry, currentMaterial);
+			break;
+	  
+		  case CANNON.Shape.types.TRIMESH:
+			var geometry = new THREE.Geometry();
+	  
+			var v0 = new CANNON.Vec3();
+			var v1 = new CANNON.Vec3();
+			var v2 = new CANNON.Vec3();
+			for (var i = 0; i < shape.indices.length / 3; i++) {
+			  shape.getTriangleVertices(i, v0, v1, v2);
+			  geometry.vertices.push(
+				new THREE.Vector3(v0.x, v0.y, v0.z),
+				new THREE.Vector3(v1.x, v1.y, v1.z),
+				new THREE.Vector3(v2.x, v2.y, v2.z)
+			  );
+			  var j = geometry.vertices.length - 3;
+			  geometry.faces.push(new THREE.Face3(j, j+1, j+2));
+			}
+			geometry.computeBoundingSphere();
+			geometry.computeFaceNormals();
+			mesh = new THREE.Mesh(geometry, currentMaterial);
+			break;
+	  
+		  default:
+			throw "Visual type not recognized: "+shape.type;
+		  }
+	  
+		  //mesh.receiveShadow = true;
+		  mesh.castShadow = true;
+		  if(mesh.children){
+			for(var i=0; i<mesh.children.length; i++){
+			  mesh.children[i].castShadow = true;
+			  mesh.children[i].receiveShadow = true;
+			  if(mesh.children[i]){
+				for(var j=0; j<mesh.children[i].length; j++){
+				  mesh.children[i].children[j].castShadow = true;
+				  mesh.children[i].children[j].receiveShadow = true;
+				}
+			  }
+			}
+		  }
+	  
+		  var o = body.shapeOffsets[l];
+		  var q = body.shapeOrientations[l];
+		  mesh.position.set(o.x, o.y, o.z);
+		  mesh.quaternion.set(q.x, q.y, q.z, q.w);
+	  
+		  obj.add(mesh);
+		}
+	  
+		return obj;
+	   };
 }
