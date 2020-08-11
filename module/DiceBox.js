@@ -348,8 +348,8 @@ export class DiceBox {
 			vec.y /= dist;
 
 			let pos = {
-				x: this.display.containerWidth * (vec.x > 0 ? -1 : 1) * 0.9,
-				y: this.display.containerHeight * (vec.y > 0 ? -1 : 1) * 0.9,
+				x: this.display.containerWidth * (vec.x > 0 ? -1 : 1) * 0.9 + Math.floor(Math.random() * 201) - 100 ,
+				y: this.display.containerHeight * (vec.y > 0 ? -1 : 1) * 0.9 + Math.floor(Math.random() * 201) - 100,
 				z: Math.random() * 200 + 200
 			};
 
@@ -427,10 +427,6 @@ export class DiceBox {
 		let value = parseInt(dicemesh.getLastValue().value);
 		let result = parseInt(dicemesh.forcedResult);
 		
-		/*if (dicemesh.notation.type == 'd10' && value == 0) value = 10;
-		if (dicemesh.notation.type == 'd100' && value == 10) value = 100;
-		if (dicemesh.notation.type == 'd100' && (value > 0 && value < 10)) value *= 10;*/
-
 		if (diceobj.shape == 'd10' && result == 0) result = 10;
 
 		console.log("swap: "+value+" => "+result);
@@ -464,7 +460,7 @@ export class DiceBox {
 			}
 		}
 
-		let materials = this.dicefactory.createMaterials(diceobj, 0, 0, false, newLabels);
+		let materials = this.dicefactory.createMaterials(null,diceobj, 0, 0, false, newLabels);
 		dicemesh.material.dispose();
 		dicemesh.material = materials.material;
 		dicemesh.texturesToMerge = materials.texturesToMerge;
@@ -503,7 +499,7 @@ export class DiceBox {
 				mass *= 2;
 				break;
 		}
-
+		console.log(vectordata.pos);
 		dicemesh.notation = vectordata;
 		dicemesh.result = [];
 		dicemesh.forcedResult = dicedata.result;
@@ -873,6 +869,8 @@ export class DiceBox {
 			if (!dicemesh) continue;
 			this.swapDiceFace(dicemesh);
 		}
+		//GC
+		this.dicefactory.canvasGC = [];
 
 		//reset the result
 		for (let i=0, len=this.diceList.length; i < len; ++i) {

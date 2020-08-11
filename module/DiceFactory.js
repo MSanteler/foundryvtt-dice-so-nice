@@ -91,7 +91,7 @@ export class DiceFactory {
 			}
 		}
 
-		this.canvas;
+		this.baseTextureCache = {};
 
 		// fixes texture rotations on specific dice models
 		this.rotate = {
@@ -372,8 +372,8 @@ export class DiceFactory {
 		let diceobj = this.dice[type];
 		if (!diceobj) return null;
 
-		let cacheString = ""; //not used for now, too many issues with instanciating
 		//We use either (by order of priority): a flavor/targeted colorset, the colorset of the diceobj, the colorset configured by the player
+		let cacheString = "";
 		if(colorset){
 			cacheString = this.setMaterialInfo(colorset);
 		}
@@ -382,6 +382,7 @@ export class DiceFactory {
 		} else {
 			cacheString = this.setMaterialInfo();
 		}
+		let baseTextureCacheString = type+cacheString;
 
 		let geom = this.geometries[type];
 		if(!geom) {
@@ -390,7 +391,7 @@ export class DiceFactory {
 		}
 		if (!geom) return null;
 		
-		let materials = this.createMaterials(diceobj, this.baseScale / 2, 1.0);
+		let materials = this.createMaterials(baseTextureCacheString, diceobj, this.baseScale / 2, 1.0);
 		
 		let dicemesh = new THREE.Mesh(geom, materials.material);
 		dicemesh.texturesToMerge = materials.texturesToMerge;
@@ -400,6 +401,7 @@ export class DiceFactory {
 		dicemesh.shape = diceobj.shape;
 		dicemesh.rerolls = 0;
 		dicemesh.resultReason = 'natural';
+		dicemesh.baseTextureCacheString = baseTextureCacheString;
 
 		let factory = this;
 		dicemesh.getFaceValue = function() {
@@ -468,7 +470,8 @@ export class DiceFactory {
 		return this.geometries[type];
 	}
 
-	createMaterials(diceobj, size, margin, allowcache = true, d4specialindex = null) {
+	createMaterials(baseTextureCacheString, diceobj, size, margin, allowcache = true, d4specialindex = null) {
+		
 		let labels = diceobj.labels;
 		if (diceobj.shape == 'd4') {
 			if(!d4specialindex)
@@ -533,9 +536,14 @@ export class DiceFactory {
 					bumpToMerge.push(bumpToMerge[i]);
 			}
 		}
-		/*mat.map = this.createMergedTexture(texturesToMerge);
-		if(this.bumpMapping)
-			mat.bumpMap = this.createMergedTexture(bumpToMerge);*/
+
+		//generate basetexture for caching, except for d4 since we have to recreate the full texture anyway
+		if(diceobj.shape != "d4" && !this.baseTextureCache["composite"+baseTextureCacheString]){
+			this.createMergedTexture(baseTextureCacheString, texturesToMerge, "composite");
+			if(this.bumpMapping)
+				this.createMergedTexture(baseTextureCacheString, bumpToMerge, "bump");
+		}
+		
 		
 		mat.opacity = 1;
 		mat.transparent = true;
@@ -545,9 +553,12 @@ export class DiceFactory {
 		return {material:mat,texturesToMerge:texturesToMerge,bumpToMerge:bumpToMerge};
 	}
 
-	createMergedTexture(facesCanvas, swapA = null, swapB = null){
+	createMergedTexture(baseTextureCacheString, facesCanvas, type = "composite", swapA = null, swapB = null){
 		let canvas = document.createElement("canvas");
 		let context = canvas.getContext("2d", {alpha: false});
+
+		let baseTexture = this.baseTextureCache[type+baseTextureCacheString];
+
 		//context.globalAlpha = 0;
 
 		//context.clearRect(0, 0, canvas.width, canvas.height);
@@ -555,8 +566,14 @@ export class DiceFactory {
 		let texturesPerLine = Math.ceil(Math.sqrt(facesCanvas.length));
 		let sizeTexture = Math.max(facesCanvas[facesCanvas.length-1].width,256);
 		let ts = this.calc_texture_size(Math.sqrt(facesCanvas.length)*sizeTexture, true);
-
+		
 		canvas.width = canvas.height = ts;
+
+		if(baseTexture){
+			context.drawImage(baseTexture, 0, 0, ts, ts);
+		} else {
+			this.baseTextureCache[type+baseTextureCacheString] = canvas;
+		}
 
 		let x = 0;
 		let y = 0;
@@ -575,17 +592,21 @@ export class DiceFactory {
 					index = swapA+1;
 			}
 
-			if(facesCanvas[index])
-				context.drawImage(facesCanvas[index], x, y, sizeTexture, sizeTexture);
+			if(facesCanvas[index]){
+				//We only draw if we are creating the baseTexture or if we are swaping two faces
+				if(!baseTexture || i == (swapA+1) || i == (swapB+1)){
+					context.drawImage(facesCanvas[index], x, y, sizeTexture, sizeTexture);
+				}
+					
+			}
+				
 			texturesOnThisLine++;
 			x += sizeTexture;
 		}
 		//Uncomment to debug atlas
 		//var img    = canvas.toDataURL("image/png");
 		//document.write('<img src="'+img+'"/>');
-		let texture = new THREE.CanvasTexture(canvas);
-		texture.flipY = false;
-		return texture;
+		return canvas;
 	}
 
 	swapTexture(dicemesh, swapA, swapB){
@@ -594,12 +615,13 @@ export class DiceFactory {
 			swapA -= 1;
 			swapB -= 1;
 		}
-		
-		dicemesh.material.map = this.createMergedTexture(dicemesh.texturesToMerge, swapA, swapB);
-		dicemesh.material.map.needsUpdate = true;
+		let texture = new THREE.CanvasTexture(this.createMergedTexture(dicemesh.baseTextureCacheString, dicemesh.texturesToMerge, "composite", swapA, swapB));
+		texture.flipY = false;
+		dicemesh.material.map = texture;
 		if(this.bumpMapping){
-			dicemesh.material.bumpMap = this.createMergedTexture(dicemesh.bumpToMerge, swapA, swapB);
-			dicemesh.material.bumpMap.needsUpdate = true;
+			let bumpMap = new THREE.CanvasTexture(this.createMergedTexture(dicemesh.baseTextureCacheString, dicemesh.bumpToMerge, "bump", swapA, swapB));
+			bumpMap.flipY = false;
+			dicemesh.material.bumpMap = bumpMap;
 		}
 		dicemesh.material.needsUpdate = true;
 	}
@@ -644,8 +666,8 @@ export class DiceFactory {
 		}
 
 		let canvas = document.createElement("canvas");
-		let context = canvas.getContext("2d", {alpha: true});
-		context.globalAlpha = 0;
+		let context = canvas.getContext("2d", {alpha: false});
+		//context.globalAlpha = 0;
 
 		context.clearRect(0, 0, canvas.width, canvas.height);
 		
@@ -923,6 +945,7 @@ export class DiceFactory {
 		this.dice_texture_rand = '';
 		this.edge_color_rand = '';
 		this.material_rand = '';
+		
 
 		// set base color first
 		if (Array.isArray(this.dice_color)) {
@@ -1059,10 +1082,7 @@ export class DiceFactory {
 		bufferGeometry.scale(this.baseScale/100,this.baseScale/100,this.baseScale/100);
 		if(type!="d10")
 			bufferGeometry.rotateY(1.5708);
-		/*if(type=="d10"){
-			bufferGeometry.rotateX(1.5708);
-			bufferGeometry.rotateZ(0.9424778);
-		}*/
+
 		let geometry = new THREE.Geometry().fromBufferGeometry(bufferGeometry);
 	
 		geometry.mergeVertices();
