@@ -859,11 +859,6 @@ export class DiceBox {
 			this.scene.remove(dice); 
 			if (dice.body) this.world.remove(dice.body);
 			if (dice.body_sim) this.world_sim.remove(dice.body_sim);
-
-			dice.material.map.dispose();
-			if(dice.material.bumpMap)
-				dice.material.bumpMap.dispose();
-			dice.material.dispose();
 		}
 		
 		if (this.pane) this.scene.remove(this.pane);
