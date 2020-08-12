@@ -391,17 +391,18 @@ export class DiceFactory {
 		}
 		if (!geom) return null;
 		
-		let materials = this.createMaterials(baseTextureCacheString, diceobj, this.baseScale / 2, 1.0);
+		let materials;
+		if(this.baseTextureCache[baseTextureCacheString])
+			materials = this.baseTextureCache[baseTextureCacheString];
+		else
+			materials = this.createMaterials(baseTextureCacheString, diceobj, this.baseScale / 2, 1.0);
 		
-		let dicemesh = new THREE.Mesh(geom, materials.material);
-		dicemesh.texturesToMerge = materials.texturesToMerge;
-		dicemesh.bumpToMerge = materials.bumpToMerge;
+		let dicemesh = new THREE.Mesh(geom, materials);
 		
 		dicemesh.result = [];
 		dicemesh.shape = diceobj.shape;
 		dicemesh.rerolls = 0;
 		dicemesh.resultReason = 'natural';
-		dicemesh.baseTextureCacheString = baseTextureCacheString;
 
 		let factory = this;
 		dicemesh.getFaceValue = function() {
@@ -420,7 +421,7 @@ export class DiceFactory {
 				}
 			}
 			let matindex = closest_face.dieValue;
-
+			factory.closest_face = closest_face;
 			const diceobj = factory.dice[this.notation.type];
 
 			if (this.shape == 'd4') {
@@ -471,7 +472,9 @@ export class DiceFactory {
 	}
 
 	createMaterials(baseTextureCacheString, diceobj, size, margin, allowcache = true, d4specialindex = null) {
-		
+		if(this.baseTextureCache[baseTextureCacheString])
+			return this.baseTextureCache[baseTextureCacheString];
+
 		let labels = diceobj.labels;
 		if (diceobj.shape == 'd4') {
 			if(!d4specialindex)
@@ -497,51 +500,74 @@ export class DiceFactory {
 			default: //plastic
 				mat = new THREE.MeshPhongMaterial(this.material_options.plastic.options);
 		}
-		let texturesToMerge = [];
-		let bumpToMerge = [];
-		for (var i = 0; i < labels.length; ++i) {
+		let canvas = document.createElement("canvas");
+		let context = canvas.getContext("2d", {alpha: true});
+		context.globalAlpha = 0;
+
+		let canvasBump = document.createElement("canvas");
+		let contextBump = canvasBump.getContext("2d", {alpha: true});
+		contextBump.globalAlpha = 0;
+
+		let texturesPerLine = Math.ceil(Math.sqrt(labels.length));
+		let sizeTexture = 256;
+		let ts = this.calc_texture_size(Math.sqrt(labels.length)*sizeTexture, true);
 		
-			let canvasTextures;
+		canvas.width = canvas.height = canvasBump.width = canvasBump.height = ts;
+		let x = 0;
+		let y = 0;
+		let texturesOnThisLine = 0;
+		for (var i = 0; i < labels.length; ++i) {
+			if(texturesOnThisLine == texturesPerLine){
+				y += sizeTexture;
+				x = 0;
+				texturesOnThisLine = 0;
+			}
 			if(i==0)//edge
 			{
 				//if the texture is fully opaque, we do not use it for edge
 				let texture = {name:"none"};
 				if(dice_texture.composite != "source-over")
 					texture = dice_texture;
-				canvasTextures = this.createTextMaterial(diceobj, labels, i, size, margin, texture, this.label_color_rand, this.label_outline_rand, this.edge_color_rand, allowcache);
-				texturesToMerge.push(canvasTextures.composite);
-				bumpToMerge.push(null);
+				this.createTextMaterial(context, contextBump, x, y, sizeTexture, diceobj, labels, i, size, margin, texture, this.label_color_rand, this.label_outline_rand, this.edge_color_rand);
 			}
 			else
 			{
-				canvasTextures = this.createTextMaterial(diceobj, labels, i, size, margin, this.dice_texture_rand, this.label_color_rand, this.label_outline_rand, this.dice_color_rand, allowcache);
-				texturesToMerge.push(canvasTextures.composite);
+				this.createTextMaterial(context, contextBump, x, y, sizeTexture, diceobj, labels, i, size, margin, this.dice_texture_rand, this.label_color_rand, this.label_outline_rand, this.dice_color_rand);
 				if(this.bumpMapping)
 				{
-					if(canvasTextures.bump){
-						bumpToMerge.push(canvasTextures.bump);
-						mat.bumpScale = 1;
-					}
+					mat.bumpScale = 1;
 					if(diceobj.shape != 'd4' && diceobj.normals[i]){
 						mat.bumpScale = 3;
-						bumpToMerge.push(diceobj.normals[i]);
 					}
 				}
 			}
+			texturesOnThisLine++;
+			x += sizeTexture;
 		}
 		if(diceobj.values.length == 3) {
 			for(i=2;i<5;i++){
-				texturesToMerge.push(texturesToMerge[i]);
-				if(this.bumpMapping)
-					bumpToMerge.push(bumpToMerge[i]);
+				if(texturesOnThisLine == texturesPerLine){
+					y += sizeTexture;
+					x = 0;
+					texturesOnThisLine = 0;
+				}
+				this.createTextMaterial(context, contextBump, x, y, sizeTexture, diceobj, labels, i, size, margin, this.dice_texture_rand, this.label_color_rand, this.label_outline_rand, this.dice_color_rand, 2);
+				texturesOnThisLine++;
+				x += sizeTexture;
 			}
 		}
-
-		//generate basetexture for caching, except for d4 since we have to recreate the full texture anyway
-		if(diceobj.shape != "d4" && !this.baseTextureCache["composite"+baseTextureCacheString]){
-			this.createMergedTexture(baseTextureCacheString, texturesToMerge, "composite");
-			if(this.bumpMapping)
-				this.createMergedTexture(baseTextureCacheString, bumpToMerge, "bump");
+		//var img    = canvas.toDataURL("image/png");
+		//document.write('<img src="'+img+'"/>');
+		//generate basetexture for caching
+		if(!this.baseTextureCache[baseTextureCacheString]){
+			let texture = new THREE.CanvasTexture(canvas);
+			texture.flipY = false;
+			mat.map = texture;
+			if(this.bumpMapping){
+				let bumpMap = new THREE.CanvasTexture(canvasBump);
+				bumpMap.flipY = false;
+				mat.bumpMap = bumpMap;
+			}
 		}
 		
 		
@@ -549,84 +575,10 @@ export class DiceFactory {
 		mat.transparent = true;
 		mat.depthTest = false;
 		mat.needUpdate = true;
-
-		return {material:mat,texturesToMerge:texturesToMerge,bumpToMerge:bumpToMerge};
+		this.baseTextureCache[baseTextureCacheString] = mat;
+		return mat;
 	}
-
-	createMergedTexture(baseTextureCacheString, facesCanvas, type = "composite", swapA = null, swapB = null){
-		let canvas = document.createElement("canvas");
-		let context = canvas.getContext("2d", {alpha: false});
-
-		let baseTexture = this.baseTextureCache[type+baseTextureCacheString];
-
-		//context.globalAlpha = 0;
-
-		//context.clearRect(0, 0, canvas.width, canvas.height);
-
-		let texturesPerLine = Math.ceil(Math.sqrt(facesCanvas.length));
-		let sizeTexture = Math.max(facesCanvas[facesCanvas.length-1].width,256);
-		let ts = this.calc_texture_size(Math.sqrt(facesCanvas.length)*sizeTexture, true);
-		
-		canvas.width = canvas.height = ts;
-
-		if(baseTexture){
-			context.drawImage(baseTexture, 0, 0, ts, ts);
-		} else {
-			this.baseTextureCache[type+baseTextureCacheString] = canvas;
-		}
-
-		let x = 0;
-		let y = 0;
-		let texturesOnThisLine = 0;
-		for(let i=0;i<facesCanvas.length;i++){
-			if(texturesOnThisLine == texturesPerLine){
-				y += sizeTexture;
-				x = 0;
-				texturesOnThisLine = 0;
-			}
-			let index = i;
-			if(swapA !== null){
-				if(index == (swapA+1))
-					index = swapB+1;
-				else if(index == (swapB+1))
-					index = swapA+1;
-			}
-
-			if(facesCanvas[index]){
-				//We only draw if we are creating the baseTexture or if we are swaping two faces
-				if(!baseTexture || i == (swapA+1) || i == (swapB+1)){
-					context.drawImage(facesCanvas[index], x, y, sizeTexture, sizeTexture);
-				}
-					
-			}
-				
-			texturesOnThisLine++;
-			x += sizeTexture;
-		}
-		//Uncomment to debug atlas
-		//var img    = canvas.toDataURL("image/png");
-		//document.write('<img src="'+img+'"/>');
-		return canvas;
-	}
-
-	swapTexture(dicemesh, swapA, swapB){
-		
-		if (['d10','d2','d4'].includes(dicemesh.shape)){
-			swapA -= 1;
-			swapB -= 1;
-		}
-		let texture = new THREE.CanvasTexture(this.createMergedTexture(dicemesh.baseTextureCacheString, dicemesh.texturesToMerge, "composite", swapA, swapB));
-		texture.flipY = false;
-		dicemesh.material.map = texture;
-		if(this.bumpMapping){
-			let bumpMap = new THREE.CanvasTexture(this.createMergedTexture(dicemesh.baseTextureCacheString, dicemesh.bumpToMerge, "bump", swapA, swapB));
-			bumpMap.flipY = false;
-			dicemesh.material.bumpMap = bumpMap;
-		}
-		dicemesh.material.needsUpdate = true;
-	}
-
-	createTextMaterial(diceobj, labels, index, size, margin, texture, forecolor, outlinecolor, backcolor, allowcache) {
+	createTextMaterial(context, contextBump, x, y, ts, diceobj, labels, index, size, margin, texture, forecolor, outlinecolor, backcolor, repeat = 1) {
 		if (labels[index] === undefined) return null;
 
 		texture = texture || this.dice_texture_rand;
@@ -636,74 +588,26 @@ export class DiceFactory {
 		outlinecolor = outlinecolor || this.label_outline_rand;
 
 		backcolor = backcolor || this.dice_color_rand;
-	
-        allowcache = allowcache == undefined ? true : allowcache;
 		
 		let text = labels[index];
 		let isTexture = false;
-		let textCache = "";
-		if(text instanceof HTMLImageElement)
-			textCache = text.src;
-		else if(text instanceof Array){
-			text.forEach(el => {
-				if(el instanceof HTMLImageElement)
-					textCache += el.src;
-				else
-					textCache += el;
-			});
-		}
-		else
-			textCache = text;
-			
-		// an attempt at materials caching
-		let cachestring = diceobj.type + textCache + index + texture.name + forecolor + outlinecolor + backcolor;
-		if (diceobj.shape == 'd4') {
-			cachestring = diceobj.type + textCache + texture.name + forecolor + outlinecolor + backcolor;
-		}
-		if (allowcache && this.materials_cache[cachestring] != null) {
-			this.cache_hits++;
-			return this.materials_cache[cachestring];
-		}
-
-		let canvas = document.createElement("canvas");
-		let context = canvas.getContext("2d", {alpha: false});
-		//context.globalAlpha = 0;
-
-		context.clearRect(0, 0, canvas.width, canvas.height);
-		
-		let canvasBump = document.createElement("canvas");
-		let contextBump = canvasBump.getContext("2d", {alpha: true});
-		contextBump.globalAlpha = 0;
-
-		contextBump.clearRect(0, 0, canvasBump.width, canvasBump.height);
-
-		let ts;
-
-		if (diceobj.shape == 'd4') {
-			ts = this.calc_texture_size(size + margin) * 2;
-		} else {
-			ts = this.calc_texture_size(size + size * 2 * margin) * 2;
-		}
-
-		canvas.width = canvas.height = ts;
-		canvasBump.width = canvasBump.height = ts;
 
 		// create color
 		context.fillStyle = backcolor;
-		context.fillRect(0, 0, canvas.width, canvas.height);
+		context.fillRect(x, y, ts, ts);
 
 		contextBump.fillStyle = "#FFFFFF";
-		contextBump.fillRect(0, 0, canvasBump.width, canvasBump.height);
+		contextBump.fillRect(x, y, ts, ts);
 
 		//create underlying texture
 		if (texture.name != '' && texture.name != 'none') {
 			context.globalCompositeOperation = texture.composite || 'source-over';
-			context.drawImage(texture.texture, 0, 0, canvas.width, canvas.height);
+			context.drawImage(texture.texture, x, y, ts, ts);
 			context.globalCompositeOperation = 'source-over';
 
 			if (texture.bump != '') {
 				contextBump.globalCompositeOperation = 'source-over';
-				contextBump.drawImage(texture.bump, 0, 0, canvas.width, canvas.height);
+				contextBump.drawImage(texture.bump, x, y, ts, ts);
 			}
 		} else {
 			context.globalCompositeOperation = 'source-over';
@@ -723,12 +627,12 @@ export class DiceFactory {
 			//custom texture face
 			if(text instanceof HTMLImageElement){
 				isTexture = true;
-				context.drawImage(text, 0,0,text.width,text.height,0,0,canvas.width,canvas.height);
+				context.drawImage(text, 0,0,text.width,text.height,x,y,ts,ts);
 			}
 			else{
 				let fontsize = ts / (1 + 2 * margin);
-				let textstarty = (canvas.height / 2);
-				let textstartx = (canvas.width / 2);
+				let textstarty = (ts / 2);
+				let textstartx = (ts / 2);
 
 				if(diceobj.fontScale)
 					fontsize *= diceobj.fontScale;
@@ -806,25 +710,25 @@ export class DiceFactory {
 					if (outlinecolor != 'none' && outlinecolor != backcolor) {
 						context.strokeStyle = outlinecolor;
 						context.lineWidth = 5;
-						context.strokeText(textlines[i], textstartx, textstarty);
+						context.strokeText(textlines[i], textstartx+x, textstarty+y);
 
 						contextBump.strokeStyle = "#000000";
 						contextBump.lineWidth = 5;
-						contextBump.strokeText(textlines[i], textstartx, textstarty);
+						contextBump.strokeText(textlines[i], textstartx+x, textstarty+y);
 						if (textline == '6' || textline == '9') {
-							context.strokeText('  .', textstartx, textstarty);
-							contextBump.strokeText('  .', textstartx, textstarty);
+							context.strokeText('  .', textstartx+x, textstarty+y);
+							contextBump.strokeText('  .', textstartx+x, textstarty+y);
 						}
 					}
 
 					context.fillStyle = forecolor;
-					context.fillText(textlines[i], textstartx, textstarty);
+					context.fillText(textlines[i], textstartx+x, textstarty+y);
 
 					contextBump.fillStyle = "#000000";
-					contextBump.fillText(textlines[i], textstartx, textstarty);
+					contextBump.fillText(textlines[i], textstartx+x, textstarty+y);
 					if (textline == '6' || textline == '9') {
-						context.fillText('  .', textstartx, textstarty);
-						contextBump.fillText('  .', textstartx, textstarty);
+						context.fillText('  .', textstartx+x, textstarty+y);
+						contextBump.fillText('  .', textstartx+x, textstarty+y);
 					}
 					textstarty += (lineHeight * 1.5);
 				}
@@ -832,8 +736,8 @@ export class DiceFactory {
 
 		} else {
 
-			var hw = (canvas.width / 2);
-			var hh = (canvas.height / 2);
+			var hw = (ts / 2);
+			var hh = (ts / 2);
 
 			context.font =  (ts / 128 * 24)+'pt '+diceobj.font;
 			contextBump.font =  (ts / 128 * 24)+'pt '+diceobj.font;
@@ -856,8 +760,8 @@ export class DiceFactory {
 				//custom texture face
 				if(text[i] instanceof HTMLImageElement){
 					isTexture = true;
-					let scaleTexture = text[i].width / canvas.width;
-					context.drawImage(text[i], 0,0,text[i].width,text[i].height,100/scaleTexture,25/scaleTexture,60/scaleTexture,60/scaleTexture);
+					let scaleTexture = text[i].width / ts;
+					context.drawImage(text[i], 0,0,text[i].width,text[i].height,100/scaleTexture+x,25/scaleTexture+y,60/scaleTexture,60/scaleTexture);
 				}
 				else{
 					// attempt to outline the text with a meaningful color
@@ -865,45 +769,32 @@ export class DiceFactory {
 						context.strokeStyle = outlinecolor;
 						
 						context.lineWidth = 5;
-						context.strokeText(text[i], hw*wShift, (hh - ts * 0.3)*hShift);
+						context.strokeText(text[i], hw*wShift+x, (hh - ts * 0.3)*hShift+y);
 
 						contextBump.strokeStyle = "#000000";
 						contextBump.lineWidth = 5;
-						contextBump.strokeText(text[i], hw*wShift, (hh - ts * 0.3)*hShift);
+						contextBump.strokeText(text[i], hw*wShift+x, (hh - ts * 0.3)*hShift+y);
 					}
 
 					//draw label in top middle section
 					context.fillStyle = forecolor;
-					context.fillText(text[i], hw*wShift, (hh - ts * 0.3)*hShift);
+					context.fillText(text[i], hw*wShift+x, (hh - ts * 0.3)*hShift+y);
 					contextBump.fillStyle = "#000000";
-					contextBump.fillText(text[i], hw*wShift, (hh - ts * 0.3)*hShift);
+					contextBump.fillText(text[i], hw*wShift+x, (hh - ts * 0.3)*hShift+y);
 					//var img    = canvas.toDataURL("image/png");
 					//document.write('<img src="'+img+'"/>');
 				}
 
 				//rotate 1/3 for next label
-				context.translate(hw, hh);
+				context.translate(hw+x, hh+y);
 				context.rotate(Math.PI * 2 / 3);
-				context.translate(-hw, -hh);
+				context.translate(-hw-x, -hh-y);
 
-				contextBump.translate(hw, hh);
+				contextBump.translate(hw+x, hh+x);
 				contextBump.rotate(Math.PI * 2 / 3);
-				contextBump.translate(-hw, -hh);
+				contextBump.translate(-hw-x, -hh-y);
 			}
 		}
-
-		let bumpMap;
-		if(!isTexture)
-			bumpMap = canvasBump;
-		else
-			bumpMap = null;
-		if (allowcache) {
-			// cache new texture
-			this.cache_misses++;
-			this.materials_cache[cachestring] = {composite:canvas,bump:bumpMap,cachestring:cachestring};
-		}
-
-		return {composite:canvas,bump:bumpMap, cachestring:cachestring};
 	}
 
 	applyColorSet(colordata) {

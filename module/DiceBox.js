@@ -1,5 +1,6 @@
 import {DiceColors, COLORSETS} from './DiceColors.js';
 import { GLTFExporter,FaceNormalsHelper } from './GLTFExporter.js';
+import { DICE_MODELS } from './DiceModels.js';
 
 export class DiceBox {
 
@@ -383,6 +384,13 @@ export class DiceBox {
 					z: Math.random(), 
 					a: Math.random()
 				};
+
+				axis = { 
+					x: 0, 
+					y: 0, 
+					z: 0, 
+					a: 0
+				};
 			}else {
 				//coin flip
 				velocity = { 
@@ -418,6 +426,7 @@ export class DiceBox {
 
 	// swaps dice faces to match desired result
 	swapDiceFace(dicemesh){
+		
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 
 		if (diceobj.shape == 'd4') {
@@ -430,7 +439,29 @@ export class DiceBox {
 		if (diceobj.shape == 'd10' && result == 0) result = 10;
 
 		console.log("swap: "+value+" => "+result);
-		this.dicefactory.swapTexture(dicemesh, value, result);
+		if(value == result) return;
+
+		let rotIndex = value > result ? result+","+value:value+","+result;
+		let rotationDegrees = DICE_MODELS[dicemesh.shape].rotationCombinations[rotIndex];
+
+		let eulerAngle = new THREE.Euler(THREE.MathUtils.degToRad(rotationDegrees[0]),THREE.MathUtils.degToRad(rotationDegrees[1]),THREE.MathUtils.degToRad(rotationDegrees[2]));
+		let quaternion = new THREE.Quaternion().setFromEuler(eulerAngle);
+		if(value > result)
+			quaternion.inverse();
+		
+		//dicemesh.applyQuaternion(quaternion);
+		dicemesh.body.quaternion.copy(quaternion);
+		/*for(let i = 0;i<dicemesh.geometry.faces.length;i++){
+			if(dicemesh.geometry.faces[i].dieValue == result){
+				let euler = new THREE.Euler().fromArray(dicemesh.geometry.faces[i].rotationToZero[i]);
+				//die.rotation.copy( euler );
+				//die.updateMatrixWorld( true );
+				dicemesh.rotation.copy( euler );
+				break;
+			}
+				
+		}*/
+		//this.dicefactory.swapTexture(dicemesh, value, result);
 
 		dicemesh.resultReason = 'forced';
 	}
