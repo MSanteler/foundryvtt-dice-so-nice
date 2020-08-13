@@ -429,10 +429,6 @@ export class DiceBox {
 		
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 
-		if (diceobj.shape == 'd4') {
-			this.swapDiceFace_D4(dicemesh);
-			return;
-		}
 		let value = parseInt(dicemesh.getLastValue().value);
 		let result = parseInt(dicemesh.forcedResult);
 		
@@ -443,14 +439,16 @@ export class DiceBox {
 
 		let rotIndex = value > result ? result+","+value:value+","+result;
 		let rotationDegrees = DICE_MODELS[dicemesh.shape].rotationCombinations[rotIndex];
-
+		
 		let eulerAngle = new THREE.Euler(THREE.MathUtils.degToRad(rotationDegrees[0]),THREE.MathUtils.degToRad(rotationDegrees[1]),THREE.MathUtils.degToRad(rotationDegrees[2]));
+		console.log(eulerAngle);
 		let quaternion = new THREE.Quaternion().setFromEuler(eulerAngle);
+		console.log(quaternion);
 		if(value > result)
 			quaternion.inverse();
 		
-		//dicemesh.applyQuaternion(quaternion);
-		dicemesh.body.quaternion.copy(quaternion);
+		dicemesh.applyQuaternion(quaternion);
+		//dicemesh.body.quaternion.copy(quaternion);
 		/*for(let i = 0;i<dicemesh.geometry.faces.length;i++){
 			if(dicemesh.geometry.faces[i].dieValue == result){
 				let euler = new THREE.Euler().fromArray(dicemesh.geometry.faces[i].rotationToZero[i]);
@@ -608,9 +606,14 @@ export class DiceBox {
 			save( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
 
 		}*/
+
+
+		let objectContainer = new THREE.Object3D();
+		objectContainer.add(dicemesh);
+
 		this.diceList.push(dicemesh);
 		if(dicemesh.startAtIteration == 0){
-			this.scene.add(dicemesh);
+			this.scene.add(objectContainer);
 			//this.scene.add(dicemesh.meshCannon);
 			this.world.add(dicemesh.body);
 			this.world_sim.add(dicemesh.body_sim);
@@ -753,7 +756,7 @@ export class DiceBox {
 			if(!(me.iteration % me.nbIterationsBetweenRolls)){
 				for(let i = 0; i < me.diceList.length; i++){
 					if(me.diceList[i].startAtIteration == me.iteration){
-						me.scene.add(me.diceList[i]);
+						me.scene.add(me.diceList[i].parent);
 						me.world.add(me.diceList[i].body);
 					}		
 				}
@@ -764,12 +767,12 @@ export class DiceBox {
 		// update physics interactions visually
 		for (let i in me.scene.children) {
 			let interact = me.scene.children[i];
-			if (interact.body != undefined) {
-				interact.position.copy(interact.body.position);
-				interact.quaternion.copy(interact.body.quaternion);
+			if (interact.children && interact.children.length && interact.children[0].body != undefined) {
+				interact.position.copy(interact.children[0].body.position);
+				interact.quaternion.copy(interact.children[0].body.quaternion);
 				if(interact.meshCannon){
-					interact.meshCannon.position.copy(interact.body.position);
-					interact.meshCannon.quaternion.copy(interact.body.quaternion);
+					interact.meshCannon.position.copy(interact.children[0].body.position);
+					interact.meshCannon.quaternion.copy(interact.children[0].body.quaternion);
 				}
 			}
 		}
@@ -856,7 +859,7 @@ export class DiceBox {
 		this.clearDice();
 		let dice;
 		while (dice = this.deadDiceList.pop()) {
-			this.scene.remove(dice); 
+			this.scene.remove(dice.parent); 
 			if (dice.body) this.world.remove(dice.body);
 			if (dice.body_sim) this.world_sim.remove(dice.body_sim);
 		}
