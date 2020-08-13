@@ -558,7 +558,7 @@ export class DiceBox {
 
 		//dicemesh.meshCannon = this.body2mesh(dicemesh.body,true);
 
-		/*var gltfExporter = new GLTFExporter();
+		var gltfExporter = new GLTFExporter();
 
 		var options = {
 		
@@ -605,7 +605,7 @@ export class DiceBox {
 
 			save( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
 
-		}*/
+		}
 
 
 		let objectContainer = new THREE.Object3D();
