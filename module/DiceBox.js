@@ -162,13 +162,13 @@ export class DiceBox {
 			
 
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference:"high-performance"});
-		this.rendererStats	= new THREEx.RendererStats()
+		/*this.rendererStats	= new THREEx.RendererStats()
 
 		this.rendererStats.domElement.style.position	= 'absolute';
 		this.rendererStats.domElement.style.left	= '44px';
 		this.rendererStats.domElement.style.bottom	= '178px';
 		this.rendererStats.domElement.style.transform	= 'scale(2)';
-		document.body.appendChild( this.rendererStats.domElement );
+		document.body.appendChild( this.rendererStats.domElement );*/
 
 		this.container.appendChild(this.renderer.domElement);
 		this.renderer.shadowMap.enabled = this.shadows;
@@ -193,7 +193,7 @@ export class DiceBox {
 		contactMaterial = new CANNON.ContactMaterial( this.barrier_body_material, this.dice_body_material, {friction: 0, restitution: 0.95});
 		this.world.addContactMaterial(contactMaterial);
 		this.world_sim.addContactMaterial(contactMaterial);
-		contactMaterial = new CANNON.ContactMaterial( this.dice_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.5});
+		contactMaterial = new CANNON.ContactMaterial( this.dice_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.7});
 		this.world.addContactMaterial(contactMaterial);
 		this.world_sim.addContactMaterial(contactMaterial);
 		let desk = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.desk_body_material});
@@ -485,7 +485,7 @@ export class DiceBox {
 		dicemesh.startAtIteration = dicedata.startAtIteration;
 		dicemesh.stopped = 0;
 		dicemesh.castShadow = this.shadows;
-		dicemesh.body = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9, mass: mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
+		/*dicemesh.body = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9, mass: mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
 		dicemesh.body.type = CANNON.Body.DYNAMIC;
 		dicemesh.body.position.set(vectordata.pos.x, vectordata.pos.y, vectordata.pos.z);
 		dicemesh.body.quaternion.setFromAxisAngle(new CANNON.Vec3(vectordata.axis.x, vectordata.axis.y, vectordata.axis.z), vectordata.axis.a * Math.PI * 2);
@@ -495,7 +495,7 @@ export class DiceBox {
 		dicemesh.body.angularDamping = 0.1;
 		dicemesh.body.diceMaterial = this.dicefactory.material_rand;
 		dicemesh.body.diceType = diceobj.type;
-		dicemesh.body.addEventListener('collide', this.eventCollide.bind(this));
+		dicemesh.body.addEventListener('collide', this.eventCollide.bind(this));*/
 
 		dicemesh.body_sim = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9,mass: mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
 		dicemesh.body_sim.type = CANNON.Body.DYNAMIC;
@@ -505,6 +505,10 @@ export class DiceBox {
 		dicemesh.body_sim.velocity.set(vectordata.velocity.x, vectordata.velocity.y, vectordata.velocity.z);
 		dicemesh.body_sim.linearDamping = 0.1;
 		dicemesh.body_sim.angularDamping = 0.1;
+		dicemesh.body_sim.addEventListener('collide', this.eventCollide.bind(this));
+		dicemesh.body_sim.stepQuaternions = new Array(1000);
+		dicemesh.body_sim.stepPositions = new Array(1000);
+		dicemesh.body_sim.detectedCollides = [];
 
 		//dicemesh.meshCannon = this.body2mesh(dicemesh.body,true);
 
@@ -548,7 +552,7 @@ export class DiceBox {
 		if(dicemesh.startAtIteration == 0){
 			this.scene.add(objectContainer);
 			//this.scene.add(dicemesh.meshCannon);
-			this.world.add(dicemesh.body);
+			//this.world.add(dicemesh.body);
 			this.world_sim.add(dicemesh.body_sim);
 		}
 	}
@@ -630,28 +634,29 @@ export class DiceBox {
 		let stopped = true;
 		if (this.iteration > 1000) return true;
 		if (this.iteration <= this.minIterations) return false;
-		for (let i=0, len=this.diceList.length; i < len; ++i) {
-			let dicemesh = this.diceList[i];
-			let body = dicemesh.body;
-			if(worldType == "sim")
-				body = dicemesh.body_sim;
-			if(body.sleepState < 2)
-				return false;
-			else if(dicemesh.result.length==0)
-				dicemesh.storeRolledValue();
-		}
-		//Throw is actually finished
-		if(stopped){
-			let canBeFlipped = game.settings.get("dice-so-nice", "diceCanBeFlipped");
-			if(!canBeFlipped){
-				//make the current dice on the board STATIC object so they can't be knocked
-				for (let i=0, len=this.diceList.length; i < len; ++i){
-					let dicemesh = this.diceList[i];
-					let body = dicemesh.body;
-					if(worldType == "sim")
-						body = dicemesh.body_sim;
-					body.mass = 0;
-					body.updateMassProperties();
+		if(worldType == "render")
+			stopped = this.iteration>=this.iterationsNeeded;
+		else{
+			for (let i=0, len=this.diceList.length; i < len; ++i) {
+				let dicemesh = this.diceList[i];
+				let body = dicemesh.body_sim;
+				if(body.sleepState < 2)
+					return false;
+				else if(dicemesh.result.length==0)
+					dicemesh.storeRolledValue();
+			}
+			//Throw is actually finished
+			if(stopped){
+				this.iterationsNeeded = this.iteration;
+				let canBeFlipped = game.settings.get("dice-so-nice", "diceCanBeFlipped");
+				if(!canBeFlipped){
+					//make the current dice on the board STATIC object so they can't be knocked
+					for (let i=0, len=this.diceList.length; i < len; ++i){
+						let dicemesh = this.diceList[i];
+						let body = dicemesh.body_sim;
+						body.mass = 0;
+						body.updateMassProperties();
+					}
 				}
 			}
 		}
@@ -659,11 +664,15 @@ export class DiceBox {
 	}
 
 	simulateThrow() {
+		this.iterationsNeeded = 0;
 		this.animstate = 'simulate';
 		this.settle_time = 0;
 		this.rolling = true;
 		while (!this.throwFinished("sim")) {
+			//Before each step, we copy the quaternions of every die in an array
 			++this.iteration;
+			
+			
 			if(!(this.iteration % this.nbIterationsBetweenRolls)){
 				for(let i = 0; i < this.diceList.length; i++){
 					if(this.diceList[i].startAtIteration == this.iteration)
@@ -671,6 +680,22 @@ export class DiceBox {
 				}
 			}
 			this.world_sim.step(this.framerate);
+			
+			for(let i = 0; i < this.world_sim.bodies.length; i++){
+				if(this.world_sim.bodies[i].mass){
+					this.world_sim.bodies[i].stepQuaternions[this.iteration] = {
+						"w":this.world_sim.bodies[i].quaternion.w,
+						"x":this.world_sim.bodies[i].quaternion.x,
+						"y":this.world_sim.bodies[i].quaternion.y,
+						"z":this.world_sim.bodies[i].quaternion.z
+					};
+					this.world_sim.bodies[i].stepPositions[this.iteration] = {
+						"x":this.world_sim.bodies[i].position.x,
+						"y":this.world_sim.bodies[i].position.y,
+						"z":this.world_sim.bodies[i].position.z
+					};
+				}
+			}
 		}
 	}
 
@@ -681,35 +706,34 @@ export class DiceBox {
 		let time_diff = (time - me.last_time) / 1000;
 		
 		let neededSteps = Math.floor(time_diff / me.framerate);
-
 		for(let i =0; i < neededSteps*me.speed; i++) {
 			++me.iteration;
 			if(!(me.iteration % me.nbIterationsBetweenRolls)){
 				for(let i = 0; i < me.diceList.length; i++){
 					if(me.diceList[i].startAtIteration == me.iteration){
 						me.scene.add(me.diceList[i].parent);
-						me.world.add(me.diceList[i].body);
+						//me.world.add(me.diceList[i].body);
 					}		
 				}
 			}
-			me.world.step(me.framerate);
+			//me.world.step(me.framerate);
 		}
 
 		// update physics interactions visually
 		for (let i in me.scene.children) {
 			let interact = me.scene.children[i];
-			if (interact.children && interact.children.length && interact.children[0].body != undefined) {
-				interact.position.copy(interact.children[0].body.position);
-				interact.quaternion.copy(interact.children[0].body.quaternion);
+			if (interact.children && interact.children.length && interact.children[0].body_sim != undefined) {
+				interact.position.copy(interact.children[0].body_sim.stepPositions[me.iteration]);
+				interact.quaternion.copy(interact.children[0].body_sim.stepQuaternions[me.iteration]);
 				if(interact.children[0].meshCannon){
-					interact.children[0].meshCannon.position.copy(interact.children[0].body.position);
-					interact.children[0].meshCannon.quaternion.copy(interact.children[0].body.quaternion);
+					interact.children[0].meshCannon.position.copy(interact.children[0].body_sim.stepPositions[me.iteration]);
+					interact.children[0].meshCannon.quaternion.copy(interact.children[0].body_sim.stepQuaternions[me.iteration]);
 				}
 			}
 		}
 
 		me.renderer.render(me.scene, me.camera);
-		me.rendererStats.update(me.renderer);
+		//me.rendererStats.update(me.renderer);
 		me.last_time = me.last_time + neededSteps*me.framerate*1000;
 
 		// roll finished
@@ -726,11 +750,7 @@ export class DiceBox {
 		// roll not finished, keep animating
 		if (me.running == threadid) {
 			((call, tid, at, aftercall, vecs) => {
-				if (!at && time_diff < me.framerate) {
-					setTimeout(() => { requestAnimationFrame(() => { call(me,tid, aftercall, vecs); }); }, (me.framerate - time_diff) * 1000);
-				} else {
-					requestAnimationFrame(() => { call(me,tid, aftercall, vecs); });
-				}
+				requestAnimationFrame(() => { call(me,tid, aftercall, vecs); });
 			})(me.animateThrow, threadid, me.adaptive_timestep, callback, throws);
 		}
 	}
@@ -791,7 +811,6 @@ export class DiceBox {
 		let dice;
 		while (dice = this.deadDiceList.pop()) {
 			this.scene.remove(dice.parent.type == "Scene" ? dice:dice.parent); 
-			if (dice.body) this.world.remove(dice.body);
 			if (dice.body_sim) this.world_sim.remove(dice.body_sim);
 		}
 		

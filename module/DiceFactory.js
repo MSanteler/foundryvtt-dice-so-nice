@@ -333,7 +333,7 @@ export class DiceFactory {
 	}
 
 	setSystem(systemId, force=false){
-		if((this.systemForced && systemId != this.systemActivated) || systemId == this.systemActivated)
+		if(this.systemForced && systemId != this.systemActivated)
 			return;
 		//first we reset to standard
 		let dices = this.systems["standard"].dice;
@@ -349,7 +349,8 @@ export class DiceFactory {
 		if(force)
 			this.systemForced = true;
 		this.systemActivated = systemId;
-		this.disposeCachedMaterials();
+		if(systemId != this.systemActivated)
+			this.disposeCachedMaterials();
 	}
 
 	disposeCachedMaterials(){

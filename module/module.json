@@ -11,9 +11,8 @@
 	],
 	"scripts": [
 		"./libs/cannon.min.js",
-		"./libs/three.min.js",
-		"./libs/threestats.js",
-		"./libs/textureMerger.js"
+		
+		"./libs/three.min.js"
 	],
 	"socket": true,
 	"styles": [
