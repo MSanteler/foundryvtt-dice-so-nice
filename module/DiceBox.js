@@ -706,34 +706,36 @@ export class DiceBox {
 		let time_diff = (time - me.last_time) / 1000;
 		
 		let neededSteps = Math.floor(time_diff / me.framerate);
-		for(let i =0; i < neededSteps*me.speed; i++) {
-			++me.iteration;
-			if(!(me.iteration % me.nbIterationsBetweenRolls)){
-				for(let i = 0; i < me.diceList.length; i++){
-					if(me.diceList[i].startAtIteration == me.iteration){
-						me.scene.add(me.diceList[i].parent);
-						//me.world.add(me.diceList[i].body);
-					}		
+		if(neededSteps){
+			for(let i =0; i < neededSteps*me.speed; i++) {
+				++me.iteration;
+				if(!(me.iteration % me.nbIterationsBetweenRolls)){
+					for(let i = 0; i < me.diceList.length; i++){
+						if(me.diceList[i].startAtIteration == me.iteration){
+							me.scene.add(me.diceList[i].parent);
+							//me.world.add(me.diceList[i].body);
+						}		
+					}
+				}
+				//me.world.step(me.framerate);
+			}
+			if(me.iteration > me.iterationsNeeded)
+				me.iteration = me.iterationsNeeded;
+			// update physics interactions visually
+			for (let i in me.scene.children) {
+				let interact = me.scene.children[i];
+				if (interact.children && interact.children.length && interact.children[0].body_sim != undefined) {
+					interact.position.copy(interact.children[0].body_sim.stepPositions[me.iteration]);
+					interact.quaternion.copy(interact.children[0].body_sim.stepQuaternions[me.iteration]);
+					if(interact.children[0].meshCannon){
+						interact.children[0].meshCannon.position.copy(interact.children[0].body_sim.stepPositions[me.iteration]);
+						interact.children[0].meshCannon.quaternion.copy(interact.children[0].body_sim.stepQuaternions[me.iteration]);
+					}
 				}
 			}
-			//me.world.step(me.framerate);
-		}
-		if(me.iteration > me.iterationsNeeded)
-			me.iteration = me.iterationsNeeded;
-		// update physics interactions visually
-		for (let i in me.scene.children) {
-			let interact = me.scene.children[i];
-			if (interact.children && interact.children.length && interact.children[0].body_sim != undefined) {
-				interact.position.copy(interact.children[0].body_sim.stepPositions[me.iteration]);
-				interact.quaternion.copy(interact.children[0].body_sim.stepQuaternions[me.iteration]);
-				if(interact.children[0].meshCannon){
-					interact.children[0].meshCannon.position.copy(interact.children[0].body_sim.stepPositions[me.iteration]);
-					interact.children[0].meshCannon.quaternion.copy(interact.children[0].body_sim.stepQuaternions[me.iteration]);
-				}
-			}
-		}
 
-		me.renderer.render(me.scene, me.camera);
+			me.renderer.render(me.scene, me.camera);
+		}
 		//me.rendererStats.update(me.renderer);
 		me.last_time = me.last_time + neededSteps*me.framerate*1000;
 
