@@ -718,7 +718,8 @@ export class DiceBox {
 			}
 			//me.world.step(me.framerate);
 		}
-
+		if(me.iteration > me.iterationsNeeded)
+			me.iteration = me.iterationsNeeded;
 		// update physics interactions visually
 		for (let i in me.scene.children) {
 			let interact = me.scene.children[i];
