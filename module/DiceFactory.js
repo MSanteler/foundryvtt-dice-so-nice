@@ -73,7 +73,6 @@ export class DiceFactory {
 					shininess: 0.3,
 					reflectivity:0.1,
 					envMap: textureCube,
-					envMapIntensity:1,
 					combine:THREE.MixOperation
 				}
 			},
@@ -85,7 +84,6 @@ export class DiceFactory {
 					shininess: 1,
 					reflectivity:0.7,
 					envMap: textureCube,
-					envMapIntensity:1,
 					combine:THREE.AddOperation
 				}
 			}
@@ -126,6 +124,7 @@ export class DiceFactory {
 			'modules/dice-so-nice/textures/coin/heads_bump.png'
 		]);
 		diceobj.setValues(0,1);
+		diceobj.setValueMap({"0":1,"1":2});
 		diceobj.inertia = 8;
 		diceobj.scale = 0.9;
 		diceobj.colorset = "coin_default"
@@ -151,6 +150,7 @@ export class DiceFactory {
 		diceobj.name = 'Fate Dice';
 		diceobj.setLabels(['−', ' ', '+']);
 		diceobj.setValues(-1,1);
+		diceobj.setValueMap({"-1":1,"0":2,"1":3});
 		diceobj.scale = 0.9;
 		diceobj.fontScale = 2;
 		this.register(diceobj);
@@ -333,7 +333,7 @@ export class DiceFactory {
 	}
 
 	setSystem(systemId, force=false){
-		if(this.systemForced && systemId != this.systemActivated)
+		if((this.systemForced && systemId != this.systemActivated) || systemId == this.systemActivated)
 			return;
 		//first we reset to standard
 		let dices = this.systems["standard"].dice;
@@ -349,6 +349,17 @@ export class DiceFactory {
 		if(force)
 			this.systemForced = true;
 		this.systemActivated = systemId;
+		this.disposeCachedMaterials();
+	}
+
+	disposeCachedMaterials(){
+		for (const material in this.baseTextureCache) {
+			this.baseTextureCache[material].map.dispose();
+			if(this.baseTextureCache[material].bumpMap)
+			this.baseTextureCache[material].bumpMap.dispose();
+			this.baseTextureCache[material].dispose();
+		}
+		this.baseTextureCache = {};
 	}
 
 	//Since FVTT will remove their fontloading method in 0.8, we're using our own.
@@ -601,18 +612,18 @@ export class DiceFactory {
 
 		//create underlying texture
 		if (texture.name != '' && texture.name != 'none') {
+			context.save();
+			context.beginPath();
+			context.rect(x,y,ts,ts);
+			context.clip();
 			context.globalCompositeOperation = texture.composite || 'source-over';
 			context.drawImage(texture.texture, x, y, ts, ts);
-			context.globalCompositeOperation = 'source-over';
+			context.restore();
 
 			if (texture.bump != '') {
-				contextBump.globalCompositeOperation = 'source-over';
 				contextBump.drawImage(texture.bump, x, y, ts, ts);
 			}
-		} else {
-			context.globalCompositeOperation = 'source-over';
 		}
-		
 
 		// create text
 		context.globalCompositeOperation = 'source-over';

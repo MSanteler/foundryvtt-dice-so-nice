@@ -1,5 +1,5 @@
 import {DiceColors, COLORSETS} from './DiceColors.js';
-import { GLTFExporter,FaceNormalsHelper } from './GLTFExporter.js';
+//import { GLTFExporter,FaceNormalsHelper } from './GLTFExporter.js';
 import { DICE_MODELS } from './DiceModels.js';
 
 export class DiceBox {
@@ -181,7 +181,6 @@ export class DiceBox {
 		this.world.broadphase = new CANNON.NaiveBroadphase();
 		this.world.solver.iterations = 14;
 		this.world.allowSleep = true;
-		this.world.doProfiling=true;
 
 		this.world_sim.gravity.set(0, 0, -9.8 * 800);
 		this.world_sim.broadphase = new CANNON.NaiveBroadphase();
@@ -426,7 +425,6 @@ export class DiceBox {
 
 	// swaps dice faces to match desired result
 	swapDiceFace(dicemesh){
-		
 		const diceobj = this.dicefactory.get(dicemesh.notation.type);
 
 		let value = parseInt(dicemesh.getLastValue().value);
@@ -434,69 +432,21 @@ export class DiceBox {
 		
 		if (diceobj.shape == 'd10' && result == 0) result = 10;
 
-		console.log("swap: "+value+" => "+result);
+		if(diceobj.valueMap){ //die with special values
+			result = diceobj.valueMap[result];
+		}
+	
 		if(value == result) return;
 
 		let rotIndex = value > result ? result+","+value:value+","+result;
 		let rotationDegrees = DICE_MODELS[dicemesh.shape].rotationCombinations[rotIndex];
-		
+		console.log([value,result,rotationDegrees]);
 		let eulerAngle = new THREE.Euler(THREE.MathUtils.degToRad(rotationDegrees[0]),THREE.MathUtils.degToRad(rotationDegrees[1]),THREE.MathUtils.degToRad(rotationDegrees[2]));
-		console.log(eulerAngle);
 		let quaternion = new THREE.Quaternion().setFromEuler(eulerAngle);
-		console.log(quaternion);
 		if(value > result)
 			quaternion.inverse();
 		
 		dicemesh.applyQuaternion(quaternion);
-		//dicemesh.body.quaternion.copy(quaternion);
-		/*for(let i = 0;i<dicemesh.geometry.faces.length;i++){
-			if(dicemesh.geometry.faces[i].dieValue == result){
-				let euler = new THREE.Euler().fromArray(dicemesh.geometry.faces[i].rotationToZero[i]);
-				//die.rotation.copy( euler );
-				//die.updateMatrixWorld( true );
-				dicemesh.rotation.copy( euler );
-				break;
-			}
-				
-		}*/
-		//this.dicefactory.swapTexture(dicemesh, value, result);
-
-		dicemesh.resultReason = 'forced';
-	}
-
-	swapDiceFace_D4(dicemesh) {
-		const diceobj = this.dicefactory.get(dicemesh.notation.type);
-		let value = parseInt(dicemesh.getLastValue().value);
-		let result = parseInt(dicemesh.forcedResult);
-		if (!(value >= 1 && value <= 4))
-		{
-			return;
-		}
-
-		let labels = diceobj.labels[0];
-		let newLabels = [[],[0,0,0]];
-
-		for(let i=2;i<labels.length;i++){
-			newLabels.push([]);
-			for(let j = 0;j<3;j++){
-				newLabels[i].push([]);
-				if(labels[i][j] == value)
-					newLabels[i][j] = result;
-				else if(labels[i][j] == result)
-					newLabels[i][j] = value;
-				else
-					newLabels[i][j] = labels[i][j];
-			}
-		}
-
-		let materials = this.dicefactory.createMaterials(null,diceobj, 0, 0, false, newLabels);
-		dicemesh.material.dispose();
-		dicemesh.material = materials.material;
-		dicemesh.texturesToMerge = materials.texturesToMerge;
-		dicemesh.bumpToMerge = materials.bumpToMerge;
-		
-	
-		this.dicefactory.swapTexture(dicemesh, 0, 0);
 
 		dicemesh.resultReason = 'forced';
 	}
@@ -528,7 +478,7 @@ export class DiceBox {
 				mass *= 2;
 				break;
 		}
-		console.log(vectordata.pos);
+
 		dicemesh.notation = vectordata;
 		dicemesh.result = [];
 		dicemesh.forcedResult = dicedata.result;
@@ -558,54 +508,37 @@ export class DiceBox {
 
 		//dicemesh.meshCannon = this.body2mesh(dicemesh.body,true);
 
-		var gltfExporter = new GLTFExporter();
+		/*var gltfExporter = new GLTFExporter();
 
-		var options = {
-		
-		};
 		//let t = new THREE.Mesh(this.dicefactory.buffergeom, new THREE.MeshBasicMaterial());
 		gltfExporter.parse(dicemesh, function ( result ) {
-
 			if ( result instanceof ArrayBuffer ) {
-
 				saveArrayBuffer( result, 'scene.glb' );
-
 			} else {
-
 				var output = JSON.stringify( result, null, 2 );
 				console.log( output );
 				saveString( output, 'scene.gltf' );
-
 			}
-
-		}, options );
+		}, {});
 
 		var link = document.createElement( 'a' );
 		link.style.display = 'none';
 		document.body.appendChild( link ); // Firefox workaround, see #6594
 
 		function save( blob, filename ) {
-
 			link.href = URL.createObjectURL( blob );
 			link.download = filename;
 			link.click();
-
 			// URL.revokeObjectURL( url ); breaks Firefox...
-
 		}
 
 		function saveString( text, filename ) {
-
 			save( new Blob( [ text ], { type: 'text/plain' } ), filename );
-
 		}
-
 
 		function saveArrayBuffer( buffer, filename ) {
-
 			save( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
-
-		}
+		}*/
 
 
 		let objectContainer = new THREE.Object3D();
@@ -709,8 +642,6 @@ export class DiceBox {
 		}
 		//Throw is actually finished
 		if(stopped){
-			if(worldType=="sim")
-				console.log(this.world.profile);
 			let canBeFlipped = game.settings.get("dice-so-nice", "diceCanBeFlipped");
 			if(!canBeFlipped){
 				//make the current dice on the board STATIC object so they can't be knocked
@@ -770,9 +701,9 @@ export class DiceBox {
 			if (interact.children && interact.children.length && interact.children[0].body != undefined) {
 				interact.position.copy(interact.children[0].body.position);
 				interact.quaternion.copy(interact.children[0].body.quaternion);
-				if(interact.meshCannon){
-					interact.meshCannon.position.copy(interact.children[0].body.position);
-					interact.meshCannon.quaternion.copy(interact.children[0].body.quaternion);
+				if(interact.children[0].meshCannon){
+					interact.children[0].meshCannon.position.copy(interact.children[0].body.position);
+					interact.children[0].meshCannon.quaternion.copy(interact.children[0].body.quaternion);
 				}
 			}
 		}
@@ -859,7 +790,7 @@ export class DiceBox {
 		this.clearDice();
 		let dice;
 		while (dice = this.deadDiceList.pop()) {
-			this.scene.remove(dice.parent); 
+			this.scene.remove(dice.parent.type == "Scene" ? dice:dice.parent); 
 			if (dice.body) this.world.remove(dice.body);
 			if (dice.body_sim) this.world_sim.remove(dice.body_sim);
 		}

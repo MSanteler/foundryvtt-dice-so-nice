@@ -11,7 +11,7 @@ export class DicePreset {
 		this.font = 'Arial';
 		this.color = '';
 		this.labels = [];
-		this.valueMap = [];
+		this.valueMap = null;
 		this.values = [];
 		this.normals = [];
 		this.mass = 300;
@@ -26,11 +26,7 @@ export class DicePreset {
 	}
 
 	setValueMap(map) {
-
-		for(let i = 0; i < this.values.length; i++){
-			let key = this.values[i];
-			if (map[key] != null) this.valueMap[key] = map[key];
-		}
+			this.valueMap = map;
 	}
 
 	registerFaces(faces, type = "labels"){
