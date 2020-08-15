@@ -45,7 +45,6 @@ export class DiceBox {
 		};
 
 		this.scene = new THREE.Scene();
-		this.world = new CANNON.World();
 		this.world_sim = new CANNON.World();
 		this.dice_body_material = new CANNON.Material();
 		this.desk_body_material = new CANNON.Material();
@@ -72,7 +71,7 @@ export class DiceBox {
 		this.framerate = (1/60);
 		this.sounds = true;
 		this.volume = 1;
-		this.soundDelay = 10; // time between sound effects in ms
+		this.soundDelay = 1; // time between sound effects in worldstep
 		this.soundsSurface = "felt";
 		this.animstate = '';
 
@@ -177,51 +176,38 @@ export class DiceBox {
 
 		this.setDimensions(this.config.dimensions);
 
-		this.world.gravity.set(0, 0, -9.8 * 800);
-		this.world.broadphase = new CANNON.NaiveBroadphase();
-		this.world.solver.iterations = 14;
-		this.world.allowSleep = true;
-
 		this.world_sim.gravity.set(0, 0, -9.8 * 800);
 		this.world_sim.broadphase = new CANNON.NaiveBroadphase();
 		this.world_sim.solver.iterations = 14;
 		this.world_sim.allowSleep = true;
 	
 		let contactMaterial = new CANNON.ContactMaterial( this.desk_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.5});
-		this.world.addContactMaterial(contactMaterial);
 		this.world_sim.addContactMaterial(contactMaterial);
 		contactMaterial = new CANNON.ContactMaterial( this.barrier_body_material, this.dice_body_material, {friction: 0, restitution: 0.95});
-		this.world.addContactMaterial(contactMaterial);
 		this.world_sim.addContactMaterial(contactMaterial);
 		contactMaterial = new CANNON.ContactMaterial( this.dice_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.7});
-		this.world.addContactMaterial(contactMaterial);
 		this.world_sim.addContactMaterial(contactMaterial);
 		let desk = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.desk_body_material});
-		this.world.add(desk);
 		this.world_sim.add(desk);
 		
 		let barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2);
 		barrier.position.set(0, this.display.containerHeight * 0.93, 0);
-		this.world.add(barrier);
 		this.world_sim.add(barrier);
 
 		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 		barrier.position.set(0, -this.display.containerHeight * 0.93, 0);
-		this.world.add(barrier);
 		this.world_sim.add(barrier);
 
 		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -Math.PI / 2);
 		barrier.position.set(this.display.containerWidth * 0.93, 0, 0);
-		this.world.add(barrier);
 		this.world_sim.add(barrier);
 
 		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
 		barrier.position.set(-this.display.containerWidth * 0.93, 0, 0);
-		this.world.add(barrier);
 		this.world_sim.add(barrier);
 
 		this.renderer.render(this.scene, this.camera);
@@ -440,7 +426,6 @@ export class DiceBox {
 
 		let rotIndex = value > result ? result+","+value:value+","+result;
 		let rotationDegrees = DICE_MODELS[dicemesh.shape].rotationCombinations[rotIndex];
-		console.log([value,result,rotationDegrees]);
 		let eulerAngle = new THREE.Euler(THREE.MathUtils.degToRad(rotationDegrees[0]),THREE.MathUtils.degToRad(rotationDegrees[1]),THREE.MathUtils.degToRad(rotationDegrees[2]));
 		let quaternion = new THREE.Quaternion().setFromEuler(eulerAngle);
 		if(value > result)
@@ -485,17 +470,6 @@ export class DiceBox {
 		dicemesh.startAtIteration = dicedata.startAtIteration;
 		dicemesh.stopped = 0;
 		dicemesh.castShadow = this.shadows;
-		/*dicemesh.body = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9, mass: mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
-		dicemesh.body.type = CANNON.Body.DYNAMIC;
-		dicemesh.body.position.set(vectordata.pos.x, vectordata.pos.y, vectordata.pos.z);
-		dicemesh.body.quaternion.setFromAxisAngle(new CANNON.Vec3(vectordata.axis.x, vectordata.axis.y, vectordata.axis.z), vectordata.axis.a * Math.PI * 2);
-		dicemesh.body.angularVelocity.set(vectordata.angle.x, vectordata.angle.y, vectordata.angle.z);
-		dicemesh.body.velocity.set(vectordata.velocity.x, vectordata.velocity.y, vectordata.velocity.z);
-		dicemesh.body.linearDamping = 0.1;
-		dicemesh.body.angularDamping = 0.1;
-		dicemesh.body.diceMaterial = this.dicefactory.material_rand;
-		dicemesh.body.diceType = diceobj.type;
-		dicemesh.body.addEventListener('collide', this.eventCollide.bind(this));*/
 
 		dicemesh.body_sim = new CANNON.Body({allowSleep: true, sleepSpeedLimit: 75, sleepTimeLimit:0.9,mass: mass, shape: dicemesh.geometry.cannon_shape, material: this.dice_body_material});
 		dicemesh.body_sim.type = CANNON.Body.DYNAMIC;
@@ -508,7 +482,6 @@ export class DiceBox {
 		dicemesh.body_sim.addEventListener('collide', this.eventCollide.bind(this));
 		dicemesh.body_sim.stepQuaternions = new Array(1000);
 		dicemesh.body_sim.stepPositions = new Array(1000);
-		dicemesh.body_sim.detectedCollides = [];
 
 		//dicemesh.meshCannon = this.body2mesh(dicemesh.body,true);
 
@@ -552,7 +525,6 @@ export class DiceBox {
 		if(dicemesh.startAtIteration == 0){
 			this.scene.add(objectContainer);
 			//this.scene.add(dicemesh.meshCannon);
-			//this.world.add(dicemesh.body);
 			this.world_sim.add(dicemesh.body_sim);
 		}
 	}
@@ -560,35 +532,26 @@ export class DiceBox {
 	eventCollide({body, target}) {
 		// collision events happen simultaneously for both colliding bodies
 		// all this sanity checking helps limits sounds being played
-
-		// don't play sounds if we're simulating
-		if (this.animstate === 'simulate') return;
 		if (!this.sounds || !body || !this.sounds_dice.plastic) return;
-
-		let now = Date.now();
+		
+		let now = body.world.stepnumber;
 		let currentSoundType = (body.mass > 0) ? 'dice' : 'table';
 
-		// 
 		// the idea here is that a dice clack should never be skipped in favor of a table sound
 		// if ((don't play sounds if we played one this world step, or there hasn't been enough delay) AND 'this sound IS NOT a dice clack') then 'skip it'
-		if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType != 'dice') return;
+		if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > body.world.stepnumber) && currentSoundType != 'dice') return;
+
 		// also skip if it's too early and both last sound and this sound are the same
-		if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > now) && currentSoundType == 'dice' && this.lastSoundType == 'dice') return;
+		if ((this.lastSoundStep == body.world.stepnumber || this.lastSound > body.world.stepnumber) && currentSoundType == 'dice' && this.lastSoundType == 'dice') return;
 
 		if (body.mass > 0) { // dice to dice collision
-
 			let speed = body.velocity.length();
 			// also don't bother playing at low speeds
 			if (speed < 250) return;
 
-			let strength = 0.1;
-			let high = 12000;
-			let low = 250;
-			strength = Math.max(Math.min(speed / (high-low), 1), strength);
+			let strength = Math.max(Math.min(speed / (550), 1), 0.2);
 			let sound;
 
-			//TODO: Use body.diceMaterial to have different sounds of colisions
-			//For now, we just have coins sounds
 			if(body.diceType != "dc"){
 				let sounds_dice = this.sounds_dice['plastic'];
 				if(this.sounds_dice[body.diceMaterial])
@@ -597,10 +560,7 @@ export class DiceBox {
 			}
 			else
 				sound = this.sounds_coins[Math.floor(Math.random() * this.sounds_coins.length)];
-			AudioHelper.play({
-				src: sound,
-				volume: this.volume
-			}, false);
+			this.detectedCollides[this.iteration] = [sound,strength];
 			this.lastSoundType = 'dice';
 
 
@@ -610,23 +570,24 @@ export class DiceBox {
 			if (speed < 100) return;
 
 			let surface = this.soundsSurface;
-			let strength = 0.1;
-			let high = 12000;
-			let low = 100;
-			strength = Math.max(Math.min(speed / (high-low), 1), strength);
+			let strength = Math.max(Math.min(speed / (500), 1), 0.2);
 
 			let soundlist = this.sounds_table[surface];
 			let sound = soundlist[Math.floor(Math.random() * soundlist.length)];
+			this.detectedCollides[this.iteration] = [sound,strength];
 
-			AudioHelper.play({
-				src: sound,
-				volume: this.volume
-			}, false);
 			this.lastSoundType = 'table';
 		}
-
 		this.lastSoundStep = body.world.stepnumber;
-		this.lastSound = now + this.soundDelay;
+		this.lastSound = body.world.stepnumber + this.soundDelay;
+	}
+
+	playSoundCollide(sound){
+		let volume = sound[1] * this.volume;
+		AudioHelper.play({
+			src: sound[0],
+			volume: volume
+		}, false);
 	}
 
 	throwFinished(worldType = "render")  {
@@ -648,12 +609,10 @@ export class DiceBox {
 		}
 		else{
 			for (let i=0, len=this.diceList.length; i < len; ++i) {
-				let dicemesh = this.diceList[i];
-				let body = dicemesh.body_sim;
-				if(body.sleepState < 2)
+				if(this.diceList[i].body_sim.sleepState < 2)
 					return false;
-				else if(dicemesh.result.length==0)
-					dicemesh.storeRolledValue();
+				else if(this.diceList[i].result.length==0)
+					this.diceList[i].storeRolledValue();
 			}
 			//Throw is actually finished
 			if(stopped){
@@ -662,10 +621,8 @@ export class DiceBox {
 				if(!canBeFlipped){
 					//make the current dice on the board STATIC object so they can't be knocked
 					for (let i=0, len=this.diceList.length; i < len; ++i){
-						let dicemesh = this.diceList[i];
-						let body = dicemesh.body_sim;
-						body.mass = 0;
-						body.updateMassProperties();
+						this.diceList[i].body_sim.mass = 0;
+						this.diceList[i].body_sim.updateMassProperties();
 					}
 				}
 			}
@@ -674,6 +631,7 @@ export class DiceBox {
 	}
 
 	simulateThrow() {
+		this.detectedCollides = new Array(1000);
 		this.iterationsNeeded = 0;
 		this.animstate = 'simulate';
 		this.settle_time = 0;
@@ -681,7 +639,6 @@ export class DiceBox {
 		while (!this.throwFinished("sim")) {
 			//Before each step, we copy the quaternions of every die in an array
 			++this.iteration;
-			
 			
 			if(!(this.iteration % this.nbIterationsBetweenRolls)){
 				for(let i = 0; i < this.diceList.length; i++){
@@ -723,14 +680,13 @@ export class DiceBox {
 					for(let i = 0; i < me.diceList.length; i++){
 						if(me.diceList[i].startAtIteration == me.iteration){
 							me.scene.add(me.diceList[i].parent);
-							//me.world.add(me.diceList[i].body);
 						}		
 					}
 				}
-				//me.world.step(me.framerate);
 			}
 			if(me.iteration > me.iterationsNeeded)
 				me.iteration = me.iterationsNeeded;
+
 			// update physics interactions visually
 			for (let i in me.scene.children) {
 				let interact = me.scene.children[i];
@@ -742,6 +698,9 @@ export class DiceBox {
 						interact.children[0].meshCannon.quaternion.copy(interact.children[0].body_sim.stepQuaternions[me.iteration]);
 					}
 				}
+			}
+			if(me.detectedCollides[me.iteration]){
+				me.playSoundCollide(me.detectedCollides[me.iteration]);
 			}
 
 			me.renderer.render(me.scene, me.camera);
