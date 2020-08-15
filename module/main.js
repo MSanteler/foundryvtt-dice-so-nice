@@ -716,7 +716,8 @@ class DiceConfig extends FormApplication {
                 "plastic": "DICESONICE.MaterialPlastic",
                 "metal": "DICESONICE.MaterialMetal",
                 "glass": "DICESONICE.MaterialGlass",
-                "wood": "DICESONICE.MaterialWood"
+                "wood": "DICESONICE.MaterialWood",
+                "chrome": "DICESONICE.MaterialChrome"
             }),
             colorsetList: Utils.prepareColorsetList(),
             shadowQualityList: Utils.localize({
@@ -729,7 +730,7 @@ class DiceConfig extends FormApplication {
                 "felt": "DICESONICE.SurfaceFelt",
                 "wood_table": "DICESONICE.SurfaceWoodTable",
                 "wood_tray": "DICESONICE.SurfaceWoodTray",
-                "metal": "DICESONICE.SurfaceMetal",
+                "metal": "DICESONICE.SurfaceMetal"
             }),
             canvasZIndexList: Utils.localize({
                 "over": "DICESONICE.CanvasZIndexOver",
