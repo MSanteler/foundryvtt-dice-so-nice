@@ -634,8 +634,18 @@ export class DiceBox {
 		let stopped = true;
 		if (this.iteration > 1000) return true;
 		if (this.iteration <= this.minIterations) return false;
-		if(worldType == "render")
+		if(worldType == "render"){
 			stopped = this.iteration>=this.iterationsNeeded;
+			if(stopped){
+				for (let i=0, len=this.diceList.length; i < len; ++i){
+					this.diceList[i].body_sim.stepPositions = new Array(1000);
+					this.diceList[i].body_sim.stepQuaternions = new Array(1000);
+					this.diceList[i].body_sim.detectedCollides = [];
+					if(!this.diceList[i].body_sim.mass)
+						this.diceList[i].body_sim.dead= true;
+				}
+			}
+		}
 		else{
 			for (let i=0, len=this.diceList.length; i < len; ++i) {
 				let dicemesh = this.diceList[i];
@@ -682,7 +692,7 @@ export class DiceBox {
 			this.world_sim.step(this.framerate);
 			
 			for(let i = 0; i < this.world_sim.bodies.length; i++){
-				if(this.world_sim.bodies[i].mass){
+				if(this.world_sim.bodies[i].stepPositions){
 					this.world_sim.bodies[i].stepQuaternions[this.iteration] = {
 						"w":this.world_sim.bodies[i].quaternion.w,
 						"x":this.world_sim.bodies[i].quaternion.x,
@@ -724,7 +734,7 @@ export class DiceBox {
 			// update physics interactions visually
 			for (let i in me.scene.children) {
 				let interact = me.scene.children[i];
-				if (interact.children && interact.children.length && interact.children[0].body_sim != undefined) {
+				if (interact.children && interact.children.length && interact.children[0].body_sim != undefined && !interact.children[0].body_sim.dead) {
 					interact.position.copy(interact.children[0].body_sim.stepPositions[me.iteration]);
 					interact.quaternion.copy(interact.children[0].body_sim.stepQuaternions[me.iteration]);
 					if(interact.children[0].meshCannon){
