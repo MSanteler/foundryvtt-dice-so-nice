@@ -28,7 +28,7 @@ export class DiceFactory {
 		let loader = new THREE.CubeTextureLoader();
 		loader.setPath('modules/dice-so-nice/textures/envmap_church/');
 
-		let textureCube = loader.load( [
+		this.textureCube = loader.load( [
 			'px.png', 'nx.png',
 			'py.png', 'ny.png',
 			'pz.png', 'nz.png'
@@ -52,7 +52,6 @@ export class DiceFactory {
 					emissive:0x111111,
 					roughness: 0.45,
 					metalness: 0.98,
-					envMap: textureCube,
 					envMapIntensity:1
 				}
 			},
@@ -72,7 +71,7 @@ export class DiceFactory {
 					color: 0xb5b5b5,
 					shininess: 0.3,
 					reflectivity:0.1,
-					envMap: textureCube,
+					envMap: this.textureCube,
 					combine:THREE.MixOperation
 				}
 			},
@@ -83,7 +82,7 @@ export class DiceFactory {
 					color: 0xb5b5b5,
 					shininess: 1,
 					reflectivity:0.7,
-					envMap: textureCube,
+					envMap: this.textureCube,
 					combine:THREE.AddOperation
 				}
 			}
@@ -197,6 +196,7 @@ export class DiceFactory {
 		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20']);
 		diceobj.setValues(1,20);
 		diceobj.mass = 500;
+		diceobj.scale = 0.9;
 		diceobj.inertia = 6;
 		this.register(diceobj);
 
@@ -273,6 +273,8 @@ export class DiceFactory {
 		if(diceobj.system == "standard")
 			this.dice[diceobj.type] = diceobj;
 		this.systems[diceobj.system].dice.push(diceobj);
+		if(diceobj.system == this.systemActivated && diceobj.modelFile && !diceobj.modelLoaded)
+			diceobj.loadModel();
 	}
 
 	//{id: 'standard', name: game.i18n.localize("DICESONICE.System.Standard")}
@@ -289,6 +291,7 @@ export class DiceFactory {
 		let preset = new DicePreset(dice.type, model.shape);
 		preset.name = dice.type;
 		preset.setLabels(dice.labels);
+		preset.setModel(dice.modelFile);
 		preset.values = model.values;
 		preset.valueMap = model.valueMap;
 		preset.mass = model.mass;
@@ -343,8 +346,11 @@ export class DiceFactory {
 		if(systemId!= "standard" && this.systems.hasOwnProperty(systemId))
 		{
 			dices = this.systems[systemId].dice;
-			for(let i=0;i<dices.length;i++)
+			for(let i=0;i<dices.length;i++){
 				this.dice[dices[i].type] = dices[i];
+				if(this.dice[dices[i].type].modelFile && !this.dice[dices[i].type].modelLoaded)
+					this.dice[dices[i].type].loadModel();
+			}
 		}
 		if(force)
 			this.systemForced = true;
@@ -383,18 +389,7 @@ export class DiceFactory {
 	create(type, colorset = null) {
 		let diceobj = this.dice[type];
 		if (!diceobj) return null;
-
-		//We use either (by order of priority): a flavor/targeted colorset, the colorset of the diceobj, the colorset configured by the player
-		let cacheString = "";
-		if(colorset){
-			cacheString = this.setMaterialInfo(colorset);
-		}
-		else if (diceobj.colorset) {
-			cacheString = this.setMaterialInfo(diceobj.colorset);
-		} else {
-			cacheString = this.setMaterialInfo();
-		}
-		let baseTextureCacheString = type+cacheString;
+		let dicemesh;
 
 		let geom = this.geometries[type];
 		if(!geom) {
@@ -402,14 +397,41 @@ export class DiceFactory {
 			this.geometries[type] = geom;
 		}
 		if (!geom) return null;
-		
-		let materials;
-		if(this.baseTextureCache[baseTextureCacheString])
-			materials = this.baseTextureCache[baseTextureCacheString];
-		else
-			materials = this.createMaterials(baseTextureCacheString, diceobj, this.baseScale / 2, 1.0);
-		
-		let dicemesh = new THREE.Mesh(geom, materials);
+
+		if(diceobj.model){
+			//TODO : find a way to not clone materials/textures. Probably require to force 3D models to follow a specific format
+			//TODO : fix scale when we have a good glb file from an artist
+			dicemesh = diceobj.model.scene.children[0].clone();
+			dicemesh.scale.set(diceobj.scale * this.baseScale,diceobj.scale * this.baseScale,diceobj.scale * this.baseScale);
+			dicemesh.geometry = {cannon_shape:geom.cannon_shape};
+		}else{
+			//We use either (by order of priority): a flavor/targeted colorset, the colorset of the diceobj, the colorset configured by the player
+			let cacheString = "";
+			if(colorset){
+				cacheString = this.setMaterialInfo(colorset);
+			}
+			else if (diceobj.colorset) {
+				cacheString = this.setMaterialInfo(diceobj.colorset);
+			} else {
+				cacheString = this.setMaterialInfo();
+			}
+
+			let baseTextureCacheString = type+cacheString;
+			let materials;
+			if(this.baseTextureCache[baseTextureCacheString])
+				materials = this.baseTextureCache[baseTextureCacheString];
+			else
+				materials = this.createMaterials(baseTextureCacheString, diceobj, this.baseScale / 2, 1.0);
+			
+			dicemesh = new THREE.Mesh(geom, materials);
+
+			if (diceobj.color) {
+				dicemesh.material[0].color = new THREE.Color(diceobj.color);
+				dicemesh.material[0].emissive = new THREE.Color(diceobj.color);
+				dicemesh.material[0].emissiveIntensity = 1;
+				dicemesh.material[0].needsUpdate = true;
+			}
+		}
 		
 		dicemesh.result = [];
 		dicemesh.shape = diceobj.shape;
@@ -420,33 +442,30 @@ export class DiceFactory {
 		dicemesh.getFaceValue = function() {
 			let reason = this.resultReason;
 			let vector = new THREE.Vector3(0, 0, this.shape == 'd4' ? -1 : 1);
-
+			let faceCannon = new THREE.Vector3();
 			let closest_face, closest_angle = Math.PI * 2;
-			for (let i = 0, l = this.geometry.faces.length; i < l; ++i) {
-				let face = this.geometry.faces[i];
-				if (!face.dieValue || face.dieValue == 0) continue;
+			for (let i = 0, l = this.body_sim.shapes[0].faceNormals.length; i < l; ++i) {
+				if(DICE_MODELS[this.shape].faceValues[i] == 0)
+					continue;
+				faceCannon.copy(this.body_sim.shapes[0].faceNormals[i]);
 				
-				let angle = face.normal.clone().applyQuaternion(this.body_sim.quaternion).angleTo(vector);
+				let angle = faceCannon.applyQuaternion(this.body_sim.quaternion).angleTo(vector);
 				if (angle < closest_angle) {
 					closest_angle = angle;
-					closest_face = face;
+					closest_face = i;
 				}
 			}
-			let matindex = closest_face.dieValue;
-			factory.closest_face = closest_face;
 			const diceobj = factory.dice[this.notation.type];
+			let dieValue = DICE_MODELS[this.shape].faceValues[closest_face];
 
 			if (this.shape == 'd4') {
-				console.log(matindex);
-				return {value: matindex, label: diceobj.labels[matindex-1], reason: reason};
+				return {value: dieValue, label: diceobj.labels[dieValue-1], reason: reason};
 			}
-			
+			let labelIndex = dieValue;
+			if (['d10','d2'].includes(this.shape)) labelIndex += 1;
+			let label = diceobj.labels[labelIndex+1];
 
-			let value = matindex;
-			if (['d10','d2'].includes(this.shape)) matindex += 1;
-			let label = diceobj.labels[matindex+1];
-
-			return {value: value, label: label, reason: reason};
+			return {value: dieValue, label: label, reason: reason};
 		};
 
 		dicemesh.storeRolledValue = function() {
@@ -466,12 +485,6 @@ export class DiceFactory {
 			return this.result[this.result.length-1] = result;
 		};
 
-		if (diceobj.color) {
-			dicemesh.material[0].color = new THREE.Color(diceobj.color);
-			dicemesh.material[0].emissive = new THREE.Color(diceobj.color);
-			dicemesh.material[0].emissiveIntensity = 1;
-			dicemesh.material[0].needsUpdate = true;
-		}
 		return dicemesh;
 	}
 
@@ -985,18 +998,7 @@ export class DiceFactory {
 		bufferGeometry.scale(this.baseScale/100,this.baseScale/100,this.baseScale/100);
 		if(type!="d10")
 			bufferGeometry.rotateY(1.5708);
-
-		let geometry = new THREE.Geometry().fromBufferGeometry(bufferGeometry);
-	
-		geometry.mergeVertices();
-		//geometry.computeFaceNormals();
-		
-		let faceValues = DICE_MODELS[type].faceValues;
-
-		for(let i=0;i<faceValues.length;i++){
-			geometry.faces[i].dieValue = faceValues[i];
-		}
-		return geometry;
+		return bufferGeometry;
 	}
 
 	create_d2_geometry(radius){

@@ -44,7 +44,10 @@ export class DiceBox {
 			far: null
 		};
 
+		
+
 		this.scene = new THREE.Scene();
+		this.scene.environment = this.dicefactory.textureCube;
 		this.world_sim = new CANNON.World();
 		this.dice_body_material = new CANNON.Material();
 		this.desk_body_material = new CANNON.Material();
