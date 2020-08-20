@@ -10,9 +10,7 @@
 		"./main.js"
 	],
 	"scripts": [
-		"./libs/cannon.min.js",
-		
-		"./libs/three.min.js"
+		"./libs/cannon.min.js"
 	],
 	"socket": true,
 	"styles": [

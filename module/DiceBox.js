@@ -1,6 +1,7 @@
 import {DiceColors, COLORSETS} from './DiceColors.js';
-//import { GLTFExporter,FaceNormalsHelper } from './GLTFExporter.js';
 import { DICE_MODELS } from './DiceModels.js';
+import { RGBELoader } from './libs/three-modules/RGBELoader.js';
+import * as THREE from './libs/three.module.js';
 
 export class DiceBox {
 
@@ -12,7 +13,7 @@ export class DiceBox {
 		this.dicefactory = dice_factory;
 		this.config = config;
 		this.speed = 1;
-
+		this.isVisible = false;
 		this.adaptive_timestep = false;
 		this.last_time = 0;
 		this.settle_time = 0;
@@ -45,9 +46,7 @@ export class DiceBox {
 		};
 
 		
-
-		this.scene = new THREE.Scene();
-		this.scene.environment = this.dicefactory.textureCube;
+		this.clock = new THREE.Clock();
 		this.world_sim = new CANNON.World();
 		this.dice_body_material = new CANNON.Material();
 		this.desk_body_material = new CANNON.Material();
@@ -86,8 +85,9 @@ export class DiceBox {
 		};
 
 		this.colors = {
-			ambient:  0xf0f5fb,
-			spotlight: 0xefdfd5
+			ambient:  0xffffff,
+			spotlight: 0xffffff,
+			ground:0x242644
 		};
 
 		this.shadows = true;
@@ -161,9 +161,18 @@ export class DiceBox {
 			this.speed = this.config.speed;
 		else
 			this.speed = parseInt(globalAnimationSpeed,10);
-			
 
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference:"high-performance"});
+		if(this.dicefactory.bumpMapping){
+			this.renderer.physicallyCorrectLights = true;
+			this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+			this.renderer.toneMappingExposure = 1.2;
+			this.renderer.outputEncoding = THREE.sRGBEncoding;
+		}
+
+		this.scene = new THREE.Scene();
+		this.loadContextScopedTextures(this.config.boxType);
+		this.dicefactory.initializeMaterials();
 		/*this.rendererStats	= new THREEx.RendererStats()
 
 		this.rendererStats.domElement.style.position	= 'absolute';
@@ -191,29 +200,61 @@ export class DiceBox {
 		contactMaterial = new CANNON.ContactMaterial( this.dice_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.7});
 		this.world_sim.addContactMaterial(contactMaterial);
 		let desk = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.desk_body_material});
-		this.world_sim.add(desk);
+		this.world_sim.addBody(desk);
 		
 		let barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2);
 		barrier.position.set(0, this.display.containerHeight * 0.93, 0);
-		this.world_sim.add(barrier);
+		this.world_sim.addBody(barrier);
 
 		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 		barrier.position.set(0, -this.display.containerHeight * 0.93, 0);
-		this.world_sim.add(barrier);
+		this.world_sim.addBody(barrier);
 
 		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -Math.PI / 2);
 		barrier.position.set(this.display.containerWidth * 0.93, 0, 0);
-		this.world_sim.add(barrier);
+		this.world_sim.addBody(barrier);
 
 		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
 		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
 		barrier.position.set(-this.display.containerWidth * 0.93, 0, 0);
-		this.world_sim.add(barrier);
+		this.world_sim.addBody(barrier);
 
 		this.renderer.render(this.scene, this.camera);
+	}
+
+	loadContextScopedTextures(type){
+		this.scopedTextureCache = {type:type};
+		if(this.dicefactory.bumpMapping){
+			let textureLoader = new THREE.TextureLoader();
+			this.scopedTextureCache.roughnessMap_fingerprint = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_finger.png');
+			this.scopedTextureCache.roughnessMap_wood = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_wood.jpg');
+			this.scopedTextureCache.roughnessMap_metal = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_metal.png');
+
+			this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+			this.pmremGenerator.compileEquirectangularShader();
+
+			new RGBELoader()
+			.setDataType( THREE.UnsignedByteType )
+			.setPath( 'modules/dice-so-nice/textures/equirectangular/' )
+			.load('foyer.hdr', function ( texture ) {
+				this.scopedTextureCache.textureCube = this.pmremGenerator.fromEquirectangular(texture).texture;
+				this.scene.environment = this.scopedTextureCache.textureCube;
+				texture.dispose();
+				this.pmremGenerator.dispose();
+			}.bind(this));
+		} else {
+			let loader = new THREE.CubeTextureLoader();
+			loader.setPath('modules/dice-so-nice/textures/cubemap/');
+
+			this.scopedTextureCache.textureCube = loader.load( [
+				'px.png', 'nx.png',
+				'py.png', 'ny.png',
+				'pz.png', 'nz.png'
+			]);
+		}
 	}
 
 	setDimensions(dimensions) {
@@ -258,24 +299,38 @@ export class DiceBox {
 
 		if (this.light) this.scene.remove(this.light);
 		if (this.light_amb) this.scene.remove(this.light_amb);
-		this.light = new THREE.SpotLight(this.colors.spotlight, 1.0);
-		this.light.position.set(-maxwidth / 2, maxwidth / 2, maxwidth * 3);
+
+		let intensity;
+		if(this.dicefactory.bumpMapping){ //advanced lighting
+			intensity = 1;
+		} else {
+			intensity = 0.7;
+			this.light_amb = new THREE.HemisphereLight(this.colors.ambient, this.colors.ground, 1);
+			this.scene.add(this.light_amb);
+		}
+		
+		this.light = new THREE.DirectionalLight(this.colors.spotlight, intensity);
+		this.light.position.set(-this.display.containerWidth/10, this.display.containerHeight/10, maxwidth/2);
 		this.light.target.position.set(0, 0, 0);
-		this.light.distance = maxwidth * 5;
-		this.light.angle = Math.PI/4;
+		this.light.distance = 0;
 		this.light.castShadow = this.shadows;
 		this.light.shadow.camera.near = maxwidth / 10;
 		this.light.shadow.camera.far = maxwidth * 5;
 		this.light.shadow.camera.fov = 50;
-		this.light.shadow.bias = 0.001;
+		this.light.shadow.bias = -0.0001;;
 		this.light.shadow.mapSize.width = 1024;
 		this.light.shadow.mapSize.height = 1024;
+		const d = 1000;
+		this.light.shadow.camera.left = - d;
+		this.light.shadow.camera.right = d;
+		this.light.shadow.camera.top = d;
+		this.light.shadow.camera.bottom = - d;
 		this.scene.add(this.light);
 
-		this.light_amb = new THREE.HemisphereLight( 0xffffbb, 0x676771, 1 );
-		this.scene.add(this.light_amb);
+	
+		if (this.desk)
+			this.scene.remove(this.desk);
 
-		if (this.desk) this.scene.remove(this.desk);
 		let shadowplane = new THREE.ShadowMaterial();
 		shadowplane.opacity = 0.5;
 		this.desk = new THREE.Mesh(new THREE.PlaneGeometry(this.display.containerWidth * 6, this.display.containerHeight * 6, 1, 1), shadowplane);
@@ -451,7 +506,7 @@ export class DiceBox {
 			colorset = dicedata.options.flavor;
 		}
 
-		let dicemesh = this.dicefactory.create(diceobj.type, colorset);
+		let dicemesh = this.dicefactory.create(this.scopedTextureCache, diceobj.type, colorset);
 		if(!dicemesh) return;
 
 		let mass = diceobj.mass;
@@ -528,7 +583,7 @@ export class DiceBox {
 		if(dicemesh.startAtIteration == 0){
 			this.scene.add(objectContainer);
 			//this.scene.add(dicemesh.meshCannon);
-			this.world_sim.add(dicemesh.body_sim);
+			this.world_sim.addBody(dicemesh.body_sim);
 		}
 	}
 
@@ -646,7 +701,7 @@ export class DiceBox {
 			if(!(this.iteration % this.nbIterationsBetweenRolls)){
 				for(let i = 0; i < this.diceList.length; i++){
 					if(this.diceList[i].startAtIteration == this.iteration)
-						this.world_sim.add(this.diceList[i].body_sim);
+						this.world_sim.addBody(this.diceList[i].body_sim);
 				}
 			}
 			this.world_sim.step(this.framerate);
@@ -669,69 +724,86 @@ export class DiceBox {
 		}
 	}
 
-	animateThrow(me, threadid, callback, throws){
-		me.animstate = 'throw';
+	animateThrow(callback, throws){
+		this.animstate = 'throw';
 		let time = (new Date()).getTime();
-		me.last_time = me.last_time || time - (me.framerate*1000);
-		let time_diff = (time - me.last_time) / 1000;
+		this.last_time = this.last_time || time - (this.framerate*1000);
+		let time_diff = (time - this.last_time) / 1000;
 		
-		let neededSteps = Math.floor(time_diff / me.framerate);
-		if(neededSteps){
-			for(let i =0; i < neededSteps*me.speed; i++) {
-				++me.iteration;
-				if(!(me.iteration % me.nbIterationsBetweenRolls)){
-					for(let i = 0; i < me.diceList.length; i++){
-						if(me.diceList[i].startAtIteration == me.iteration){
-							me.scene.add(me.diceList[i].parent);
+		let neededSteps = Math.floor(time_diff / this.framerate);
+
+		//Update animated dice mixer
+		if(this.animatedDiceDetected){
+			let delta = this.clock.getDelta();
+			for(let i in this.scene.children){
+				let container = this.scene.children[i];
+				let dicemesh = container.children && container.children.length && container.children[0].body_sim != undefined ? container.children[0]:null;
+				if(dicemesh && dicemesh.mixer){
+					dicemesh.mixer.update(delta);
+				}
+			}
+		}
+
+		if(neededSteps && this.rolling){
+			for(let i =0; i < neededSteps*this.speed; i++) {
+				++this.iteration;
+				if(!(this.iteration % this.nbIterationsBetweenRolls)){
+					for(let i = 0; i < this.diceList.length; i++){
+						if(this.diceList[i].startAtIteration == this.iteration){
+							this.scene.add(this.diceList[i].parent);
 						}		
 					}
 				}
 			}
-			if(me.iteration > me.iterationsNeeded)
-				me.iteration = me.iterationsNeeded;
+			if(this.iteration > this.iterationsNeeded)
+				this.iteration = this.iterationsNeeded;
 
 			// update physics interactions visually
-			for (let i in me.scene.children) {
-				let interact = me.scene.children[i];
-				if (interact.children && interact.children.length && interact.children[0].body_sim != undefined && !interact.children[0].body_sim.dead) {
-					interact.position.copy(interact.children[0].body_sim.stepPositions[me.iteration]);
-					interact.quaternion.copy(interact.children[0].body_sim.stepQuaternions[me.iteration]);
-					if(interact.children[0].meshCannon){
-						interact.children[0].meshCannon.position.copy(interact.children[0].body_sim.stepPositions[me.iteration]);
-						interact.children[0].meshCannon.quaternion.copy(interact.children[0].body_sim.stepQuaternions[me.iteration]);
+		
+			for (let i in this.scene.children) {
+				let container = this.scene.children[i];
+				let dicemesh = container.children && container.children.length && container.children[0].body_sim != undefined && !container.children[0].body_sim.dead ? container.children[0]:null;
+				if (dicemesh) {
+					container.position.copy(dicemesh.body_sim.stepPositions[this.iteration]);
+					container.quaternion.copy(dicemesh.body_sim.stepQuaternions[this.iteration]);
+						
+					if(dicemesh.meshCannon){
+						dicemesh.meshCannon.position.copy(dicemesh.body_sim.stepPositions[this.iteration]);
+						dicemesh.meshCannon.quaternion.copy(dicemesh.body_sim.stepQuaternions[this.iteration]);
 					}
 				}
 			}
-			if(me.detectedCollides[me.iteration]){
-				me.playSoundCollide(me.detectedCollides[me.iteration]);
+			if(this.detectedCollides[this.iteration]){
+				this.playSoundCollide(this.detectedCollides[this.iteration]);
 			}
+		} 
 
-			me.renderer.render(me.scene, me.camera);
-		}
-		//me.rendererStats.update(me.renderer);
-		me.last_time = me.last_time + neededSteps*me.framerate*1000;
+		if(this.animatedDiceDetected || neededSteps)
+			this.renderer.render(this.scene, this.camera);
+		//this.rendererStats.update(this.renderer);
+		this.last_time = this.last_time + neededSteps*this.framerate*1000;
 
 		// roll finished
-		if (me.running == threadid && me.throwFinished("render")) {
-			me.running = false;
-			me.rolling = false;
+		if (this.throwFinished("render")) {
+			this.running = false;
+			this.rolling = false;
 
 			if(callback) callback(throws);
 
-			me.running = (new Date()).getTime();
-			return;
+			this.running = (new Date()).getTime();
+			if(!this.animatedDiceDetected)
+				return;
 		}
 
-		// roll not finished, keep animating
-		if (me.running == threadid) {
-			((call, tid, at, aftercall, vecs) => {
-				requestAnimationFrame(() => { call(me,tid, aftercall, vecs); });
-			})(me.animateThrow, threadid, me.adaptive_timestep, callback, throws);
+		// roll not finished or animated dice still on the table, keep animating
+		if (this.isVisible) {
+			requestAnimationFrame(this.animateThrow.bind(this, callback, throws));
 		}
 	}
 
 	start_throw(throws, callback) {
 		if (this.rolling) return;
+		this.isVisible = true;
 		let countNewDice = 0;
 		throws.forEach(notation => {
 			let vector = { x: (Math.random() * 2 - 0.5) * this.display.currentWidth, y: -(Math.random() * 2 - 0.5) * this.display.currentHeight};
@@ -791,6 +863,7 @@ export class DiceBox {
 		
 		if (this.pane) this.scene.remove(this.pane);
 		this.renderer.render(this.scene, this.camera);
+		this.isVisible = false;
 
 		setTimeout(() => { this.renderer.render(this.scene, this.camera); }, 100);
 	}
@@ -818,13 +891,15 @@ export class DiceBox {
 
 
 		//check forced results, fix dice faces if necessary
+		//Detect if there's an animated dice
+		this.animatedDiceDetected = false;
 		for (let i=0, len=this.diceList.length; i < len; ++i) {
 			let dicemesh = this.diceList[i];
 			if (!dicemesh) continue;
 			this.swapDiceFace(dicemesh);
+			if(dicemesh.mixer)	
+				this.animatedDiceDetected = true;
 		}
-		//GC
-		this.dicefactory.canvasGC = [];
 
 		//reset the result
 		for (let i=0, len=this.diceList.length; i < len; ++i) {
@@ -839,7 +914,7 @@ export class DiceBox {
 		this.rolling = true;
 		this.running = (new Date()).getTime();
 		this.last_time = 0;
-		this.animateThrow(this,this.running, callback, throws);
+		this.animateThrow.bind(this, callback, throws)();
 	}
 
 	showcase(config) {
@@ -871,7 +946,7 @@ export class DiceBox {
 				posy--;
 			}
 
-			let dicemesh = this.dicefactory.create(selectordice[i]);
+			let dicemesh = this.dicefactory.create(this.scopedTextureCache, selectordice[i]);
 			dicemesh.position.set(posx * step, posy * step, step * 0.5);
 			dicemesh.castShadow = this.shadows;
 			dicemesh.userData = selectordice[i];

@@ -25,7 +25,7 @@ Hooks.once('init', () => {
         config: false,
         onChange: settings => {
             if (game.dice3d) {
-                if(game.dice3d.currentCanvasPosition != settings.canvasZIndex)
+                if((game.dice3d.currentCanvasPosition != settings.canvasZIndex)||(game.dice3d.currentBumpMapping != settings.bumpMapping))
                     location.reload();
                 else
                     game.dice3d.update(settings);
@@ -402,6 +402,7 @@ export class Dice3D {
             $("#board").after(this.canvas);
         }
         this.currentCanvasPosition = Dice3D.CONFIG.canvasZIndex;
+        this.currentBumpMapping =  Dice3D.CONFIG.bumpMapping;
         this._resizeCanvas();
     }
 
@@ -423,7 +424,9 @@ export class Dice3D {
      */
     _buildDiceBox() {
         this.DiceFactory = new DiceFactory();
-        this.box = new DiceBox(this.canvas[0], this.DiceFactory, Dice3D.ALL_CONFIG());
+        let config = Dice3D.ALL_CONFIG();
+        config.boxType = "board";
+        this.box = new DiceBox(this.canvas[0], this.DiceFactory, config);
         this.box.initialize();
     }
 
@@ -466,7 +469,9 @@ export class Dice3D {
             this.canvas[0].remove();
             this._buildCanvas();
             this._resizeCanvas();
-            this.box = new DiceBox(this.canvas[0], this.DiceFactory, Dice3D.ALL_CONFIG());
+            let config = Dice3D.ALL_CONFIG();
+            config.boxType = "board";
+            this.box = new DiceBox(this.canvas[0], this.DiceFactory, config);
             this.box.initialize();
         }
     }
@@ -623,7 +628,7 @@ export class Dice3D {
                         this.box.clearAll();
                     }
                     if (Dice3D.CONFIG.hideFX === 'fadeOut') {
-                        this.canvas.fadeOut({
+                       this.canvas.fadeOut({
                             duration: 1000,
                             complete: () => {
                                 this.box.clearAll();
@@ -747,7 +752,7 @@ class DiceConfig extends FormApplication {
         let canvas = document.getElementById('dice-configuration-canvas');
         let config = mergeObject(
             this.reset ? Dice3D.ALL_DEFAULT_OPTIONS() : Dice3D.ALL_CONFIG(),
-            { dimensions: { w: 500, h: 245 }, autoscale: false, scale: 60 }
+            { dimensions: { w: 500, h: 245 }, autoscale: false, scale: 60, boxType:"showcase" }
         );
 
         this.box = new DiceBox(canvas, game.dice3d.box.dicefactory, config);
