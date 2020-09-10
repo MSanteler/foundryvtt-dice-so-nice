@@ -1,10 +1,10 @@
-<div class="tab active" data-tab="general">
-    <div id="dice-configuration-canvas"></div>
-    <form autocomplete="off" class="dice-so-nice">
+<form autocomplete="off" class="dice-so-nice">
+    <div class="tab active" data-tab="general">
+        <div id="dice-configuration-canvas"></div>
         <div class="dsn-settings-container">
             <div class="form-group">
                 <label>{{localize "DICESONICE.enable"}}</label>
-                <input type="checkbox" name="enabled" data-dtype="Boolean" {{checked enabled}}/>
+                <input type="checkbox" name="enabled" data-dtype="Boolean" {{checked enabled}} />
             </div>
             <h2>{{localize "DICESONICE.settingsAppearance"}}</h2>
             <div class="form-group">
@@ -55,42 +55,42 @@
                     {{/select}}
                 </select>
             </div>
-            
+
             <div class="form-group">
                 <label>{{localize "DICESONICE.labelColor"}}</label>
                 <div class="form-fields">
-                    <input type="text"  name="labelColor" value="{{labelColor}}" data-dtype="String"/>
-                    <input type="color" name="labelColorSelector" value="{{labelColor}}" data-edit="labelColor"/>
+                    <input type="text" name="labelColor" value="{{labelColor}}" data-dtype="String" />
+                    <input type="color" name="labelColorSelector" value="{{labelColor}}" data-edit="labelColor" />
                 </div>
             </div>
 
             <div class="form-group">
                 <label>{{localize "DICESONICE.diceColor"}}</label>
                 <div class="form-fields">
-                    <input type="text" name="diceColor" value="{{diceColor}}" data-dtype="String"/>
-                    <input type="color" name="diceColorSelector" value="{{diceColor}}" data-edit="diceColor"/>
+                    <input type="text" name="diceColor" value="{{diceColor}}" data-dtype="String" />
+                    <input type="color" name="diceColorSelector" value="{{diceColor}}" data-edit="diceColor" />
                 </div>
             </div>
 
             <div class="form-group">
                 <label>{{localize "DICESONICE.outlineColor"}}</label>
                 <div class="form-fields">
-                    <input type="text" name="outlineColor" value="{{outlineColor}}" data-dtype="String"/>
-                    <input type="color" name="outlineColorSelector" value="{{outlineColor}}" data-edit="outlineColor"/>
+                    <input type="text" name="outlineColor" value="{{outlineColor}}" data-dtype="String" />
+                    <input type="color" name="outlineColorSelector" value="{{outlineColor}}" data-edit="outlineColor" />
                 </div>
             </div>
 
             <div class="form-group">
                 <label>{{localize "DICESONICE.edgeColor"}}</label>
                 <div class="form-fields">
-                    <input type="text" name="edgeColor" value="{{edgeColor}}" data-dtype="String"/>
-                    <input type="color" name="edgeColorSelector" value="{{edgeColor}}" data-edit="edgeColor"/>
+                    <input type="text" name="edgeColor" value="{{edgeColor}}" data-dtype="String" />
+                    <input type="color" name="edgeColorSelector" value="{{edgeColor}}" data-edit="edgeColor" />
                 </div>
             </div>
             <h2>{{localize "DICESONICE.settingsPlayerPreferences"}}</h2>
             <div class="form-group">
                 <label>{{localize "DICESONICE.hideAfterRoll"}}</label>
-                <input type="checkbox" name="hideAfterRoll" data-dtype="Boolean" {{checked hideAfterRoll}}/>
+                <input type="checkbox" name="hideAfterRoll" data-dtype="Boolean" {{checked hideAfterRoll}} />
             </div>
 
             <div class="form-group setting-timeBeforeHide">
@@ -111,7 +111,7 @@
 
             <div class="form-group">
                 <label>{{localize "DICESONICE.sounds"}}</label>
-                <input type="checkbox" name="sounds" data-dtype="Boolean" {{checked sounds}}/>
+                <input type="checkbox" name="sounds" data-dtype="Boolean" {{checked sounds}} />
             </div>
 
             <div class="form-group">
@@ -135,7 +135,7 @@
 
             <div class="form-group">
                 <label>{{localize "DICESONICE.autoSize"}}</label>
-                <input type="checkbox" name="autoscale" data-dtype="Boolean" {{checked autoscale}}/>
+                <input type="checkbox" name="autoscale" data-dtype="Boolean" {{checked autoscale}} />
             </div>
 
             <div class="form-group">
@@ -181,7 +181,7 @@
 
             <div class="form-group">
                 <label>{{localize "DICESONICE.bumpMapping"}}</label>
-                <input type="checkbox" name="bumpMapping" data-dtype="Boolean" {{checked bumpMapping}}/>
+                <input type="checkbox" name="bumpMapping" data-dtype="Boolean" {{checked bumpMapping}} />
             </div>
         </div>
 
@@ -194,6 +194,5 @@
             </button>
         </div>
 
-    </form>
-
-</div>
+    </div>
+</form>
