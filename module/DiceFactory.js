@@ -38,8 +38,7 @@ export class DiceFactory {
 		this.systems = {
 			'standard': {id: 'standard', name: game.i18n.localize("DICESONICE.System.Standard"), dice:[]},
 			'dot': {id: 'dot', name: game.i18n.localize("DICESONICE.System.Dot"), dice:[]},
-			'dot_b': {id: 'dot_b', name: game.i18n.localize("DICESONICE.System.DotBlack"), dice:[]},
-			'gltf': {id: 'gltf', name:"GLTF", dice:[]}
+			'dot_b': {id: 'dot_b', name: game.i18n.localize("DICESONICE.System.DotBlack"), dice:[]}
 		};
 		let diceobj;
 		diceobj = new DicePreset('d2');
@@ -183,14 +182,6 @@ export class DiceFactory {
 		diceobj.setValues(1,6);
 		diceobj.scale = 0.9;
 		diceobj.system = "dot_b";
-		this.register(diceobj);
-
-		diceobj = new DicePreset('d6');
-		diceobj.name = 'd6';
-		diceobj.setValues(1,6);
-		diceobj.scale = 0.9;
-		diceobj.system = "gltf";
-		diceobj.setModel('modules/dice-so-nice/models/d6roku.glb');
 		this.register(diceobj);
 
 		for(let i in CONFIG.Dice.terms){
@@ -465,10 +456,8 @@ export class DiceFactory {
 		if (!geom) return null;
 
 		if(diceobj.model){
-			//TODO : find a way to not clone materials/textures. Probably require to force 3D models to follow a specific format
-			//TODO : fix scale when we have a good glb file from an artist
 			dicemesh = diceobj.model.scene.children[0].clone();
-			let scale = 1/diceobj.scale*this.baseScale/100*1.80;
+			let scale = this.baseScale/100;
 			dicemesh.scale.set(scale,scale,scale);
 			if(!dicemesh.geometry)
 				dicemesh.geometry = {};

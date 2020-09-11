@@ -44,7 +44,7 @@ THREEx.RendererStats	= function (){
 
 		update: function(webGLRenderer){
 			// sanity check
-			console.assert(webGLRenderer instanceof THREE.WebGLRenderer)
+			//console.assert(webGLRenderer instanceof THREE.WebGLRenderer)
 
 			// refresh only 30time per second
 			if( Date.now() - lastTime < 1000/30 )	return;

@@ -541,11 +541,9 @@ export class DiceBox {
 		dicemesh.body_sim.stepQuaternions = new Array(1000);
 		dicemesh.body_sim.stepPositions = new Array(1000);
 
-		//dicemesh.meshCannon = this.body2mesh(dicemesh.body,true);
+		//dicemesh.meshCannon = this.body2mesh(dicemesh.body_sim,true);
 
 		/*var gltfExporter = new GLTFExporter();
-
-		//let t = new THREE.Mesh(this.dicefactory.buffergeom, new THREE.MeshBasicMaterial());
 		gltfExporter.parse(dicemesh, function ( result ) {
 			if ( result instanceof ArrayBuffer ) {
 				saveArrayBuffer( result, 'scene.glb' );
