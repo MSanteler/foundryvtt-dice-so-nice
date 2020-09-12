@@ -138,12 +138,12 @@ Hooks.on('createChatMessage', (chatMessage) => {
 
     chatMessage._dice3danimating = true;
     Hooks.callAll("diceSoNiceRollStart", chatMessage.id);
-    let rollPromise = game.dice3d.showForRoll(chatMessage.roll, chatMessage.user).then(displayed => {
+    game.dice3d.showForRoll(chatMessage.roll, chatMessage.user).then(displayed => {
         delete chatMessage._dice3danimating;
         $(`#chat-log .message[data-message-id="${chatMessage.id}"]`).show();
         Hooks.callAll("diceSoNiceRollComplete", chatMessage.id);
         ui.chat.scrollBottom();
-    });;
+    });
 });
 
 /**
@@ -278,7 +278,8 @@ export class Dice3D {
             sounds: true,
             soundsSurface: 'felt',
             soundsVolume: 0.5,
-            canvasZIndex:'over'
+            canvasZIndex:'over',
+            throwingForce:'medium'
         };
     }
 
@@ -752,6 +753,11 @@ class DiceConfig extends FormApplication {
             canvasZIndexList: Utils.localize({
                 "over": "DICESONICE.CanvasZIndexOver",
                 "under": "DICESONICE.CanvasZIndexUnder",
+            }),
+            throwingForceList: Utils.localize({
+                "weak": "DICESONICE.ThrowingForceWeak",
+                "medium": "DICESONICE.ThrowingForceMedium",
+                "strong": "DICESONICE.ThrowingForceStrong"
             })
         },
             this.reset ? Dice3D.ALL_DEFAULT_OPTIONS() : Dice3D.ALL_CONFIG()
@@ -834,7 +840,8 @@ class DiceConfig extends FormApplication {
                 texture: $('select[name="texture"]').val(),
                 material: $('select[name="material"]').val(),
                 sounds: $('input[name="sounds"]').is(':checked'),
-                system: $('select[name="system"]').val()
+                system: $('select[name="system"]').val(),
+                throwingForce:$('select[name="throwingForce"]').val()
             };
 
             this.box.update(config);

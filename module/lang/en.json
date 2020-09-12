@@ -54,6 +54,7 @@
     "DICESONICE.canvasZIndex": "3D layer position",
     "DICESONICE.immediatelyDisplayChatMessages": "Display chat message immediately",
     "DICESONICE.immediatelyDisplayChatMessagesHint": "When enabled, do not wait for the 3D roll to finish before showing the roll chat card",
+    "DICESONICE.throwingForce" : "Throwing force",
 
     "DICESONICE.TextureClouds" : "Clouds",
     "DICESONICE.TextureCloudsTransparent" : "Clouds (Transparent)",
@@ -137,5 +138,9 @@
     "DICESONICE.SurfaceMetal" : "Metal",
 
     "DICESONICE.CanvasZIndexOver": "Over sheets",
-    "DICESONICE.CanvasZIndexUnder": "Under sheets"
+    "DICESONICE.CanvasZIndexUnder": "Under sheets",
+
+    "DICESONICE.ThrowingForceWeak": "Weak",
+    "DICESONICE.ThrowingForceMedium" : "Medium",
+    "DICESONICE.ThrowingForceStrong" : "Strong"
 }

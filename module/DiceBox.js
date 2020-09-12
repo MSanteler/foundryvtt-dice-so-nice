@@ -76,6 +76,7 @@ export class DiceBox {
 		this.soundDelay = 1; // time between sound effects in worldstep
 		this.soundsSurface = "felt";
 		this.animstate = '';
+		this.throwingForce = "medium";
 
 		this.selector = {
 			animate: true,
@@ -161,6 +162,7 @@ export class DiceBox {
 			this.speed = this.config.speed;
 		else
 			this.speed = parseInt(globalAnimationSpeed,10);
+		this.throwingForce = this.config.throwingForce;
 
 		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference:"high-performance"});
 		if(this.dicefactory.bumpMapping){
@@ -364,7 +366,8 @@ export class DiceBox {
 		this.soundsSurface = config.soundsSurface;
 		if(config.system)
 			this.dicefactory.setSystem(config.system);
-        this.applyColorsForRoll(config);
+		this.applyColorsForRoll(config);
+		this.throwingForce = config.throwingForce;
     }
 
 
@@ -804,7 +807,16 @@ export class DiceBox {
 		throws.forEach(notation => {
 			let vector = { x: (Math.random() * 2 - 0.5) * this.display.currentWidth, y: -(Math.random() * 2 - 0.5) * this.display.currentHeight};
 			let dist = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
-			let boost = ((Math.random() + 3)*0.8) * dist;
+			let throwingForceModifier = 0.8;
+			switch(this.throwingForce){
+				case "weak":
+					throwingForceModifier = 0.5;
+					break;
+				case "strong":
+					throwingForceModifier = 1.8;
+					break;
+			}
+			let boost = ((Math.random() + 3)*throwingForceModifier) * dist;
 
 			notation = this.getVectors(notation, vector, boost, dist);
 			countNewDice += notation.dice.length;
