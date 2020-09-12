@@ -722,7 +722,7 @@ export class DiceBox {
 		}
 	}
 
-	animateThrow(callback, throws){
+	animateThrow(){
 		this.animstate = 'throw';
 		let time = (new Date()).getTime();
 		this.last_time = this.last_time || time - (this.framerate*1000);
@@ -783,19 +783,17 @@ export class DiceBox {
 
 		// roll finished
 		if (this.throwFinished("render")) {
+			//if animated dice still on the table, keep animating
+			
 			this.running = false;
 			this.rolling = false;
 
-			if(callback) callback(throws);
-
+			if(this.callback) this.callback(this.throws);
+			this.callback = null;
+			this.throws = null;
 			this.running = (new Date()).getTime();
 			if(!this.animatedDiceDetected)
-				return;
-		}
-
-		// roll not finished or animated dice still on the table, keep animating
-		if (this.isVisible) {
-			requestAnimationFrame(this.animateThrow.bind(this, callback, throws));
+				canvas.app.ticker.remove(this.animateThrow,this);;
 		}
 	}
 
@@ -912,7 +910,10 @@ export class DiceBox {
 		this.rolling = true;
 		this.running = (new Date()).getTime();
 		this.last_time = 0;
-		this.animateThrow.bind(this, callback, throws)();
+		this.callback = callback;
+		this.throws = throws;
+		canvas.app.ticker.remove(this.animateThrow,this);
+		canvas.app.ticker.add(this.animateThrow,this);
 	}
 
 	showcase(config) {
@@ -953,16 +954,16 @@ export class DiceBox {
 			this.scene.add(dicemesh);
 		}
 
-		this.running = (new Date()).getTime();
 		this.last_time = 0;
 		if (this.selector.animate) {
 			this.container.style.opacity = 0;
-			this.animateSelector(this.running);
+			canvas.app.ticker.remove(this.animateSelector,this);
+			canvas.app.ticker.add(this.animateSelector,this);
 		}
 		else this.renderer.render(this.scene, this.camera);
 	}
 
-	animateSelector(threadid) {
+	animateSelector() {
 		this.animstate = 'selector';
 		let time = (new Date()).getTime();
 		let time_diff = (time - this.last_time) / 1000;
@@ -981,15 +982,7 @@ export class DiceBox {
 
 		this.last_time = time;
 		this.renderer.render(this.scene, this.camera);
-		if (this.running == threadid) {
-			(function(animateCallback, tid, at) {
-				if (!at && time_diff < this.framerate) {
-					setTimeout(() => { requestAnimationFrame(() => { animateCallback.call(this, tid); }); }, (this.framerate - time_diff) * 1000);
-				} else {
-					requestAnimationFrame(() => { animateCallback.call(this, tid); });
-				}
-			}).bind(this)(this.animateSelector, threadid, this.adaptive_timestep);
-		}
+		
 	}
 
 	//used to debug cannon shape vs three shape
