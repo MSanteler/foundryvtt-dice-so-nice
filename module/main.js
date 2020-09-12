@@ -102,6 +102,15 @@ Hooks.once('init', () => {
         config: true
     });
 
+    game.settings.register("dice-so-nice", "immediatelyDisplayChatMessages", {
+        name: "DICESONICE.immediatelyDisplayChatMessages",
+        hint: "DICESONICE.immediatelyDisplayChatMessagesHint",
+        scope: "world",
+        type: Boolean,
+        default: false,
+        config: true
+    });
+
 });
 
 /**
@@ -129,12 +138,12 @@ Hooks.on('createChatMessage', (chatMessage) => {
 
     chatMessage._dice3danimating = true;
     Hooks.callAll("diceSoNiceRollStart", chatMessage.id);
-    game.dice3d.showForRoll(chatMessage.roll, chatMessage.user).then(displayed => {
+    let rollPromise = game.dice3d.showForRoll(chatMessage.roll, chatMessage.user).then(displayed => {
         delete chatMessage._dice3danimating;
         $(`#chat-log .message[data-message-id="${chatMessage.id}"]`).show();
         Hooks.callAll("diceSoNiceRollComplete", chatMessage.id);
         ui.chat.scrollBottom();
-    });
+    });;
 });
 
 /**
@@ -555,6 +564,9 @@ export class Dice3D {
                 } else {
                     resolve(false);
                 }
+            }
+            if(game.settings.get("dice-so-nice","immediatelyDisplayChatMessages")){
+                resolve();
             }
         });
     }

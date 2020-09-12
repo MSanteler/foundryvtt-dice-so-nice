@@ -52,6 +52,8 @@
     "DICESONICE.enabledSimultaneousRolls": "Simultaneous rolls are merged",
     "DICESONICE.enabledSimultaneousRollsHint": "Combine simultaneous rolls in a single animation instead of waiting for each roll to end.",
     "DICESONICE.canvasZIndex": "3D layer position",
+    "DICESONICE.immediatelyDisplayChatMessages": "Display chat message immediately",
+    "DICESONICE.immediatelyDisplayChatMessagesHint": "When enabled, do not wait for the 3D roll to finish before showing the roll chat card",
 
     "DICESONICE.TextureClouds" : "Clouds",
     "DICESONICE.TextureCloudsTransparent" : "Clouds (Transparent)",
