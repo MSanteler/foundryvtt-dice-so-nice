@@ -134,7 +134,7 @@ export class DiceFactory {
 		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','20']);
 		diceobj.setValues(1,20);
 		diceobj.mass = 500;
-		diceobj.scale = 0.9;
+		diceobj.scale = 1;
 		diceobj.inertia = 6;
 		this.register(diceobj);
 
