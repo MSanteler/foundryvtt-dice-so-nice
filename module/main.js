@@ -549,7 +549,7 @@ export class Dice3D {
 
             if (!data.throws) throw new Error("Roll data should be not null");
 
-            if (!data.throws.length) {
+            if (!data.throws.length || !this.isEnabled()) {
                 resolve(false);
             } else {
 
