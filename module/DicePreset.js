@@ -75,7 +75,7 @@ export class DicePreset {
 		let imgElements = Array(textures.length);
 		let hasTextures = false;
 		for (let i = 0; i < numImages; i++) {
-			if (textures[i] == '' || !textures[i].match(regexTexture)) {
+			if (textures[i] == null || textures[i] == '' || !textures[i].match(regexTexture)) {
 				imgElements[i] = textures[i];
 				++loadedImages
 				continue;

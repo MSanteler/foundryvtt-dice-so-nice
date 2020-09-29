@@ -129,6 +129,7 @@
     "DICESONICE.MaterialAuto": "Auto (Theme/Texture)",
 
     "DICESONICE.System.Standard" : "Standard",
+    "DICESONICE.System.FoundryVTT" : "Foundry VTT",
     "DICESONICE.System.Dot" : "Dot (White)",
     "DICESONICE.System.DotBlack" : "Dot (Black)",
 
