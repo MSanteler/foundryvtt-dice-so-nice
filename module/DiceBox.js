@@ -168,7 +168,7 @@ export class DiceBox {
 		if(this.dicefactory.bumpMapping){
 			this.renderer.physicallyCorrectLights = true;
 			this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-			this.renderer.toneMappingExposure = 1.2;
+			this.renderer.toneMappingExposure = 0.83;
 			this.renderer.outputEncoding = THREE.sRGBEncoding;
 		}
 

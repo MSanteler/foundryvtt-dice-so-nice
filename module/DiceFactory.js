@@ -37,6 +37,7 @@ export class DiceFactory {
 
 		this.systems = {
 			'standard': {id: 'standard', name: game.i18n.localize("DICESONICE.System.Standard"), dice:[]},
+			'foundry_vtt': {id: 'foundry_vtt', name: game.i18n.localize("DICESONICE.System.FoundryVTT"), dice:[]},
 			'dot': {id: 'dot', name: game.i18n.localize("DICESONICE.System.Dot"), dice:[]},
 			'dot_b': {id: 'dot_b', name: game.i18n.localize("DICESONICE.System.DotBlack"), dice:[]}
 		};
@@ -182,6 +183,19 @@ export class DiceFactory {
 		diceobj.setValues(1,6);
 		diceobj.scale = 0.9;
 		diceobj.system = "dot_b";
+		this.register(diceobj);
+
+		diceobj = new DicePreset('d20');
+		diceobj.name = 'd20';
+		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','modules/dice-so-nice/textures/foundry_vtt/foundrynat20.png']);
+		diceobj.setBumpMaps([,,,,,,,,,,,,,,,,,,,'modules/dice-so-nice/textures/foundry_vtt/foundrynat20_bump.png']);
+		diceobj.setValues(1,20);
+		diceobj.mass = 500;
+		diceobj.scale = 1;
+		diceobj.font = "Arial Black";
+		diceobj.fontScale = 0.8;
+		diceobj.inertia = 6;
+		diceobj.system = "foundry_vtt";
 		this.register(diceobj);
 
 		for(let i in CONFIG.Dice.terms){
