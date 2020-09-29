@@ -1,5 +1,10 @@
 # FoundryVTT - Dice So Nice!
 
+> **If you are using FVTT v0.7.x, please checkout our alpha release of Dice So Nice v3!  
+> https://gitlab.com/riccisi/foundryvtt-dice-so-nice/raw/alpha/module/module.json**
+
+
+
 This module for Foundry VTT adds the ability to show a 3D dice simulation when a roll is made.
 
 [[_TOC_]]
