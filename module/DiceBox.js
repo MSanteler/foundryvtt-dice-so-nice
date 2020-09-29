@@ -244,6 +244,9 @@ export class DiceBox {
 			.load('foyer.hdr', function ( texture ) {
 				this.scopedTextureCache.textureCube = this.pmremGenerator.fromEquirectangular(texture).texture;
 				this.scene.environment = this.scopedTextureCache.textureCube;
+				this.scene.traverse(object => {
+					if(object.type === 'Mesh') object.material.needsUpdate = true;
+				});
 				texture.dispose();
 				this.pmremGenerator.dispose();
 			}.bind(this));
