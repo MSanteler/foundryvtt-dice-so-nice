@@ -54,12 +54,12 @@ export class DiceFactory {
 		diceobj = new DicePreset('dc','d2');
 		diceobj.name = 'Coin';
 		diceobj.setLabels([
-			'modules/dice-so-nice/textures/coin/tail.png',
-			'modules/dice-so-nice/textures/coin/heads.png'
+			'modules/dice-so-nice/textures/coin/tail.webp',
+			'modules/dice-so-nice/textures/coin/heads.webp'
 		]);
 		diceobj.setBumpMaps([
-			'modules/dice-so-nice/textures/coin/tail_bump.png',
-			'modules/dice-so-nice/textures/coin/heads_bump.png'
+			'modules/dice-so-nice/textures/coin/tail_bump.webp',
+			'modules/dice-so-nice/textures/coin/heads_bump.webp'
 		]);
 		diceobj.setValues(0,1);
 		diceobj.setValueMap({"0":1,"1":2});
@@ -142,20 +142,20 @@ export class DiceFactory {
 		diceobj = new DicePreset('d6');
 		diceobj.name = 'd6';
 		diceobj.setLabels([
-			'modules/dice-so-nice/textures/dot/d6-1.png',
-			'modules/dice-so-nice/textures/dot/d6-2.png',
-			'modules/dice-so-nice/textures/dot/d6-3.png',
-			'modules/dice-so-nice/textures/dot/d6-4.png',
-			'modules/dice-so-nice/textures/dot/d6-5.png',
-			'modules/dice-so-nice/textures/dot/d6-6.png',
+			'modules/dice-so-nice/textures/dot/d6-1.webp',
+			'modules/dice-so-nice/textures/dot/d6-2.webp',
+			'modules/dice-so-nice/textures/dot/d6-3.webp',
+			'modules/dice-so-nice/textures/dot/d6-4.webp',
+			'modules/dice-so-nice/textures/dot/d6-5.webp',
+			'modules/dice-so-nice/textures/dot/d6-6.webp',
 		]);
 		diceobj.setBumpMaps([
-			'modules/dice-so-nice/textures/dot/d6-1-b.png',
-			'modules/dice-so-nice/textures/dot/d6-2-b.png',
-			'modules/dice-so-nice/textures/dot/d6-3-b.png',
-			'modules/dice-so-nice/textures/dot/d6-4-b.png',
-			'modules/dice-so-nice/textures/dot/d6-5-b.png',
-			'modules/dice-so-nice/textures/dot/d6-6-b.png',
+			'modules/dice-so-nice/textures/dot/d6-1-b.webp',
+			'modules/dice-so-nice/textures/dot/d6-2-b.webp',
+			'modules/dice-so-nice/textures/dot/d6-3-b.webp',
+			'modules/dice-so-nice/textures/dot/d6-4-b.webp',
+			'modules/dice-so-nice/textures/dot/d6-5-b.webp',
+			'modules/dice-so-nice/textures/dot/d6-6-b.webp',
 		]);
 		diceobj.setValues(1,6);
 		diceobj.scale = 0.9;
@@ -165,20 +165,20 @@ export class DiceFactory {
 		diceobj = new DicePreset('d6');
 		diceobj.name = 'd6';
 		diceobj.setLabels([
-			'modules/dice-so-nice/textures/dot/d6-1-black.png',
-			'modules/dice-so-nice/textures/dot/d6-2-black.png',
-			'modules/dice-so-nice/textures/dot/d6-3-black.png',
-			'modules/dice-so-nice/textures/dot/d6-4-black.png',
-			'modules/dice-so-nice/textures/dot/d6-5-black.png',
-			'modules/dice-so-nice/textures/dot/d6-6-black.png',
+			'modules/dice-so-nice/textures/dot/d6-1-black.webp',
+			'modules/dice-so-nice/textures/dot/d6-2-black.webp',
+			'modules/dice-so-nice/textures/dot/d6-3-black.webp',
+			'modules/dice-so-nice/textures/dot/d6-4-black.webp',
+			'modules/dice-so-nice/textures/dot/d6-5-black.webp',
+			'modules/dice-so-nice/textures/dot/d6-6-black.webp',
 		]);
 		diceobj.setBumpMaps([
-			'modules/dice-so-nice/textures/dot/d6-1-b.png',
-			'modules/dice-so-nice/textures/dot/d6-2-b.png',
-			'modules/dice-so-nice/textures/dot/d6-3-b.png',
-			'modules/dice-so-nice/textures/dot/d6-4-b.png',
-			'modules/dice-so-nice/textures/dot/d6-5-b.png',
-			'modules/dice-so-nice/textures/dot/d6-6-b.png',
+			'modules/dice-so-nice/textures/dot/d6-1-b.webp',
+			'modules/dice-so-nice/textures/dot/d6-2-b.webp',
+			'modules/dice-so-nice/textures/dot/d6-3-b.webp',
+			'modules/dice-so-nice/textures/dot/d6-4-b.webp',
+			'modules/dice-so-nice/textures/dot/d6-5-b.webp',
+			'modules/dice-so-nice/textures/dot/d6-6-b.webp',
 		]);
 		diceobj.setValues(1,6);
 		diceobj.scale = 0.9;
@@ -187,8 +187,8 @@ export class DiceFactory {
 
 		diceobj = new DicePreset('d20');
 		diceobj.name = 'd20';
-		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','modules/dice-so-nice/textures/foundry_vtt/foundrynat20.png']);
-		diceobj.setBumpMaps([,,,,,,,,,,,,,,,,,,,'modules/dice-so-nice/textures/foundry_vtt/foundrynat20_bump.png']);
+		diceobj.setLabels(['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16','17','18','19','modules/dice-so-nice/textures/foundry_vtt/foundrynat20.webp']);
+		diceobj.setBumpMaps([,,,,,,,,,,,,,,,,,,,'modules/dice-so-nice/textures/foundry_vtt/foundrynat20_bump.webp']);
 		diceobj.setValues(1,20);
 		diceobj.mass = 500;
 		diceobj.scale = 1;
