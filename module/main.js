@@ -774,21 +774,22 @@ class DiceConfig extends FormApplication {
         );
 
         this.box = new DiceBox(canvas, game.dice3d.box.dicefactory, config);
-        this.box.initialize();
-        this.box.showcase(config);
+        this.box.initialize().then(()=>{
+            this.box.showcase(config);
 
-        this.toggleHideAfterRoll();
-        this.toggleAutoScale();
-        this.toggleCustomColors();
+            this.toggleHideAfterRoll();
+            this.toggleAutoScale();
+            this.toggleCustomColors();
 
-        html.find('input[name="hideAfterRoll"]').change(this.toggleHideAfterRoll.bind(this));
-        html.find('input[name="sounds"]').change(this.toggleSounds.bind(this));
-        html.find('input[name="autoscale"]').change(this.toggleAutoScale.bind(this));
-        html.find('select[name="colorset"]').change(this.toggleCustomColors.bind(this));
-        html.find('input,select').change(this.onApply.bind(this));
-        html.find('button[name="reset"]').click(this.onReset.bind(this));
+            html.find('input[name="hideAfterRoll"]').change(this.toggleHideAfterRoll.bind(this));
+            html.find('input[name="sounds"]').change(this.toggleSounds.bind(this));
+            html.find('input[name="autoscale"]').change(this.toggleAutoScale.bind(this));
+            html.find('select[name="colorset"]').change(this.toggleCustomColors.bind(this));
+            html.find('input,select').change(this.onApply.bind(this));
+            html.find('button[name="reset"]').click(this.onReset.bind(this));
 
-        this.reset = false;
+            this.reset = false;
+        });
     }
 
     toggleHideAfterRoll() {

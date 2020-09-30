@@ -262,7 +262,7 @@ export class DiceFactory {
 					'type':'standard',
 					'options': {
 						metalness: 1,
-						roughness: 0
+						roughness: 0.1
 					},
 					'scopedOptions':{
 						roughnessMap : "roughnessMap_fingerprint",
@@ -431,14 +431,16 @@ export class DiceFactory {
 			this.disposeCachedMaterials();
 	}
 
-	disposeCachedMaterials(){
+	disposeCachedMaterials(type = null){
 		for (const material in this.baseTextureCache) {
-			this.baseTextureCache[material].map.dispose();
-			if(this.baseTextureCache[material].bumpMap)
-			this.baseTextureCache[material].bumpMap.dispose();
-			this.baseTextureCache[material].dispose();
+			if(type == null || material.substr(0,type.length) == type){
+				this.baseTextureCache[material].map.dispose();
+				if(this.baseTextureCache[material].bumpMap)
+				this.baseTextureCache[material].bumpMap.dispose();
+				this.baseTextureCache[material].dispose();
+				delete this.baseTextureCache[material];
+			}
 		}
-		this.baseTextureCache = {};
 	}
 
 	//Since FVTT will remove their fontloading method in 0.8, we're using our own.

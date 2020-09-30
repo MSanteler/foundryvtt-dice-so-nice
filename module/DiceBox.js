@@ -95,6 +95,9 @@ export class DiceBox {
 
 		this.rethrowFunctions = {};
 		this.afterThrowFunctions = {};
+
+		//clean cache
+		this.dicefactory.disposeCachedMaterials(config.boxType);
 	}
 
 	preloadSounds(){
@@ -147,119 +150,128 @@ export class DiceBox {
 	}
 
 	initialize() {
-		game.audio.pending.push(this.preloadSounds.bind(this));
+		return new Promise(async resolve => {
+			game.audio.pending.push(this.preloadSounds.bind(this));
 
-		if(this.config.system != "standard")
-			this.dicefactory.setSystem(this.config.system);
+			if(this.config.system != "standard")
+				this.dicefactory.setSystem(this.config.system);
 
-		this.sounds = this.config.sounds == '1';
-		this.volume = this.config.soundsVolume;
-		this.soundsSurface = this.config.soundsSurface;
-		this.shadows = this.config.shadowQuality != "none";
-		this.dicefactory.setBumpMapping(this.config.bumpMapping);
-		let globalAnimationSpeed = game.settings.get("dice-so-nice", "globalAnimationSpeed");
-		if(globalAnimationSpeed === "0")
-			this.speed = this.config.speed;
-		else
-			this.speed = parseInt(globalAnimationSpeed,10);
-		this.throwingForce = this.config.throwingForce;
+			this.sounds = this.config.sounds == '1';
+			this.volume = this.config.soundsVolume;
+			this.soundsSurface = this.config.soundsSurface;
+			this.shadows = this.config.shadowQuality != "none";
+			this.dicefactory.setBumpMapping(this.config.bumpMapping);
+			let globalAnimationSpeed = game.settings.get("dice-so-nice", "globalAnimationSpeed");
+			if(globalAnimationSpeed === "0")
+				this.speed = this.config.speed;
+			else
+				this.speed = parseInt(globalAnimationSpeed,10);
+			this.throwingForce = this.config.throwingForce;
 
-		this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference:"high-performance"});
-		if(this.dicefactory.bumpMapping){
-			this.renderer.physicallyCorrectLights = true;
-			this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-			this.renderer.toneMappingExposure = 0.9;
-			this.renderer.outputEncoding = THREE.sRGBEncoding;
-		}
+			this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference:"high-performance"});
+			if(this.dicefactory.bumpMapping){
+				this.renderer.physicallyCorrectLights = true;
+				this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				this.renderer.toneMappingExposure = 0.9;
+				this.renderer.outputEncoding = THREE.sRGBEncoding;
+			}
 
-		this.scene = new THREE.Scene();
-		this.loadContextScopedTextures(this.config.boxType);
-		this.dicefactory.initializeMaterials();
-		/*this.rendererStats	= new THREEx.RendererStats()
+			this.scene = new THREE.Scene();
+			await this.loadContextScopedTextures(this.config.boxType);
+			this.dicefactory.initializeMaterials();
+			/*this.rendererStats	= new THREEx.RendererStats()
 
-		this.rendererStats.domElement.style.position	= 'absolute';
-		this.rendererStats.domElement.style.left	= '44px';
-		this.rendererStats.domElement.style.bottom	= '178px';
-		this.rendererStats.domElement.style.transform	= 'scale(2)';
-		document.body.appendChild( this.rendererStats.domElement );*/
+			this.rendererStats.domElement.style.position	= 'absolute';
+			this.rendererStats.domElement.style.left	= '44px';
+			this.rendererStats.domElement.style.bottom	= '178px';
+			this.rendererStats.domElement.style.transform	= 'scale(2)';
+			document.body.appendChild( this.rendererStats.domElement );*/
 
-		this.container.appendChild(this.renderer.domElement);
-		this.renderer.shadowMap.enabled = this.shadows;
-		this.renderer.shadowMap.type = this.config.shadowQuality == "high" ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
-		this.renderer.setClearColor(0x000000, 0);
+			this.container.appendChild(this.renderer.domElement);
+			this.renderer.shadowMap.enabled = this.shadows;
+			this.renderer.shadowMap.type = this.config.shadowQuality == "high" ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+			this.renderer.setClearColor(0x000000, 0);
 
-		this.setDimensions(this.config.dimensions);
+			this.setDimensions(this.config.dimensions);
 
-		this.world_sim.gravity.set(0, 0, -9.8 * 800);
-		this.world_sim.broadphase = new CANNON.NaiveBroadphase();
-		this.world_sim.solver.iterations = 14;
-		this.world_sim.allowSleep = true;
-	
-		let contactMaterial = new CANNON.ContactMaterial( this.desk_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.5});
-		this.world_sim.addContactMaterial(contactMaterial);
-		contactMaterial = new CANNON.ContactMaterial( this.barrier_body_material, this.dice_body_material, {friction: 0, restitution: 0.95});
-		this.world_sim.addContactMaterial(contactMaterial);
-		contactMaterial = new CANNON.ContactMaterial( this.dice_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.7});
-		this.world_sim.addContactMaterial(contactMaterial);
-		let desk = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.desk_body_material});
-		this.world_sim.addBody(desk);
+			this.world_sim.gravity.set(0, 0, -9.8 * 800);
+			this.world_sim.broadphase = new CANNON.NaiveBroadphase();
+			this.world_sim.solver.iterations = 14;
+			this.world_sim.allowSleep = true;
 		
-		let barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
-		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2);
-		barrier.position.set(0, this.display.containerHeight * 0.93, 0);
-		this.world_sim.addBody(barrier);
+			let contactMaterial = new CANNON.ContactMaterial( this.desk_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.5});
+			this.world_sim.addContactMaterial(contactMaterial);
+			contactMaterial = new CANNON.ContactMaterial( this.barrier_body_material, this.dice_body_material, {friction: 0, restitution: 0.95});
+			this.world_sim.addContactMaterial(contactMaterial);
+			contactMaterial = new CANNON.ContactMaterial( this.dice_body_material, this.dice_body_material, {friction: 0.01, restitution: 0.7});
+			this.world_sim.addContactMaterial(contactMaterial);
+			let desk = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.desk_body_material});
+			this.world_sim.addBody(desk);
+			
+			let barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+			barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2);
+			barrier.position.set(0, this.display.containerHeight * 0.93, 0);
+			this.world_sim.addBody(barrier);
 
-		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
-		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-		barrier.position.set(0, -this.display.containerHeight * 0.93, 0);
-		this.world_sim.addBody(barrier);
+			barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+			barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+			barrier.position.set(0, -this.display.containerHeight * 0.93, 0);
+			this.world_sim.addBody(barrier);
 
-		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
-		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -Math.PI / 2);
-		barrier.position.set(this.display.containerWidth * 0.93, 0, 0);
-		this.world_sim.addBody(barrier);
+			barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+			barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), -Math.PI / 2);
+			barrier.position.set(this.display.containerWidth * 0.93, 0, 0);
+			this.world_sim.addBody(barrier);
 
-		barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
-		barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
-		barrier.position.set(-this.display.containerWidth * 0.93, 0, 0);
-		this.world_sim.addBody(barrier);
+			barrier = new CANNON.Body({allowSleep: false, mass: 0, shape: new CANNON.Plane(), material: this.barrier_body_material});
+			barrier.quaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), Math.PI / 2);
+			barrier.position.set(-this.display.containerWidth * 0.93, 0, 0);
+			this.world_sim.addBody(barrier);
 
-		this.renderer.render(this.scene, this.camera);
+			this.renderer.render(this.scene, this.camera);
+			resolve();
+		});
 	}
 
 	loadContextScopedTextures(type){
-		this.scopedTextureCache = {type:type};
-		if(this.dicefactory.bumpMapping){
-			let textureLoader = new THREE.TextureLoader();
-			this.scopedTextureCache.roughnessMap_fingerprint = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_finger.png');
-			this.scopedTextureCache.roughnessMap_wood = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_wood.jpg');
-			this.scopedTextureCache.roughnessMap_metal = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_metal.png');
+		return new Promise(resolve => {
+			this.scopedTextureCache = {type:type};
+			if(this.dicefactory.bumpMapping){
+				let textureLoader = new THREE.TextureLoader();
+				this.scopedTextureCache.roughnessMap_fingerprint = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_finger.png');
+				this.scopedTextureCache.roughnessMap_wood = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_wood.jpg');
+				this.scopedTextureCache.roughnessMap_metal = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_metal.png');
 
-			this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
-			this.pmremGenerator.compileEquirectangularShader();
+				this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
+				this.pmremGenerator.compileEquirectangularShader();
 
-			new RGBELoader()
-			.setDataType( THREE.UnsignedByteType )
-			.setPath( 'modules/dice-so-nice/textures/equirectangular/' )
-			.load('foyer.hdr', function ( texture ) {
-				this.scopedTextureCache.textureCube = this.pmremGenerator.fromEquirectangular(texture).texture;
-				this.scene.environment = this.scopedTextureCache.textureCube;
-				this.scene.traverse(object => {
-					if(object.type === 'Mesh') object.material.needsUpdate = true;
-				});
-				texture.dispose();
-				this.pmremGenerator.dispose();
-			}.bind(this));
-		} else {
-			let loader = new THREE.CubeTextureLoader();
-			loader.setPath('modules/dice-so-nice/textures/cubemap/');
+				new RGBELoader()
+				.setDataType( THREE.UnsignedByteType )
+				.setPath( 'modules/dice-so-nice/textures/equirectangular/' )
+				.load('foyer.hdr', function ( texture ) {
+					this.scopedTextureCache.textureCube = this.pmremGenerator.fromEquirectangular(texture).texture;
+					this.scene.environment = this.scopedTextureCache.textureCube;
+					this.scene.traverse(object => {
+						if(object.type === 'Mesh') object.material.needsUpdate = true;
+					});
+	
+					texture.dispose();
+					this.pmremGenerator.dispose();
+					resolve();
+					
+				}.bind(this));
+			} else {
+				let loader = new THREE.CubeTextureLoader();
+				loader.setPath('modules/dice-so-nice/textures/cubemap/');
 
-			this.scopedTextureCache.textureCube = loader.load( [
-				'px.png', 'nx.png',
-				'py.png', 'ny.png',
-				'pz.png', 'nz.png'
-			]);
-		}
+				this.scopedTextureCache.textureCube = loader.load( [
+					'px.png', 'nx.png',
+					'py.png', 'ny.png',
+					'pz.png', 'nz.png'
+				]);
+				resolve();
+			}
+		});
 	}
 
 	setDimensions(dimensions) {
@@ -307,7 +319,7 @@ export class DiceBox {
 
 		let intensity;
 		if(this.dicefactory.bumpMapping){ //advanced lighting
-			intensity = 1;
+			intensity = 0.6;
 		} else {
 			intensity = 0.7;
 			this.light_amb = new THREE.HemisphereLight(this.colors.ambient, this.colors.ground, 1);
@@ -371,6 +383,9 @@ export class DiceBox {
 			this.dicefactory.setSystem(config.system);
 		this.applyColorsForRoll(config);
 		this.throwingForce = config.throwingForce;
+		this.scene.traverse(object => {
+			if(object.type === 'Mesh') object.material.needsUpdate = true;
+		});
     }
 
 
@@ -876,7 +891,7 @@ export class DiceBox {
 		this.renderer.render(this.scene, this.camera);
 		this.isVisible = false;
 
-		setTimeout(() => { this.renderer.render(this.scene, this.camera); }, 100);
+		//setTimeout(() => { this.renderer.render(this.scene, this.camera); }, 100);
 	}
 
 	rollDice(throws, callback){
@@ -976,6 +991,11 @@ export class DiceBox {
 			canvas.app.ticker.add(this.animateSelector,this);
 		}
 		else this.renderer.render(this.scene, this.camera);
+		setTimeout(() =>{
+			this.scene.traverse(object => {
+				if(object.type === 'Mesh') object.material.needsUpdate = true;
+			});
+		},2000);
 	}
 
 	animateSelector() {
