@@ -238,9 +238,9 @@ export class DiceBox {
 			this.scopedTextureCache = {type:type};
 			if(this.dicefactory.bumpMapping){
 				let textureLoader = new THREE.TextureLoader();
-				this.scopedTextureCache.roughnessMap_fingerprint = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_finger.png');
-				this.scopedTextureCache.roughnessMap_wood = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_wood.jpg');
-				this.scopedTextureCache.roughnessMap_metal = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_metal.png');
+				this.scopedTextureCache.roughnessMap_fingerprint = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_finger.webp');
+				this.scopedTextureCache.roughnessMap_wood = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_wood.webp');
+				this.scopedTextureCache.roughnessMap_metal = textureLoader.load('modules/dice-so-nice/textures/roughnessMap_metal.webp');
 
 				this.pmremGenerator = new THREE.PMREMGenerator(this.renderer);
 				this.pmremGenerator.compileEquirectangularShader();
@@ -265,9 +265,9 @@ export class DiceBox {
 				loader.setPath('modules/dice-so-nice/textures/cubemap/');
 
 				this.scopedTextureCache.textureCube = loader.load( [
-					'px.png', 'nx.png',
-					'py.png', 'ny.png',
-					'pz.png', 'nz.png'
+					'px.webp', 'nx.webp',
+					'py.webp', 'ny.webp',
+					'pz.webp', 'nz.webp'
 				]);
 				resolve();
 			}

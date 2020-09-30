@@ -8,190 +8,190 @@ export const TEXTURELIST = {
 	'cloudy': {
 		name: 'DICESONICE.TextureCloudsTransparent',
 		composite: 'destination-in',
-		source: 'modules/dice-so-nice/textures/cloudy.png',
-		bump: 'modules/dice-so-nice/textures/cloudy.alt.png'
+		source: 'modules/dice-so-nice/textures/cloudy.webp',
+		bump: 'modules/dice-so-nice/textures/cloudy.alt.webp'
 	},
 	'cloudy_2': {
 		name: 'DICESONICE.TextureClouds',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/cloudy.alt.png',
-		bump: 'modules/dice-so-nice/textures/cloudy.alt.png'
+		source: 'modules/dice-so-nice/textures/cloudy.alt.webp',
+		bump: 'modules/dice-so-nice/textures/cloudy.alt.webp'
 	},
 	'fire': {
 		name: 'DICESONICE.TextureFire',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/fire.png',
-		bump: 'modules/dice-so-nice/textures/fire.png'
+		source: 'modules/dice-so-nice/textures/fire.webp',
+		bump: 'modules/dice-so-nice/textures/fire.webp'
 	},
 	'marble': {
 		name: 'DICESONICE.TextureMarble',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/marble.png',
+		source: 'modules/dice-so-nice/textures/marble.webp',
 		bump: '',
 		material: "glass"
 	},
 	'water': {
 		name: 'DICESONICE.TextureWater',
 		composite: 'destination-in',
-		source: 'modules/dice-so-nice/textures/water.png',
-		bump: 'modules/dice-so-nice/textures/water.png',
+		source: 'modules/dice-so-nice/textures/water.webp',
+		bump: 'modules/dice-so-nice/textures/water.webp',
 		material: 'glass',
 	},
 	'ice': {
 		name: 'DICESONICE.TextureIce',
 		composite: 'destination-in',
-		source: 'modules/dice-so-nice/textures/ice.png',
-		bump: 'modules/dice-so-nice/textures/ice.png',
+		source: 'modules/dice-so-nice/textures/ice.webp',
+		bump: 'modules/dice-so-nice/textures/ice.webp',
 		material: 'glass'
 	},
 	'paper': {
 		name: 'DICESONICE.TexturePaper',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/paper.png',
-		bump: 'modules/dice-so-nice/textures/paper-bump.png',
+		source: 'modules/dice-so-nice/textures/paper.webp',
+		bump: 'modules/dice-so-nice/textures/paper-bump.webp',
 		material: 'wood'
 	},
 	'speckles': {
 		name: 'DICESONICE.TextureSpeckles',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/speckles.png',
-		bump: 'modules/dice-so-nice/textures/speckles.png'
+		source: 'modules/dice-so-nice/textures/speckles.webp',
+		bump: 'modules/dice-so-nice/textures/speckles.webp'
 	},
 	'glitter': {
 		name: 'DICESONICE.TextureGlitter',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/glitter.png',
-		bump: 'modules/dice-so-nice/textures/glitter-bump.png'
+		source: 'modules/dice-so-nice/textures/glitter.webp',
+		bump: 'modules/dice-so-nice/textures/glitter-bump.webp'
 	},
 	'glitter_2': {
 		name: 'DICESONICE.TextureGlitterTransparent',
 		composite: 'destination-in',
-		source: 'modules/dice-so-nice/textures/glitter-alpha.png',
+		source: 'modules/dice-so-nice/textures/glitter-alpha.webp',
 		bump: ''
 	},
 	'stars': {
 		name: 'DICESONICE.TextureStars',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/stars.png',
-		bump: 'modules/dice-so-nice/textures/stars.png'
+		source: 'modules/dice-so-nice/textures/stars.webp',
+		bump: 'modules/dice-so-nice/textures/stars.webp'
 	},
 	'stainedglass': {
 		name: 'DICESONICE.TextureStainedGlass',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/stainedglass.png',
-		bump: 'modules/dice-so-nice/textures/stainedglass-bump.png',
+		source: 'modules/dice-so-nice/textures/stainedglass.webp',
+		bump: 'modules/dice-so-nice/textures/stainedglass-bump.webp',
 		material: 'glass'
 	},
 	'skulls': {
 		name: 'DICESONICE.TextureSkulls',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/skulls.png',
-		bump: 'modules/dice-so-nice/textures/skulls.png'
+		source: 'modules/dice-so-nice/textures/skulls.webp',
+		bump: 'modules/dice-so-nice/textures/skulls.webp'
 	},
 	'leopard': {
 		name: 'DICESONICE.TextureLeopard',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/leopard.png',
-		bump: 'modules/dice-so-nice/textures/leopard.png',
+		source: 'modules/dice-so-nice/textures/leopard.webp',
+		bump: 'modules/dice-so-nice/textures/leopard.webp',
 		material: 'wood'
 	},
 	'tiger': {
 		name: 'DICESONICE.TextureTiger',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/tiger.png',
-		bump: 'modules/dice-so-nice/textures/tiger.png',
+		source: 'modules/dice-so-nice/textures/tiger.webp',
+		bump: 'modules/dice-so-nice/textures/tiger.webp',
 		material: 'wood'
 	},
 	'cheetah': {
 		name: 'DICESONICE.TextureCheetah',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/cheetah.png',
-		bump: 'modules/dice-so-nice/textures/cheetah.png',
+		source: 'modules/dice-so-nice/textures/cheetah.webp',
+		bump: 'modules/dice-so-nice/textures/cheetah.webp',
 		material: 'wood'
 	},
 	'dragon': {
 		name: 'Dragon',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/dragon.png',
-		bump: 'modules/dice-so-nice/textures/dragon-bump.png'
+		source: 'modules/dice-so-nice/textures/dragon.webp',
+		bump: 'modules/dice-so-nice/textures/dragon-bump.webp'
 	},
 	'lizard': {
 		name: 'Lizard',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/lizard.png',
-		bump: 'modules/dice-so-nice/textures/lizard-bump.png'
+		source: 'modules/dice-so-nice/textures/lizard.webp',
+		bump: 'modules/dice-so-nice/textures/lizard-bump.webp'
 	},
 	'bird': {
 		name: 'Bird',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/feather.png',
-		bump: 'modules/dice-so-nice/textures/feather-bump.png'
+		source: 'modules/dice-so-nice/textures/feather.webp',
+		bump: 'modules/dice-so-nice/textures/feather-bump.webp'
 	},
 	'astral': {
 		name: 'DICESONICE.TextureAstralSea',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/astral.png',
-		bump: 'modules/dice-so-nice/textures/stars.png'
+		source: 'modules/dice-so-nice/textures/astral.webp',
+		bump: 'modules/dice-so-nice/textures/stars.webp'
 	},
 	'wood': {
 		name: 'DICESONICE.TextureWood',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/wood.png',
-		bump: 'modules/dice-so-nice/textures/wood.png',
+		source: 'modules/dice-so-nice/textures/wood.webp',
+		bump: 'modules/dice-so-nice/textures/wood.webp',
 		material: 'wood'
 	},
 	'metal': {
 		name: 'DICESONICE.TextureMetal',
 		composite: 'multiply',
-		source: 'modules/dice-so-nice/textures/metal.png',
+		source: 'modules/dice-so-nice/textures/metal.webp',
 		bump: '',
 		material: 'metal'
 	},
 	'radial': {
 		name: 'DICESONICE.TextureRadial',
 		composite: 'source-over',
-		source: 'modules/dice-so-nice/textures/radial.png',
+		source: 'modules/dice-so-nice/textures/radial.webp',
 		bump: '',
 	},
 	'bronze01': {
 		name: 'DICESONICE.TextureBronze1',
 		composite: 'difference',
-		source: 'modules/dice-so-nice/textures/bronze01.png',
+		source: 'modules/dice-so-nice/textures/bronze01.webp',
 		material: 'metal',
 		bump: ''
 	},
 	'bronze02': {
 		name: 'DICESONICE.TextureBronze2',
 		composite: 'difference',
-		source: 'modules/dice-so-nice/textures/bronze02.png',
+		source: 'modules/dice-so-nice/textures/bronze02.webp',
 		material: 'metal',
 		bump: ''
 	},
 	'bronze03': {
 		name: 'DICESONICE.TextureBronze3',
 		composite: 'difference',
-		source: 'modules/dice-so-nice/textures/bronze03.png',
+		source: 'modules/dice-so-nice/textures/bronze03.webp',
 		material: 'metal',
 		bump: ''
 	},
 	'bronze03a': {
 		name: 'DICESONICE.TextureBronze3a',
 		composite: 'difference',
-		source: 'modules/dice-so-nice/textures/bronze03a.png',
+		source: 'modules/dice-so-nice/textures/bronze03a.webp',
 		material: 'metal',
 		bump: ''
 	},
 	'bronze03b': {
 		name: 'DICESONICE.TextureBronze3b',
 		composite: 'difference',
-		source: 'modules/dice-so-nice/textures/bronze03b.png',
+		source: 'modules/dice-so-nice/textures/bronze03b.webp',
 		material: 'metal',
 		bump: ''
 	},
 	'bronze04': {
 		name: 'DICESONICE.TextureBronze4',
 		composite: 'difference',
-		source: 'modules/dice-so-nice/textures/bronze04.png',
+		source: 'modules/dice-so-nice/textures/bronze04.webp',
 		material: 'metal',
 		bump: ''
 	}
