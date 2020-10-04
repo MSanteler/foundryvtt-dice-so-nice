@@ -137,8 +137,7 @@ Hooks.on('createChatMessage', (chatMessage) => {
     }
 
     chatMessage._dice3danimating = true;
-    Hooks.callAll("diceSoNiceRollStart", chatMessage.id);
-    game.dice3d.showForRoll(chatMessage.roll, chatMessage.user).then(displayed => {
+    game.dice3d.showForRoll(chatMessage.roll, chatMessage.user, false, null, false, chatMessage.id).then(displayed => {
         delete chatMessage._dice3danimating;
         $(`#chat-log .message[data-message-id="${chatMessage.id}"]`).show();
         Hooks.callAll("diceSoNiceRollComplete", chatMessage.id);
@@ -529,9 +528,17 @@ export class Dice3D {
      * @param blind if the roll is blind for the current user
      * @returns {Promise<boolean>} when resolved true if the animation was displayed, false if not.
      */
-    showForRoll(roll, user = game.user, synchronize, users = null, blind) {
-        let notation = new DiceNotation(roll);
-        return this.show(notation, user, synchronize, users, blind);
+    showForRoll(roll, user = game.user, synchronize, users = null, blind, messageID = null) {
+        let context = {
+            roll:roll,
+            user:user,
+            users:users,
+            blind:blind
+        };
+        Hooks.callAll("diceSoNiceRollStart", messageID, context);
+
+        let notation = new DiceNotation(context.roll);
+        return this.show(notation, context.user, synchronize, context.users, context.blind);
     }
 
     /**
