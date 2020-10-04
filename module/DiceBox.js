@@ -1,6 +1,7 @@
 import {DiceColors, COLORSETS} from './DiceColors.js';
 import { DICE_MODELS } from './DiceModels.js';
 import { RGBELoader } from './libs/three-modules/RGBELoader.js';
+//import {GLTFExporter} from './libs/three-modules/GLTFExporter.js';
 import * as THREE from './libs/three.module.js';
 
 export class DiceBox {
