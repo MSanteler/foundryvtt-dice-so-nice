@@ -48,7 +48,7 @@ It is possible to configure some aspects of the dice in the foundry game setting
 - **Throwing force**: Change the magnitude of the vector applied to roll the dice. Let you either gently roll the dice or throw them with full force like a mad man.
 - **Shadows Quality**: Allows to select the shadows quality. Can help with performances on some PCs.
 - **Advanced lighting**: When enabled, use realistic lighting (HDRI). Disable for better performances.
-# API and documentation
+# Documentation and API
 A complete API and documentation for developers and artists alike is available in the [Wiki](https://gitlab.com/riccisi/foundryvtt-dice-so-nice/-/wikis/home)
 
 # Known limitations
@@ -70,7 +70,7 @@ v2 of "Dice So Nice" based on Teal's fork from the awesome MajorVictory, with hi
 
 v10 Geometry created by Greewi who did all the maths for this custom "Pentagonal Trapezohedron". You can find his homebrewed (french) TTRPG Feerie/Solaires here: https://feerie.net
 
-Theme and model credits:
+## Theme and model credits:
 - **Spencer Thayer:** `Thylean Bronze` theme
 - **Foundry VTT:** For the FVTT Logo in the `Foundry VTT` preset.
 - **MajorVictory:** For all the other theme in this module!
