@@ -14,7 +14,6 @@ export class DiceFactory {
 		this.systemForced = false;
 		this.systemActivated = "standard";
 
-		this.materials_cache = {};
 		this.loadedFonts = [];
 		this.cache_hits = 0;
 		this.cache_misses = 0;
@@ -334,7 +333,6 @@ export class DiceFactory {
 		this.baseScale = scale;
 		this.geometries = {};
 		this.meshes = {};
-		this.materials_cache = {};
 	}
 
 	setBumpMapping(bumpMapping){
@@ -462,19 +460,20 @@ export class DiceFactory {
 	// returns a dicemesh (THREE.Mesh) object
 	create(scopedTextureCache, type, colorset = null) {
 		let diceobj = this.dice[type];
+		let scopedScale = scopedTextureCache.type == "board" ? this.baseScale : 60;
 		if (!diceobj) return null;
 		let dicemesh;
 
-		let geom = this.geometries[type];
+		let geom = this.geometries[type+scopedScale];
 		if(!geom) {
-			geom = this.createGeometry(diceobj.shape, diceobj.scale * this.baseScale);
-			this.geometries[type] = geom;
+			geom = this.createGeometry(diceobj.shape, diceobj.scale, scopedScale);
+			this.geometries[type+scopedScale] = geom;
 		}
 		if (!geom) return null;
 
 		if(diceobj.model){
 			dicemesh = diceobj.model.scene.children[0].clone();
-			let scale = this.baseScale/100;
+			let scale = scopedScale/100;
 			dicemesh.scale.set(scale,scale,scale);
 			if(!dicemesh.geometry)
 				dicemesh.geometry = {};
@@ -495,7 +494,7 @@ export class DiceFactory {
 				cacheString = this.setMaterialInfo();
 			}
 
-			let baseTextureCacheString = scopedTextureCache.type+type+cacheString;
+			let baseTextureCacheString = scopedTextureCache.type+this.systemActivated+type+cacheString;
 			let materials;
 			if(this.baseTextureCache[baseTextureCacheString])
 				materials = this.baseTextureCache[baseTextureCacheString];
@@ -1057,60 +1056,61 @@ export class DiceFactory {
 		return size;
 	}
 
-	createGeometry(type, radius) {
+	createGeometry(type, typeScale, scopedScale) {
+		let radius = typeScale * scopedScale;
 		let geom = null;
 		switch (type) {
 			case 'd2':
-				geom = this.create_d2_geometry(radius);
+				geom = this.create_d2_geometry(radius, scopedScale);
 				break;
 			case 'd4':
-				geom = this.create_d4_geometry(radius);
+				geom = this.create_d4_geometry(radius, scopedScale);
 				break;
 			case 'd6':
-				geom = this.create_d6_geometry(radius);
+				geom = this.create_d6_geometry(radius, scopedScale);
 				break;
 			case 'd8':
-				geom = this.create_d8_geometry(radius);
+				geom = this.create_d8_geometry(radius, scopedScale);
 				break;
 			case 'd10':
-				geom = this.create_d10_geometry(radius);
+				geom = this.create_d10_geometry(radius, scopedScale);
 				break;
 			case 'd12':
-				geom = this.create_d12_geometry(radius);
+				geom = this.create_d12_geometry(radius, scopedScale);
 				break;
 			case 'd20':
-				geom = this.create_d20_geometry(radius);
+				geom = this.create_d20_geometry(radius, scopedScale);
 				break;
 		}
 		return geom;
 	}
 
-	load_geometry(type,radius){
+	load_geometry(type, scopedScale){
 		var loader = new THREE.BufferGeometryLoader();
 		let bufferGeometry = loader.parse(DICE_MODELS[type]);
-		bufferGeometry.scale(this.baseScale/100,this.baseScale/100,this.baseScale/100);
+		bufferGeometry.scale(scopedScale/100,scopedScale/100,scopedScale/100);
 		if(type!="d10")
 			bufferGeometry.rotateY(1.5708);
 		return bufferGeometry;
 	}
 
-	create_d2_geometry(radius){
-		let geom = this.load_geometry("d2",radius);
+	create_d2_geometry(radius, scopedScale){
+		let geom = this.load_geometry("d2",scopedScale);
 		geom.lookAt(new THREE.Vector3(0,1,0));
 		geom.cannon_shape = new CANNON.Cylinder(1*radius,1*radius,0.1*radius,8);
 		return geom;
 	}
 
-	create_d4_geometry(radius) {
-		let geom = this.load_geometry("d4",radius);
+	create_d4_geometry(radius, scopedScale) {
+		let geom = this.load_geometry("d4",scopedScale);
 		var vertices = [[1, 1, 1], [-1, -1, 1], [-1, 1, -1], [1, -1, -1]];
 		var faces = [[1, 0, 2, 1], [0, 1, 3, 2], [0, 3, 2, 3], [1, 2, 3, 4]];
 		geom.cannon_shape = this.create_geom(vertices, faces, radius);
 		return geom;
 	}
 
-	create_d6_geometry(radius) {
-		let geom = this.load_geometry("d6",radius);
+	create_d6_geometry(radius, scopedScale) {
+		let geom = this.load_geometry("d6",scopedScale);
 		var vertices = [[-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
 				[-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]];
 		var faces = [[0, 3, 2, 1, 1], [1, 2, 6, 5, 2], [0, 1, 5, 4, 3],
@@ -1119,8 +1119,8 @@ export class DiceFactory {
 		return geom;
 	}
 
-	create_d8_geometry(radius) {
-		let geometry = this.load_geometry("d8",radius);
+	create_d8_geometry(radius, scopedScale) {
+		let geometry = this.load_geometry("d8",scopedScale);
 		
 		var vertices = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
 		var faces = [[0, 2, 4, 1], [0, 4, 3, 2], [0, 3, 5, 3], [0, 5, 2, 4], [1, 3, 4, 5],
@@ -1129,8 +1129,8 @@ export class DiceFactory {
 		return geometry;
 	}
 
-	create_d10_geometry(radius) {
-		let geom = this.load_geometry("d10",radius);
+	create_d10_geometry(radius, scopedScale) {
+		let geom = this.load_geometry("d10",scopedScale);
 		//geom.scale(1.38,1.38,1.38);
 		
 		var a = Math.PI * 2 / 10, h = 0.105, v = -1;
@@ -1158,8 +1158,8 @@ export class DiceFactory {
 		return geom;
 	}
 
-	create_d12_geometry(radius) {
-		let geom = this.load_geometry("d12",radius);
+	create_d12_geometry(radius, scopedScale) {
+		let geom = this.load_geometry("d12",scopedScale);
 		var p = (1 + Math.sqrt(5)) / 2, q = 1 / p;
 		var vertices = [[0, q, p], [0, q, -p], [0, -q, p], [0, -q, -p], [p, 0, q],
 				[p, 0, -q], [-p, 0, q], [-p, 0, -q], [q, p, 0], [q, -p, 0], [-q, p, 0],
@@ -1173,9 +1173,9 @@ export class DiceFactory {
 		return geom;
 	}
 
-	create_d20_geometry(radius) {
+	create_d20_geometry(radius, scopedScale) {
 		
-		let geom = this.load_geometry("d20",radius);
+		let geom = this.load_geometry("d20",scopedScale);
 
 		var t = (1 + Math.sqrt(5)) / 2;
 		var vertices = [[-1, t, 0], [1, t, 0 ], [-1, -t, 0], [1, -t, 0],
