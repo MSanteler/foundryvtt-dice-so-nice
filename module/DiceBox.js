@@ -291,7 +291,8 @@ export class DiceBox {
 			this.display.scale = Math.sqrt(this.display.containerWidth * this.display.containerWidth + this.display.containerHeight * this.display.containerHeight) / 13;
 		else
 			this.display.scale = this.config.scale;
-		this.dicefactory.setScale(this.display.scale);
+		if(this.config.boxType == "board")
+			this.dicefactory.setScale(this.display.scale);
 		this.renderer.setSize(this.display.currentWidth * 2, this.display.currentHeight * 2);
 
 		this.cameraHeight.max = this.display.currentHeight / this.display.aspect / Math.tan(10 * Math.PI / 180);
