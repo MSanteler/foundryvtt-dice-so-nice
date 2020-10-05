@@ -70,7 +70,7 @@ Hooks.once('init', () => {
         hint: "DICESONICE.enabledSimultaneousRollsHint",
         scope: "world",
         type: Boolean,
-        default: false,
+        default: true,
         config: true,
         onChange: () => {
             location.reload();
@@ -863,6 +863,13 @@ class DiceConfig extends FormApplication {
     }
 
     async _updateObject(event, formData) {
+        //Remove custom settings if custom isn't selected to prevent losing them in the user save
+        if(formData.colorset != "custom"){
+                delete formData.labelColor;
+                delete formData.diceColor;
+                delete formData.outlineColor;
+                delete formData.edgeColor;
+        }
         let settings = mergeObject(Dice3D.CONFIG, formData, { insertKeys: false, insertValues: false });
         let appearance = mergeObject(Dice3D.APPEARANCE(), formData, { insertKeys: false, insertValues: false });
         await game.settings.set('dice-so-nice', 'settings', settings);
