@@ -918,7 +918,7 @@ export class DiceFactory {
 		this.colordata = colordata;
 		this.label_color = colordata.foreground;
 		this.dice_color = colordata.background;
-		this.label_outline = colordata.outline != '' ? colordata.outline:"none";
+		this.label_outline = colordata.outline ? colordata.outline:"none";
 		this.dice_texture = colordata.texture;
 		this.material = colordata.material;
 		this.edge_color = colordata.hasOwnProperty("edge") && colordata.edge != '' ? colordata.edge:colordata.background;
@@ -941,9 +941,24 @@ export class DiceFactory {
 		if (colorset) {
 			let colordata = DiceColors.getColorSet(colorset);
 
+			if(colordata.background == "custom")
+				colordata.background = prevcolordata.background;
+			if(colordata.foreground == "custom")
+				colordata.foreground = prevcolordata.foreground;
+			if(colordata.edge == "custom")
+				colordata.edge = prevcolordata.edge;
+			if(colordata.outline == "custom")
+				colordata.outline = prevcolordata.outline;
+			if(colordata.material == "custom")
+				colordata.material = prevmaterial;
+			if(colordata.texture == "custom")
+				colordata.texture = prevtexture;
+
+
 			if (this.colordata.id != colordata.id) {
 				this.applyColorSet(colordata);
 			}
+			let colordata2 = DiceColors.getColorSet(colorset);
 		}
 
 		//reset random choices
