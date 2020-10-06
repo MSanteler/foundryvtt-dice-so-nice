@@ -362,6 +362,15 @@ export class Dice3D {
      * @param {Object} apply = "no", "default", "force"
      */
     addColorset(colorset, apply = "no") {
+        let defaultValues = {
+            foreground:"custom",
+            background:"custom",
+            outline:"custom",
+            edge:"custom",
+            texture:"custom",
+            material:"custom"
+        }
+        colorset = mergeObject(defaultValues, colorset);
         COLORSETS[colorset.name] = colorset;
         DiceColors.initColorSets(colorset);
 

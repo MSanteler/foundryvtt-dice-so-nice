@@ -613,7 +613,8 @@ export class DiceColors {
 			sets = Object.entries(COLORSETS);
 		for (const [name, data] of sets) {
 			COLORSETS[name].id = name;
-			COLORSETS[name].texture = this.getTexture(data.texture);
+			if(data.texture != "custom")
+				COLORSETS[name].texture = this.getTexture(data.texture);
 			if(typeof COLORSETS[name].texture == "object")
 				COLORSETS[name].texture.id = data.texture;
 			if(!COLORSETS[name].material)
@@ -644,7 +645,7 @@ export class DiceColors {
 	
 	static getColorSet(colorsetname) {
 		let colorset = COLORSETS[colorsetname] || COLORSETS['custom'];
-		return colorset;
+		return {...colorset};
 	}
 
 	static setColorCustom(foreground = '#FFFFFF', background = '#000000', outline = '#FFFFFF', edge = '#FFFFFF'){
