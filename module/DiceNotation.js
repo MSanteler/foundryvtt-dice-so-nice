@@ -49,7 +49,7 @@ export class DiceNotation {
 	}
 	addDie(fvttDie, index, isd10of100 = false){
 		let dsnDie = {};
-		let dieValue = fvttDie.values[index];
+		let dieValue = fvttDie.results[index].result;
 		if(fvttDie.faces == 100) {
 			//For d100, we create two d10 dice
 			if(isd10of100) {
