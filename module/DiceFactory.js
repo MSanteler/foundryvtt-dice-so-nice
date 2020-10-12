@@ -219,7 +219,7 @@ export class DiceFactory {
 			let term = CONFIG.Dice.terms[i];
 			//If this is not a core dice type
 			if(![Coin, FateDie, Die].includes(term)){
-				let objTerm = new term();
+				let objTerm = new term({});
 				if([3, 4, 6, 8, 10, 12, 20].includes(objTerm.faces)){
 					this.internalAddDicePreset(objTerm);
 				}
