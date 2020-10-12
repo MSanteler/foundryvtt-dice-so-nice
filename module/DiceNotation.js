@@ -12,7 +12,7 @@ export class DiceNotation {
 		//First we need to prepare the data
 		rolls.dice.forEach(die => {
 			//We only are able to handle this list of number of face in 3D for now
-			if([2, 3, 4, 6, 8, 10, 12, 20, 100].includes(die.faces)) {
+			if([2, 3, 4, 5, 6, 8, 10, 12, 20, 100].includes(die.faces)) {
 				//We flag every single die with a throw number, to queue exploded dice
 				let cnt=die.number;
 				let countExploded = 0;
@@ -37,7 +37,7 @@ export class DiceNotation {
 		//Then we can create the throws
 		rolls.dice.forEach(die => {
 			//We only are able to handle this list of number of face in 3D for now
-			if([2, 3, 4, 6, 8, 10, 12, 20, 100].includes(die.faces)) {
+			if([2, 3, 4, 5, 6, 8, 10, 12, 20, 100].includes(die.faces)) {
 				for(let i =0; i< die.results.length; i++){
 					this.addDie(die, i);
 					if(die.faces == 100){
