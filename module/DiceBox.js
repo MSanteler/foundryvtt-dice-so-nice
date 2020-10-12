@@ -965,7 +965,9 @@ export class DiceBox {
 		}
 
 		let selectordice = Object.keys(this.dicefactory.dice);
-		this.camera.position.z = selectordice.length > 10 ? this.cameraHeight.far : this.cameraHeight.medium;
+		//remove the useless d3
+		selectordice = selectordice.filter((die) => die!=="d3");
+		this.camera.position.z = selectordice.length > 10 ? this.cameraHeight.far/1.3 : this.cameraHeight.medium;
 		let posxstart = selectordice.length > 10 ? -2.5 : -2.0;
 		let posystart = selectordice.length > 10 ? 1 : 0.5;
 		let poswrap = selectordice.length > 10 ? 3 : 2;
