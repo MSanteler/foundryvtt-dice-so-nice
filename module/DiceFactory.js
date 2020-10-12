@@ -117,6 +117,16 @@ export class DiceFactory {
 		diceobj.fontScale = 1;
 		this.register(diceobj);
 
+		diceobj = new DicePreset('d5','d10');
+		diceobj.name = 'd5';
+		diceobj.setLabels(['1','2','3','4','5','1','2','3','4','5']);
+		diceobj.setValues(1,5);
+		diceobj.mass = 450;
+		diceobj.inertia = 9;
+		diceobj.scale = 0.9;
+		diceobj.fontScale = 1;
+		this.register(diceobj);
+
 		diceobj = new DicePreset('d100', 'd10');
 		diceobj.name = 'd100';
 		diceobj.setLabels(['10', '20', '30', '40', '50', '60', '70', '80', '90', '00']);
