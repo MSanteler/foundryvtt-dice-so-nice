@@ -83,6 +83,14 @@ export class DiceFactory {
 		diceobj.fontScale = 1.3;
 		this.register(diceobj);
 
+		diceobj = new DicePreset('d3', 'd6');
+		diceobj.name = 'd3';
+		diceobj.setLabels(['1', '2', '3', '1', '2', '3']);
+		diceobj.setValues(1,3);
+		diceobj.scale = 0.9;
+		diceobj.fontScale = 1.3;
+		this.register(diceobj);
+
 		diceobj = new DicePreset('df', 'd6');
 		diceobj.name = 'Fate Dice';
 		diceobj.setLabels(['−', ' ', '+']);
