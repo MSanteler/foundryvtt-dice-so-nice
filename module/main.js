@@ -491,6 +491,7 @@ export class Dice3D {
             config.boxType = "board";
             this.box = new DiceBox(this.canvas[0], this.DiceFactory, config);
             this.box.initialize();
+            this.box.preloadSounds();
         }
     }
 
@@ -728,7 +729,7 @@ class DiceConfig extends FormApplication {
             id: "dice-config",
             template: "modules/dice-so-nice/templates/dice-config.html",
             width: 500,
-            height: 845,
+            height: 700,
             closeOnSubmit: true
         })
     }
