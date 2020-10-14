@@ -491,6 +491,7 @@ export class Dice3D {
             config.boxType = "board";
             this.box = new DiceBox(this.canvas[0], this.DiceFactory, config);
             this.box.initialize();
+            this.box.preloadSounds();
         }
     }
 
