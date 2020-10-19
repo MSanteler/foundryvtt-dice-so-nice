@@ -127,7 +127,7 @@ Hooks.once('ready', () => {
  * Intercepts all roll-type messages hiding the content until the animation is finished
  */
 Hooks.on('createChatMessage', (chatMessage) => {
-    if (!chatMessage.isRoll || !chatMessage.isContentVisible || (game.dice3d && game.dice3d.messageHookDisabled)) {
+    if (!chatMessage.isRoll || !chatMessage.isContentVisible || !game.dice3d || game.dice3d.messageHookDisabled) {
         return;
     }
 
