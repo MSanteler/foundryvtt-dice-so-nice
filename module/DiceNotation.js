@@ -33,12 +33,15 @@ export class DiceNotation {
 				}
 			}
 		});
-
+		let diceNumber = 0;
+		let maxDiceNumber = game.settings.get("dice-so-nice", "maxDiceNumber");
 		//Then we can create the throws
-		rolls.dice.forEach(die => {
+		rolls.dice.some(die => {
 			//We only are able to handle this list of number of face in 3D for now
 			if([2, 3, 4, 5, 6, 8, 10, 12, 20, 100].includes(die.faces)) {
 				for(let i =0; i< die.results.length; i++){
+					if(++diceNumber >= maxDiceNumber)
+						return true;
 					this.addDie(die, i);
 					if(die.faces == 100){
 						this.addDie(die, i, true);

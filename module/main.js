@@ -41,7 +41,7 @@ Hooks.once('init', () => {
         default: 20,
         range: {
             min: 20,
-            max: 50,
+            max: 100,
             step: 5
         },
         config: true
