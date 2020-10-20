@@ -843,7 +843,7 @@ export class DiceBox {
 		});
 
 		let maxDiceNumber = game.settings.get("dice-so-nice", "maxDiceNumber");
-		if(this.deadDiceList.length + countNewDice > maxDiceNumber) {
+		if(this.deadDiceList.length + this.diceList.length +  countNewDice > maxDiceNumber) {
 			this.clearAll();
 		}
 
