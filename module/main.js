@@ -127,7 +127,11 @@ Hooks.once('ready', () => {
  * Intercepts all roll-type messages hiding the content until the animation is finished
  */
 Hooks.on('createChatMessage', (chatMessage) => {
-    if (!chatMessage.isRoll || !chatMessage.isContentVisible || !game.dice3d || game.dice3d.messageHookDisabled) {
+    if (!chatMessage.isRoll ||
+        !chatMessage.isContentVisible ||
+        !game.dice3d ||
+        game.dice3d.messageHookDisabled ||
+        chatMessage.getFlag("core", "RollTable")) {
         return;
     }
 
@@ -152,7 +156,20 @@ Hooks.on("renderChatMessage", (message, html, data) => {
     if (game.dice3d && game.dice3d.messageHookDisabled) {
         return;
     }
-    if (message._dice3danimating) html.hide();
+    if (message._dice3danimating) {
+        html.hide();
+    }
+});
+
+Hooks.on('updateCombatant', () => {
+
+    console.log("updateCombatant")
+
+});
+Hooks.on('renderCombatTracker', () => {
+
+    console.log("renderCombatTracker")
+
 });
 
 /**
