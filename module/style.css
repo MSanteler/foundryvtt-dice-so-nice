@@ -6,3 +6,31 @@
 .dice-so-nice input[type=range]:disabled, .dice-so-nice input[type=color]:disabled {
     opacity: 0.3;
 }
+
+#dice-config .window-content{
+    overflow-y:hidden;
+}
+
+.dice-so-nice .dsn-settings-container{
+    height: 368px;
+    overflow-y: auto;
+}
+
+.dice-so-nice .buttons-save{
+    position:sticky;
+    margin-top: 8px;
+}
+
+.dice-so-nice .form-group select{
+    flex:1;
+}
+
+.dice-so-nice .setting-timeBeforeHide input{
+    flex: 1; 
+    text-align: right;
+}
+
+#dice-configuration-canvas{
+    width: 500px;
+    height: 245px;
+}
