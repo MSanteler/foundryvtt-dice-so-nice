@@ -161,17 +161,6 @@ Hooks.on("renderChatMessage", (message, html, data) => {
     }
 });
 
-Hooks.on('updateCombatant', () => {
-
-    console.log("updateCombatant")
-
-});
-Hooks.on('renderCombatTracker', () => {
-
-    console.log("renderCombatTracker")
-
-});
-
 /**
  * Generic utilities class...
  */
