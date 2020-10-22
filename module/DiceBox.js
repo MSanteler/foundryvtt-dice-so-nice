@@ -365,32 +365,7 @@ export class DiceBox {
         } else {
             this.display.scale = config.scale
         }
-		this.dicefactory.addDicePreset({
-		  type: "d20",
-		  labels: [
-		    config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage,
-				config.critImage
-		  ],
-		  system: 'standard' // TODO config.system doesn't work
-		});
+		this.dicefactory.setCustomFaces(config.critImage);
 		this.dicefactory.setScale(this.display.scale);
 		this.dicefactory.setBumpMapping(config.bumpMapping);
 

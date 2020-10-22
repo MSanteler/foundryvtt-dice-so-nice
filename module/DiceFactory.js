@@ -400,6 +400,40 @@ export class DiceFactory {
 		}
 	}
 
+	setCustomFaces(critImage, system = 'standard'){
+		let preset = new DicePreset('d20');
+		preset.name = 'd20';
+		preset.setLabels([
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage
+		]);
+		preset.setValues(1,20);
+		preset.mass = 500;
+		preset.scale = 1;
+		preset.inertia = 6;
+		this.register(preset);
+		if(this.systemActivated == system)
+			this.setSystem(system);
+	}
+
 	//Is called when trying to create a DicePreset by guessing its faces from the CONFIG entries
 	internalAddDicePreset(diceobj){
 		let shape = "d";
