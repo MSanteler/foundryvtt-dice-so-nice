@@ -430,6 +430,7 @@ export class DiceFactory {
 		preset.scale = 1;
 		preset.inertia = 6;
 		this.register(preset);
+		this.disposeCachedMaterials()
 		if(this.systemActivated == system)
 			this.setSystem(system);
 	}
