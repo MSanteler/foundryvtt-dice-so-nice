@@ -852,6 +852,7 @@ class DiceConfig extends FormApplication {
         setTimeout(() => {
 
             let config = {
+                critImage: $('input[name="critImage"]').val(),
                 labelColor: $('input[name="labelColor"]').val(),
                 diceColor: $('input[name="diceColor"]').val(),
                 outlineColor: $('input[name="outlineColor"]').val(),

@@ -365,6 +365,14 @@ export class DiceBox {
         } else {
             this.display.scale = config.scale
         }
+		this.dicefactory.addDicePreset({
+		  type: "d20",
+		  labels: [
+		    "💩","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19",
+		    config.critImage
+		  ],
+		  system: 'standard' // TODO config.system doesn't work
+		});
 		this.dicefactory.setScale(this.display.scale);
 		this.dicefactory.setBumpMapping(config.bumpMapping);
 
