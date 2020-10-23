@@ -400,6 +400,40 @@ export class DiceFactory {
 		}
 	}
 
+	setCustomFaces(critImage, system = 'standard'){
+		let preset = new DicePreset('d20');
+		preset.name = 'd20';
+		preset.setLabels([
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage,
+			critImage
+		]);
+		preset.setValues(1,20);
+		preset.mass = 500;
+		preset.scale = 1;
+		preset.inertia = 6;
+		this.register(preset);
+		if(this.systemActivated == system)
+			this.setSystem(system);
+	}
+
 	//Is called when trying to create a DicePreset by guessing its faces from the CONFIG entries
 	internalAddDicePreset(diceobj){
 		let shape = "d";
@@ -502,17 +536,17 @@ export class DiceFactory {
 			}
 		}else{
 			//We use either (by order of priority): a flavor/targeted colorset, the colorset of the diceobj, the colorset configured by the player
-			let cacheString = "";
+			let colorsetCacheString = "";
 			if(colorset){
-				cacheString = this.setMaterialInfo(colorset);
+				colorsetCacheString = this.setMaterialInfo(colorset);
 			}
 			else if (diceobj.colorset) {
-				cacheString = this.setMaterialInfo(diceobj.colorset);
+				colorsetCacheString = this.setMaterialInfo(diceobj.colorset);
 			} else {
-				cacheString = this.setMaterialInfo();
+				colorsetCacheString = this.setMaterialInfo();
 			}
 
-			let baseTextureCacheString = scopedTextureCache.type+this.systemActivated+type+cacheString;
+			let baseTextureCacheString = scopedTextureCache.type+this.systemActivated+type+colorsetCacheString+diceobj.labelcache;
 			let materials;
 			if(this.baseTextureCache[baseTextureCacheString])
 				materials = this.baseTextureCache[baseTextureCacheString];
@@ -1077,6 +1111,7 @@ export class DiceFactory {
 			this.applyTexture(prevtexture);
 			this.applyMaterial(prevmaterial);
 		}
+		// Return a string for caching
 		return this.dice_color_rand+this.label_color_rand+this.label_outline_rand+this.dice_texture_rand.name+this.edge_color_rand+this.material_rand;
 	}
 

@@ -12,6 +12,7 @@ export class DicePreset {
 		this.font = 'Arial';
 		this.color = '';
 		this.labels = [];
+		this.labelcache = '';
 		this.valueMap = null;
 		this.values = [];
 		this.normals = [];
@@ -62,6 +63,7 @@ export class DicePreset {
 
 	setLabels(labels) {
 		this.loadTextures(labels, this.registerFaces.bind(this), "labels");
+		this.labelcache = labels.join()
 	}
 
 	setBumpMaps(normals) {

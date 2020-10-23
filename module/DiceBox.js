@@ -161,6 +161,7 @@ export class DiceBox {
 			this.volume = this.config.soundsVolume;
 			this.soundsSurface = this.config.soundsSurface;
 			this.shadows = this.config.shadowQuality != "none";
+			this.dicefactory.setCustomFaces(this.config.critImage);
 			this.dicefactory.setBumpMapping(this.config.bumpMapping);
 			let globalAnimationSpeed = game.settings.get("dice-so-nice", "globalAnimationSpeed");
 			if(globalAnimationSpeed === "0")
@@ -365,6 +366,7 @@ export class DiceBox {
         } else {
             this.display.scale = config.scale
         }
+		this.dicefactory.setCustomFaces(config.critImage);
 		this.dicefactory.setScale(this.display.scale);
 		this.dicefactory.setBumpMapping(config.bumpMapping);
 
